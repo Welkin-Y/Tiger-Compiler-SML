@@ -1,0 +1,7 @@
+(* This is a comment *)
+let 
+    var V := 123
+
+(* a weird (*nested*)*) (*comment(**)*)(*(*ya*) let V = 231 *** ()*)
+    var V := 123
+end
