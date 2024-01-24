@@ -11,19 +11,19 @@ fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 %% 
 %s COMMENT;
 ids=[a-zA-Z][a-zA-Z0-9_]*;
-strs="((\\.)|[^\\"])*";
-ints=([1-9][0-9]*) | 0;
+strs=\"((\\.)|[^\\"])*\";
+ints=([1-9][0-9]*)|0;
 %%
 
 \n	=> (lineNum := !lineNum+1; linePos := yypos :: !linePos; continue());
-<INITIAL>"(*"   => (commentDepth := !commentDepth+1; YYBEGIN COMMENT; continue());
-<INITIAL>"type"  => (Tokens.TYPE(yypos, yypos+4));
-<INITIAL>"var"  	=> (Tokens.VAR(yypos,yypos+3));
-<INITIAL>"function" => (Tokens.FUNCTION(yypos, yypos+8));
-<INITIAL>"break" => (Tokens.BREAK(yypos, yypos+5));
-<INITIAL>"of"    => (Tokens.OF(yypos, yypos+2));
+<INITIAL>"(*"	 => (commentDepth := !commentDepth+1; YYBEGIN COMMENT; continue());
+<INITIAL>"type"	 => (Tokens.TYPE(yypos, yypos+4));
+<INITIAL>"var"	=> (Tokens.VAR(yypos,yypos+3));
+<INITIAL>"function"	=> (Tokens.FUNCTION(yypos, yypos+8));
+<INITIAL>"break"	=> (Tokens.BREAK(yypos, yypos+5));
+<INITIAL>"of"	=> (Tokens.OF(yypos, yypos+2));
 
-<INITIAL>"end"     => (Tokens.END(yypos, yypos+3));
+<INITIAL>"end"	=> (Tokens.END(yypos, yypos+3));
 <INITIAL>"in"    => (Tokens.IN(yypos, yypos+2));
 <INITIAL>"nil"   => (Tokens.NIL(yypos, yypos+3));
 <INITIAL>"let"     => (Tokens.LET(yypos, yypos+3));
@@ -58,9 +58,9 @@ ints=([1-9][0-9]*) | 0;
 <INITIAL>";"   => (Tokens.SEMICOLON(yypos, yypos+1));
 <INITIAL>"."   => (Tokens.DOT(yypos, yypos+1));
 <INITIAL>","	=> (Tokens.COMMA(yypos,yypos+1));
-<INITIAL>{{ids}} => (Tokens.ID(yytext, yypos, yypos+size yytext));
-<INITIAL>{{ints}} => (Tokens.INT(Int.fromString yytext, yypos, yypos+size yytext));
-<INITIAL>{{strs}}  => (Tokens.STRING(yytext, yypos, yypos+size yytext));
+<INITIAL>{ids}	=> (Tokens.ID(yytext, yypos, yypos+size yytext));
+<INITIAL>{ints}	=> (Tokens.INT(valOf (Int.fromString yytext), yypos, yypos+size yytext));
+<INITIAL>{strs}	=> (Tokens.STRING(yytext, yypos, yypos+size yytext));
 
 <INITIAL>" "     => (continue());
 <INITIAL>\t    => (continue());

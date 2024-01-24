@@ -258,17 +258,18 @@ fun yyAction41 (strm, lastMatch : yymatch) = (yystrm := strm;
 fun yyAction42 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
-        yystrm := strm; (Tokens.ID(yypos, yypos+size yytext))
+        yystrm := strm; (Tokens.ID(yytext, yypos, yypos+size yytext))
       end
 fun yyAction43 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
-        yystrm := strm; (Tokens.INT(yypos, yypos+size yytext))
+        yystrm := strm;
+        (Tokens.INT(valOf (Int.fromString yytext), yypos, yypos+size yytext))
       end
 fun yyAction44 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
-        yystrm := strm; (Tokens.STRING(yypos, yypos+size yytext))
+        yystrm := strm; (Tokens.STRING(yytext, yypos, yypos+size yytext))
       end
 fun yyAction45 (strm, lastMatch : yymatch) = (yystrm := strm; (continue()))
 fun yyAction46 (strm, lastMatch : yymatch) = (yystrm := strm; (continue()))
