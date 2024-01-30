@@ -1,6 +1,6 @@
 CM.make "lexer/src/resources.cm";
 (* Test A Simple Variable Assignment *)
-val infile = TextIO.openIn "filelist.txt";
+val infile = TextIO.openIn "filelist.tmp.txt";
 fun dropNewline str =
     if String.size str > 0 andalso String.sub (str, String.size str - 1) = #"\n"
       then String.extract (str, 0, SOME (String.size str - 1))
