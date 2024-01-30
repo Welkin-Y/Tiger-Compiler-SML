@@ -1,7 +1,11 @@
-(* This is a comment *)
+*//* This is a comment */
+if0+0=0then
 let 
     var V := 123
-
-(* a weird (*nested*)*) (*comment(**)*)(*(*ya*) let V = 231 *** ()*)
-    var V := 123
+)
+/* a weird /*nested*/*/ /*comment/**/*//*/*ya*/ let V = 231 *** () */*/
+    var V := 456
 end
+(
+    {[
+        /*]}

@@ -12,11 +12,11 @@ fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 %s COMMENT;
 ids=[a-zA-Z][a-zA-Z0-9_]*;
 strs=\"((\\.)|[^\\"])*\";
-ints=([1-9][0-9]*)|0;
+ints=[0-9]+;
 %%
 
 \n	=> (lineNum := !lineNum+1; linePos := yypos :: !linePos; continue());
-<INITIAL>"(*"	 => (commentDepth := !commentDepth+1; YYBEGIN COMMENT; continue());
+<INITIAL>"/*"	 => (commentDepth := !commentDepth+1; YYBEGIN COMMENT; continue());
 <INITIAL>"type"	 => (Tokens.TYPE(yypos, yypos+4));
 <INITIAL>"var"	=> (Tokens.VAR(yypos,yypos+3));
 <INITIAL>"function"	=> (Tokens.FUNCTION(yypos, yypos+8));
@@ -65,8 +65,8 @@ ints=([1-9][0-9]*)|0;
 <INITIAL>" "     => (continue());
 <INITIAL>\t    => (continue());
 <INITIAL>.       => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
-<COMMENT> "(*" => (commentDepth := !commentDepth+1; continue());
-<COMMENT>"*)"   => (commentDepth := !commentDepth-1; if !commentDepth = 0 then YYBEGIN INITIAL else (); continue());
+<COMMENT> "/*" => (commentDepth := !commentDepth+1; continue());
+<COMMENT>"*/"   => (commentDepth := !commentDepth-1; if !commentDepth = 0 then YYBEGIN INITIAL else (); continue());
 <COMMENT>.    => (continue());
 
 
