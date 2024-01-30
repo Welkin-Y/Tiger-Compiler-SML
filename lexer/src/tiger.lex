@@ -1,6 +1,6 @@
 type pos = int
 type lexresult = Tokens.token
-val commentDepth : int ref = ref 0
+val commentDepth = ErrorMsg.commentDepth
 val lineNum = ErrorMsg.lineNum
 val linePos = ErrorMsg.linePos
 val stringBuilder = ref ""
@@ -16,12 +16,6 @@ in
     else ();
     Tokens.EOF(pos,pos))
 end
-
-fun reset() = (
-    commentDepth := 0;        (* Reset comment depth to 0 *)
-    lineNum := 1;             (* Reset line number to 1 *)
-    linePos := [0]            (* Reset line positions to 0 *)
-) 
 
 %% 
 %s COMMENT STRING MULTILINE;
