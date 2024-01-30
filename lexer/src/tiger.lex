@@ -3,25 +3,57 @@ type lexresult = Tokens.token
 val commentDepth : int ref = ref 0
 val lineNum = ErrorMsg.lineNum
 val linePos = ErrorMsg.linePos
+val stringBuilder = ref ""
+val stringStartPos = ref 0
 fun err(p1,p2) = ErrorMsg.error p1
 
-fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
+fun eof() = 
+let 
+    val pos = hd(!linePos)
+in 
+    (if !commentDepth <> 0 then
+        ErrorMsg.error pos ("Comment error")
+    else ();
+    Tokens.EOF(pos,pos))
+end
+
+fun reset() = (
+    commentDepth := 0;        (* Reset comment depth to 0 *)
+    lineNum := 1;             (* Reset line number to 1 *)
+    linePos := [0]            (* Reset line positions to 0 *)
+) 
 
 %% 
-%s COMMENT;
+%s COMMENT STRING MULTILINE;
 ids=[a-zA-Z][a-zA-Z0-9_]*;
-strs=\"((\\.)|[^\\"])*\";
 ints=[0-9]+;
 %%
 
-\n	=> (lineNum := !lineNum+1; linePos := yypos :: !linePos; continue());
+<INITIAL>\"   => (
+    YYBEGIN STRING;
+    stringBuilder := "";
+    stringStartPos := yypos;
+    continue()
+);
+<STRING>\"    => (
+    YYBEGIN INITIAL;
+    Tokens.STRING(!stringBuilder, !stringStartPos, yypos + 1)
+);
+<STRING>\\[\n\t]*\n[\n\t]*\\ => (continue());
+<STRING>\\\"  => (stringBuilder := !stringBuilder ^ "\""; continue());
+<STRING>\\n   => (stringBuilder := !stringBuilder ^ "\n"; continue());
+<STRING>\\t   => (stringBuilder := !stringBuilder ^ "\t"; continue());
+<STRING>\\\\  => (stringBuilder := !stringBuilder ^ "\\"; continue());
+<STRING>\\    => (ErrorMsg.error yypos ("illegal escaping character"); continue());
+<STRING>\n    => (lineNum := !lineNum+1; linePos := yypos :: !linePos; ErrorMsg.error yypos ("illegal newline in string"); continue());
+<STRING>.     => (stringBuilder := !stringBuilder ^ yytext; continue());
+
 <INITIAL>"/*"	 => (commentDepth := !commentDepth+1; YYBEGIN COMMENT; continue());
 <INITIAL>"type"	 => (Tokens.TYPE(yypos, yypos+4));
 <INITIAL>"var"	=> (Tokens.VAR(yypos,yypos+3));
 <INITIAL>"function"	=> (Tokens.FUNCTION(yypos, yypos+8));
 <INITIAL>"break"	=> (Tokens.BREAK(yypos, yypos+5));
 <INITIAL>"of"	=> (Tokens.OF(yypos, yypos+2));
-
 <INITIAL>"end"	=> (Tokens.END(yypos, yypos+3));
 <INITIAL>"in"    => (Tokens.IN(yypos, yypos+2));
 <INITIAL>"nil"   => (Tokens.NIL(yypos, yypos+3));
@@ -60,7 +92,6 @@ ints=[0-9]+;
 <INITIAL>{ids}	=> (Tokens.ID(yytext, yypos, yypos+size yytext));
 <INITIAL>{ints}	=> (Tokens.INT(valOf (Int.fromString yytext) , yypos, yypos+size yytext) handle Overflow => (
 ErrorMsg.error yypos ("int overflow " ^ yytext); continue()));
-<INITIAL>{strs}	=> (Tokens.STRING(yytext, yypos, yypos+size yytext));
 
 <INITIAL>" "     => (continue());
 <INITIAL>\t    => (continue());
@@ -68,5 +99,4 @@ ErrorMsg.error yypos ("int overflow " ^ yytext); continue()));
 <COMMENT> "/*" => (commentDepth := !commentDepth+1; continue());
 <COMMENT>"*/"   => (commentDepth := !commentDepth-1; if !commentDepth = 0 then YYBEGIN INITIAL else (); continue());
 <COMMENT>.    => (continue());
-
-
+\n	=> (lineNum := !lineNum+1; linePos := yypos :: !linePos; continue());
