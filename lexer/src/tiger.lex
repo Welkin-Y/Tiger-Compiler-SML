@@ -17,6 +17,8 @@ in
     Tokens.EOF(pos,pos))
 end
 
+fun ascii(x) = String.str(Char.chr(x))
+
 %% 
 %s COMMENT STRING MULTILINE;
 ids=[a-zA-Z][a-zA-Z0-9_]*;
@@ -33,6 +35,7 @@ ints=[0-9]+;
     YYBEGIN INITIAL;
     Tokens.STRING(!stringBuilder, !stringStartPos, yypos + 1)
 );
+<STRING>\\[0-9][0-9][0-9]	=> (let val x = valOf(Int.fromString(String.substring(yytext,1,3))) in stringBuilder := !stringBuilder ^ ascii(x) end handle Chr => ErrorMsg.error yypos ("illegal ascii: " ^ yytext); continue()); 
 <STRING>\\[\n\t]*\n[\n\t]*\\ => (continue());
 <STRING>\\\"  => (stringBuilder := !stringBuilder ^ "\""; continue());
 <STRING>\\n   => (stringBuilder := !stringBuilder ^ "\n"; continue());
