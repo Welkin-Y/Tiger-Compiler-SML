@@ -6,7 +6,11 @@ val linePos = ErrorMsg.linePos
 fun err(p1,p2) = ErrorMsg.error p1
 
 fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
-
+fun reset() = (
+  commentDepth := 0;        (* Reset comment depth to 0 *)
+  lineNum := 1;             (* Reset line number to 1 *)
+  linePos := [0]            (* Reset line positions to 0 *)
+) 
 
 %% 
 %s COMMENT;
