@@ -5,7 +5,15 @@ val lineNum = ErrorMsg.lineNum
 val linePos = ErrorMsg.linePos
 fun err(p1,p2) = ErrorMsg.error p1
 
-fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
+fun eof() = 
+let 
+    val pos = hd(!linePos)
+in 
+    (if !commentDepth <> 0 then
+        ErrorMsg.error pos ("Comment error")
+    else ();
+    Tokens.EOF(pos,pos))
+end
 
 
 %% 
