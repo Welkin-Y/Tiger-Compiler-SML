@@ -316,7 +316,8 @@ fun yyAction53 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
-        (Tokens.INT(valOf (Int.fromString yytext), yypos, yypos+size yytext))
+        (Tokens.INT(valOf (Int.fromString yytext) , yypos, yypos+size yytext) handle Overflow => (
+ErrorMsg.error yypos ("int overflow " ^ yytext); continue()))
       end
 fun yyAction54 (strm, lastMatch : yymatch) = (yystrm := strm; (continue()))
 fun yyAction55 (strm, lastMatch : yymatch) = (yystrm := strm; (continue()))

@@ -8,9 +8,10 @@ struct
 	  fun do_it() =
 	      let val t = lexer()
 	       in print t; print "\n";
-		   if substring(t,0,3)="EOF" then Mlex.UserDeclarations.reset() else do_it()
+		   if substring(t,0,3)="EOF" then () else do_it()
 	      end
        in do_it();
+          ErrorMsg.reset();
 	  TextIO.closeIn file
       end
 
