@@ -1,0 +1,10 @@
+"Hello World"
+"   Hello 553"
+"I am in \"quotation marks\""
+"Here should be a newline\nnewline"
+"I escaped a newline \\n on the same line"
+"\e\s\c\a\p\e\ \e\v\e\r\y\t\h\i\n\g"
+"This is a \
+\ really long string \
+\ blahblahblah\
+\ "
