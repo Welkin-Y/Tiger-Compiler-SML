@@ -13,6 +13,8 @@ val parseList = read infile;
 TextIO.closeIn infile;
 let fun parse (filename, ()) = (
                 print ("Start to parse: " ^ filename ^ "\n");
-                Parse.parse filename)
+                Parse.parse filename) handle Overflow => (
+                        print("Int Overflow\n")
+                )
         in foldl parse () parseList 
 end;

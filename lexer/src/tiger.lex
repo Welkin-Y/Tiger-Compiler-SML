@@ -58,7 +58,8 @@ ints=[0-9]+;
 <INITIAL>"."   => (Tokens.DOT(yypos, yypos+1));
 <INITIAL>","	=> (Tokens.COMMA(yypos,yypos+1));
 <INITIAL>{ids}	=> (Tokens.ID(yytext, yypos, yypos+size yytext));
-<INITIAL>{ints}	=> (Tokens.INT(valOf (Int.fromString yytext), yypos, yypos+size yytext));
+<INITIAL>{ints}	=> (Tokens.INT(valOf (Int.fromString yytext) , yypos, yypos+size yytext) handle Overflow => (
+ErrorMsg.error yypos ("int overflow " ^ yytext); continue()));
 <INITIAL>{strs}	=> (Tokens.STRING(yytext, yypos, yypos+size yytext));
 
 <INITIAL>" "     => (continue());
