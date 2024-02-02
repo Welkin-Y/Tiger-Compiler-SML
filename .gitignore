@@ -2,3 +2,4 @@
 **/.cm
 .DS_Store
 **/tiger.lex.sml
+**/__pycache__

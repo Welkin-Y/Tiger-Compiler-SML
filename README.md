@@ -1,6 +1,27 @@
 # Tiger Compiler in SML - Documentation
 
+[![License](https://img.shields.io/badge/License-GLPv3-blue.svg)](https://gitlab.oit.duke.edu/zy96/553-compiler/-/blob/main/LICENSE)
+[![Build Status](https://gitlab.oit.duke.edu/zy96/553-compiler/badges/main/pipeline.svg)](https://gitlab.oit.duke.edu/zy96/553-compiler/pipelines)
+
 By Frank Fu (qf37), Janus Chen (jc977), and Welkin Yuan (zy96).
+
+## Test Environment
+```
+Distributor ID: Ubuntu  
+Description:    Ubuntu 22.04.3 LTS  
+Release:        22.04  
+Codename:       jammy  
+```
+
+## Dependencies
+Standard ML of New Jersey v110.79 [built: Sat Oct 26 12:27:04 2019]  
+Python 3.10.12  
+```
+sudo apt-get update -y  
+sudo apt-get install -y smlnj  
+sudo apt-get install -y ml-ulex  
+sudo apt-get install -y python3 python3-pip  
+```
 
 ## Code Structure
 
