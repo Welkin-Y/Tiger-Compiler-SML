@@ -20,6 +20,7 @@ Python 3.10.12
 sudo apt-get update -y  
 sudo apt-get install -y smlnj  
 sudo apt-get install -y ml-ulex  
+sudo apt-get install -y ml-yacc
 sudo apt-get install -y python3 python3-pip  
 ```
 
