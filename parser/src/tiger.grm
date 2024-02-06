@@ -1,3 +1,5 @@
+structure A = Absyn
+
 %%
 %term
     EOF 
@@ -11,7 +13,7 @@
   | BREAK | NIL
   | FUNCTION | VAR | TYPE 
 
-%nonterm  exp | program
+%nonterm  exp | program of A.exp
 
 %pos int
 %verbose
@@ -32,12 +34,7 @@
 
 %%
 
-(* This is a skeleton grammar file, meant to illustrate what kind of
- * declarations are necessary above the %% mark.  Students are expected
- *  to replace the two dummy productions below with an actual grammar. 
- *)
-
-program	: exp				()
+program	: exp				(exp)
 
 	
-exp: 			()
+exp: NIL		(A.NilExp)
