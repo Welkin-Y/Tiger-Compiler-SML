@@ -1,11 +1,11 @@
-structure Parse : sig val parse : string -> unit  end =
+structure ParseTest =
 struct 
   structure TigerLrVals = TigerLrValsFun(structure Token = LrParser.Token)
   structure Lex = TigerLexFun(structure Tokens = TigerLrVals.Tokens)
   structure TigerP = Join(structure ParserData = TigerLrVals.ParserData
 			structure Lex=Lex
 			structure LrParser = LrParser)
-  fun parse filename =
+  fun parse outStream filename =
       let val _ = (ErrorMsg.reset(); ErrorMsg.fileName := filename)
 	  val file = TextIO.openIn filename
 	  fun get _ = TextIO.input file
@@ -13,9 +13,8 @@ struct
 	  val lexer = LrParser.Stream.streamify (Lex.makeLexer get)
 	  val (absyn, _) = TigerP.parse(30,lexer,parseerror,())
        in TextIO.closeIn file;
-	   absyn
+		PrintAbsyn.print(outStream, absyn)
       end handle LrParser.ParseError => raise ErrorMsg.Error
-
 end
 
 

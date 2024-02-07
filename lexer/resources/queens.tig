@@ -7,7 +7,7 @@ let
 	var row := intArray [ N ] of 0
 	var col := intArray [ N ] of 0
 	var diagl := intArray [N+N-l] of 0
-	var diag2 : = intArray [N+N-l] of 0
+	var diag2 := intArray [N+N-l] of 0
 
 	function printboard() =
 		(for i := 0 to N-l
