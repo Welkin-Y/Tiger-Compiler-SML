@@ -13,7 +13,7 @@ structure A = Absyn
   | BREAK | NIL
   | FUNCTION | VAR | TYPE 
 
-%nonterm  exp | program of A.exp
+%nonterm  exp of A.exp | program of A.exp | vardec of A.dec | dec of A.dec | args of A.exp list
 
 %pos int
 %verbose
@@ -37,4 +37,25 @@ structure A = Absyn
 program	: exp				(exp)
 
 	
-exp: NIL		(A.NilExp)
+exp: 
+NIL                 (A.NilExp)
+| INT               (A.IntExp(INT))
+| STRING            (A.StringExp(STRING, STRINGleft))
+| ID LPAREN args RPAREN	(A.CallExp({func=Symbol.symbol(ID), args=args, pos=IDleft}))	(* f(args) *)
+| ID LPAREN RPAREN	(A.CallExp({func=Symbol.symbol(ID), args=[], pos=IDleft}))		(* f() *)
+| exp PLUS exp      (A.OpExp({left=exp1, oper=A.PlusOp, right=exp2, pos=exp1left}))
+| exp MINUS exp     (A.OpExp({left=exp1, oper=A.MinusOp, right=exp2, pos=exp1left}))
+| exp TIMES exp     (A.OpExp({left=exp1, oper=A.TimesOp, right=exp2, pos=exp1left}))
+| exp DIVIDE exp    (A.OpExp({left=exp1, oper=A.DivideOp, right=exp2, pos=exp1left}))
+| exp EQ exp        (A.OpExp({left=exp1, oper=A.EqOp, right=exp2, pos=exp1left}))
+| exp NEQ exp       (A.OpExp({left=exp1, oper=A.NeqOp, right=exp2, pos=exp1left}))
+| exp LT exp        (A.OpExp({left=exp1, oper=A.LtOp, right=exp2, pos=exp1left}))
+| exp LE exp        (A.OpExp({left=exp1, oper=A.LeOp, right=exp2, pos=exp1left}))
+| exp GT exp        (A.OpExp({left=exp1, oper=A.GtOp, right=exp2, pos=exp1left}))
+| exp GE exp        (A.OpExp({left=exp1, oper=A.GeOp, right=exp2, pos=exp1left}))
+
+args: exp           ([exp])
+| exp COMMA args    (exp::args)
+
+
+
