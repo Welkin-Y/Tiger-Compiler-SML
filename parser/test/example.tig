@@ -1,1 +1,1 @@
-print("hello", "world", "ece", "553")
+if 5 then 2 else 0

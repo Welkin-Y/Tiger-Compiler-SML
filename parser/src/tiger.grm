@@ -11,7 +11,7 @@ structure A = Absyn
   | AND | OR | ASSIGN
   | ARRAY | IF | THEN | ELSE | WHILE | FOR | TO | DO | LET | IN | END | OF 
   | BREAK | NIL
-  | FUNCTION | VAR | TYPE 
+  | FUNCTION | VAR | TYPE | UMINUS
 
 %nonterm  exp of A.exp | program of A.exp | vardec of A.dec | dec of A.dec | args of A.exp list
 
@@ -25,6 +25,16 @@ structure A = Absyn
 
 %keyword WHILE FOR TO BREAK LET IN END FUNCTION VAR TYPE ARRAY IF THEN ELSE 
 	DO OF NIL
+
+%nonassoc EQ NEQ LT LE GT GE
+%left THEN ELSE
+%left AND OR
+%left EQ NEQ LT LE GT GE
+%left PLUS MINUS
+%left TIMES DIVIDE
+%left UMINUS
+
+
 
 %prefer THEN ELSE LPAREN
 
@@ -45,6 +55,7 @@ NIL                 (A.NilExp)
 | ID LPAREN RPAREN	(A.CallExp({func=Symbol.symbol(ID), args=[], pos=IDleft}))		(* f() *)
 | exp PLUS exp      (A.OpExp({left=exp1, oper=A.PlusOp, right=exp2, pos=exp1left}))
 | exp MINUS exp     (A.OpExp({left=exp1, oper=A.MinusOp, right=exp2, pos=exp1left}))
+| MINUS exp %prec UMINUS (A.OpExp({left=A.IntExp(0), oper=A.MinusOp, right=exp, pos=exp1left}))
 | exp TIMES exp     (A.OpExp({left=exp1, oper=A.TimesOp, right=exp2, pos=exp1left}))
 | exp DIVIDE exp    (A.OpExp({left=exp1, oper=A.DivideOp, right=exp2, pos=exp1left}))
 | exp EQ exp        (A.OpExp({left=exp1, oper=A.EqOp, right=exp2, pos=exp1left}))
@@ -53,8 +64,13 @@ NIL                 (A.NilExp)
 | exp LE exp        (A.OpExp({left=exp1, oper=A.LeOp, right=exp2, pos=exp1left}))
 | exp GT exp        (A.OpExp({left=exp1, oper=A.GtOp, right=exp2, pos=exp1left}))
 | exp GE exp        (A.OpExp({left=exp1, oper=A.GeOp, right=exp2, pos=exp1left}))
+| exp AND exp       (A.IfExp({test=exp1, then'=exp2, else'=NONE, pos=exp1left}))
+| exp OR exp        (A.IfExp({test=exp1, then'=exp1, else'=SOME(exp2), pos=exp1left}))
+| IF exp THEN exp   (A.IfExp({test=exp1, then'=exp2, else'=NONE, pos=exp1left}))
+| IF exp THEN exp ELSE exp (A.IfExp({test=exp1, then'=exp2, else'=SOME(exp3), pos=exp1left}))
 
-args: exp           ([exp])
+
+args: exp           (exp::nil)
 | exp COMMA args    (exp::args)
 
 
