@@ -1,5 +1,0 @@
-/*test case from textbook p97 */
-let var a := 5
-	function f() : int = g(a)
-	function g(i: int) = f()
-in f() end 
