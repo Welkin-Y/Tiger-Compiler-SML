@@ -102,6 +102,7 @@ ty: tyid							(A.NameTy(tyid, tyidleft))
 tyfield: ID COLON tyid				({name=Symbol.symbol ID, escape=ref true, typ=tyid, pos=IDleft})
 
 tyfields: tyfield COMMA tyfields	(tyfield::tyfields)
+| tyfield							(tyfield::nil)
 | 									(nil)
 
 (* declarition syntax *)
