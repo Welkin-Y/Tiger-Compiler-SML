@@ -42,7 +42,7 @@ structure A = Absyn
 %left PLUS MINUS
 %left TIMES DIVIDE
 %left UMINUS
-%left RBRACE
+%left RBRACE RPAREN RBRACK
 %right COLON
 
 
@@ -83,6 +83,11 @@ exp: NIL                 			(A.NilExp)
 | LET decs IN expseq END			(A.LetExp({decs=decs,body=A.SeqExp(expseq), pos=LETleft}))
 | lvalue ASSIGN exp           (A.AssignExp({var=lvalue, exp=exp, pos=lvalueleft}))
 | lvalue                      (A.VarExp(lvalue))
+(* Array Creation*)
+| ID LBRACK exp RBRACK OF exp (A.ArrayExp({typ=Symbol.symbol(ID), size=exp1, init=exp2, pos=IDleft}))
+(*Parentheses*)
+| LPAREN exp RPAREN           (exp)
+
 
 lvalue: ID                    (A.SimpleVar(Symbol.symbol(ID), IDleft))
 | lvalue DOT ID               (A.FieldVar(lvalue, Symbol.symbol(ID), IDleft))
