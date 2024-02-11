@@ -113,8 +113,8 @@ tydec: TYPE tyid EQ ty				(A.TypeDec([{name=tyid, ty=ty, pos=TYPEleft}]))
 vardec: VAR ID ASSIGN exp			(A.VarDec({name=Symbol.symbol(ID), escape=ref true, typ=NONE, init=exp, pos=VARleft}))
 | VAR ID COLON tyid ASSIGN exp		(A.VarDec({name=Symbol.symbol(ID), escape=ref true, typ=SOME(tyid,tyidleft), init=exp, pos=VARleft}))
 
-fundec: FUNCTION ID LPAREN tyfields RPAREN RPAREN EQ exp	(A.FunctionDec([{name=Symbol.symbol(ID),params=tyfields, result=NONE, body=exp, pos=FUNCTIONleft}]))
-| FUNCTION ID ID LPAREN tyfields RPAREN COLON tyid EQ exp		(A.FunctionDec([{name=Symbol.symbol(ID),params=tyfields, result=SOME(tyid, tyidleft), body=exp, pos=FUNCTIONleft}]))
+fundec: FUNCTION ID LPAREN tyfields RPAREN EQ exp	(A.FunctionDec([{name=Symbol.symbol(ID),params=tyfields, result=NONE, body=exp, pos=FUNCTIONleft}]))
+| FUNCTION ID LPAREN tyfields RPAREN COLON tyid EQ exp		(A.FunctionDec([{name=Symbol.symbol(ID),params=tyfields, result=SOME(tyid, tyidleft), body=exp, pos=FUNCTIONleft}]))
 
 decs: dec decs						(dec::decs)
 |									(nil)
