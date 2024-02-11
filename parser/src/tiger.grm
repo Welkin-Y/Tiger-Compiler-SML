@@ -82,7 +82,8 @@ args: exp           				(exp::nil)
 | exp COMMA args    				(exp::args)
 
 (* sequence of zero or more expressions, separated by semicolons. *)
-expseq: exp SEMICOLON expseq		((exp1,exp1left)::expseq)
+expseq: seq_cont					(seq_cont)
+| exp								((exp,expleft)::nil)
 |									(nil)
 
 (* A sequence of two or more expressions, surrounded by parentheses and separated by semicolons (exp; exp; . . . exp) evaluates all the expressions in order. The result of a sequence is the result (if any) yielded by the last of the expressions. *)
