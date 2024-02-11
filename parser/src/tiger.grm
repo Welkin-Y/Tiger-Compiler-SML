@@ -44,6 +44,8 @@ structure A = Absyn
 %left UMINUS
 %left RBRACE RPAREN RBRACK
 %right COLON
+%left ID
+%right LBRACK
 
 
 
@@ -90,8 +92,10 @@ exp: NIL                 			(A.NilExp)
 
 
 lvalue: ID                    (A.SimpleVar(Symbol.symbol(ID), IDleft))
-| lvalue DOT ID               (A.FieldVar(lvalue, Symbol.symbol(ID), IDleft))
-| lvalue LBRACK exp RBRACK    (A.SubscriptVar(lvalue, exp, exp1left))
+| lvalue DOT ID               (A.FieldVar(lvalue, Symbol.symbol(ID), lvalueleft))
+| lvalue LBRACK exp RBRACK    (A.SubscriptVar(lvalue, exp, lvalueleft))
+| ID LBRACK exp RBRACK        (A.SubscriptVar(A.SimpleVar(Symbol.symbol(ID), IDleft), exp, IDleft))
+
 
 args: exp           				(exp::nil)
 | exp COMMA args    				(exp::args)
