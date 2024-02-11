@@ -1,5 +1,6 @@
 structure A = Absyn
 
+
 %%
 %term
     EOF 
@@ -13,7 +14,7 @@ structure A = Absyn
   | BREAK | NIL
   | FUNCTION | VAR | TYPE | UMINUS
 
-%nonterm  exp of A.exp | program of A.exp 
+%nonterm  exp of A.exp | program of A.exp | lvalue of A.var
   | dec of A.dec | tydec of A.dec | vardec of A.dec | fundec of A.dec | decs of A.dec list 
   | ty of A.ty | tyid of Symbol.symbol 
   | tyfield of A.field | tyfields of A.field list
@@ -77,6 +78,12 @@ exp: NIL                 			(A.NilExp)
 | FOR ID ASSIGN exp TO exp DO exp	(A.ForExp({var=Symbol.symbol(ID),escape=ref true, lo=exp1, hi=exp2, body=exp3, pos=FORleft})) 
 | BREAK								(A.BreakExp(BREAKleft))
 | LET decs IN expseq END			(A.LetExp({decs=decs,body=A.SeqExp(expseq), pos=LETleft}))
+| lvalue ASSIGN exp           (A.AssignExp({var=lvalue, exp=exp, pos=lvalueleft}))
+| lvalue                      (A.VarExp(lvalue))
+
+lvalue: ID                    (A.SimpleVar(Symbol.symbol(ID), IDleft))
+| lvalue DOT ID               (A.FieldVar(lvalue, Symbol.symbol(ID), IDleft))
+| lvalue LBRACK exp RBRACK    (A.SubscriptVar(lvalue, exp, exp1left))
 
 args: exp           				(exp::nil)
 | exp COMMA args    				(exp::args)
