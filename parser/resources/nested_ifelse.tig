@@ -1,1 +1,1 @@
-if 5+5 then 2+3 else if col[i]=1 then 5 else 3+3
+if 1 then 0 else if 4 then 5 else 2
