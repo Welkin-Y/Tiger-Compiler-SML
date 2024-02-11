@@ -81,7 +81,7 @@ exp: NIL                 			(A.NilExp)
 args: exp           				(exp::nil)
 | exp COMMA args    				(exp::args)
 
-(* sequence of zero or more expressions, separated by semicolons. *)
+(* sequence of zero or more expressions, separated by semicolons. The result (if any) of the last exp in the sequence is then the result of the entire let-expression.*)
 expseq: seq_cont					(seq_cont)
 | exp								((exp,expleft)::nil)
 |									(nil)
