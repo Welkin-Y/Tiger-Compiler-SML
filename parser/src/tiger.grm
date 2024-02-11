@@ -13,7 +13,13 @@ structure A = Absyn
   | BREAK | NIL
   | FUNCTION | VAR | TYPE | UMINUS
 
-%nonterm  exp of A.exp | program of A.exp | vardec of A.dec | dec of A.dec | args of A.exp list
+%nonterm  exp of A.exp | program of A.exp 
+  | dec of A.dec | tydec of A.dec | vardec of A.dec | fundec of A.dec | decs of A.dec list 
+  | ty of A.ty | tyid of Symbol.symbol 
+  | tyfield of A.field | tyfields of A.field list
+  | args of A.exp list 
+  | expseq of (A.exp * A.pos) list
+  | seq_cont of (A.exp * A.pos) list | seq of (A.exp * A.pos) list
 
 %pos int
 %verbose
@@ -26,13 +32,14 @@ structure A = Absyn
 %keyword WHILE FOR TO BREAK LET IN END FUNCTION VAR TYPE ARRAY IF THEN ELSE 
 	DO OF NIL
 
-%nonassoc EQ NEQ LT LE GT GE
-%left THEN ELSE
+%nonassoc EQ NEQ LT LE GT GE DO OF
+%left THEN ELSE 
 %left AND OR
-%left EQ NEQ LT LE GT GE
 %left PLUS MINUS
 %left TIMES DIVIDE
 %left UMINUS
+%left RBRACE
+%right COLON
 
 
 
@@ -46,7 +53,6 @@ structure A = Absyn
 
 program: exp						(exp)
 
-	
 exp: NIL                 			(A.NilExp)
 | INT               				(A.IntExp(INT))
 | STRING            				(A.StringExp(STRING, STRINGleft))
@@ -65,13 +71,52 @@ exp: NIL                 			(A.NilExp)
 | exp GE exp        				(A.OpExp({left=exp1, oper=A.GeOp, right=exp2, pos=exp1left}))
 | exp AND exp       				(A.IfExp({test=exp1, then'=exp2, else'=NONE, pos=exp1left}))
 | exp OR exp        				(A.IfExp({test=exp1, then'=exp1, else'=SOME(exp2), pos=exp1left}))
-| IF exp THEN exp   				(A.IfExp({test=exp1, then'=exp2, else'=NONE, pos=exp1left}))
-| IF exp THEN exp ELSE exp 			(A.IfExp({test=exp1, then'=exp2, else'=SOME(exp3), pos=exp1left}))
-| WHILE exp DO exp					(A.WhileExp({test=exp1, body=exp2, pos=exp1left}))
-| FOR ID ASSIGN exp TO exp DO exp	(A.ForExp({var=Symbol.symbol(ID),escape=ref true, lo=exp1, hi=exp2, body=exp3, pos=exp1left})) 
+| IF exp THEN exp   				(A.IfExp({test=exp1, then'=exp2, else'=NONE, pos=IFleft}))
+| IF exp THEN exp ELSE exp 			(A.IfExp({test=exp1, then'=exp2, else'=SOME(exp3), pos=IFleft}))
+| WHILE exp DO exp					(A.WhileExp({test=exp1, body=exp2, pos=WHILEleft}))
+| FOR ID ASSIGN exp TO exp DO exp	(A.ForExp({var=Symbol.symbol(ID),escape=ref true, lo=exp1, hi=exp2, body=exp3, pos=FORleft})) 
+| BREAK								(A.BreakExp(BREAKleft))
+| LET decs IN expseq END			(A.LetExp({decs=decs,body=A.SeqExp(expseq), pos=LETleft}))
 
-args: exp           			(exp::nil)
-| exp COMMA args    			(exp::args)
+args: exp           				(exp::nil)
+| exp COMMA args    				(exp::args)
 
+(* sequence of zero or more expressions, separated by semicolons. *)
+expseq: exp SEMICOLON expseq		((exp1,exp1left)::expseq)
+|									(nil)
+
+(* A sequence of two or more expressions, surrounded by parentheses and separated by semicolons (exp; exp; . . . exp) evaluates all the expressions in order. The result of a sequence is the result (if any) yielded by the last of the expressions. *)
+seq: LPAREN seq_cont RPAREN			(seq_cont)
+
+seq_cont: exp SEMICOLON exp			((exp1, exp1left)::(exp2,exp2left)::nil)
+| exp SEMICOLON seq_cont			((exp, expleft)::seq_cont)
+
+(* data type syntax *)
+tyid: ID							(Symbol.symbol(ID))
+
+ty: tyid							(A.NameTy(tyid, tyidleft))
+| ARRAY OF tyid 					(A.ArrayTy(tyid, tyidleft))
+| LBRACE tyfields RBRACE			(A.RecordTy(tyfields))
+
+tyfield: ID COLON tyid				({name=Symbol.symbol ID, escape=ref true, typ=tyid, pos=IDleft})
+
+tyfields: tyfield COMMA tyfields	(tyfield::tyfields)
+| 									(nil)
+
+(* declarition syntax *)
+dec: tydec							(tydec)
+| vardec							(vardec)
+| fundec							(fundec)
+
+tydec: TYPE tyid EQ ty				(A.TypeDec([{name=tyid, ty=ty, pos=TYPEleft}]))		
+
+vardec: VAR ID ASSIGN exp			(A.VarDec({name=Symbol.symbol(ID), escape=ref true, typ=NONE, init=exp, pos=VARleft}))
+| VAR ID COLON tyid ASSIGN exp		(A.VarDec({name=Symbol.symbol(ID), escape=ref true, typ=SOME(tyid,tyidleft), init=exp, pos=VARleft}))
+
+fundec: FUNCTION ID LPAREN tyfields RPAREN RPAREN EQ exp	(A.FunctionDec([{name=Symbol.symbol(ID),params=tyfields, result=NONE, body=exp, pos=FUNCTIONleft}]))
+| FUNCTION ID ID LPAREN tyfields RPAREN COLON tyid EQ exp		(A.FunctionDec([{name=Symbol.symbol(ID),params=tyfields, result=SOME(tyid, tyidleft), body=exp, pos=FUNCTIONleft}]))
+
+decs: dec decs						(dec::decs)
+|									(nil)
 
 
