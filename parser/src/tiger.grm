@@ -89,6 +89,8 @@ exp: NIL                 			(A.NilExp)
 | ID LBRACK exp RBRACK OF exp (A.ArrayExp({typ=Symbol.symbol(ID), size=exp1, init=exp2, pos=IDleft}))
 (*Parentheses*)
 | LPAREN exp RPAREN           (exp)
+(*Sequence*)
+| seq                         (A.SeqExp(seq))
 
 
 lvalue: ID                    (A.SimpleVar(Symbol.symbol(ID), IDleft))
