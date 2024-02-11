@@ -36,10 +36,12 @@ structure A = Absyn
 %keyword WHILE FOR TO BREAK LET IN END FUNCTION VAR TYPE ARRAY IF THEN ELSE 
 	DO OF NIL
 
-%nonassoc EQ NEQ LT LE GT GE DO OF
+
 %right THEN
 %right ELSE
-%left AND OR
+%left OR
+%left AND
+%nonassoc EQ NEQ LT LE GT GE DO OF
 %left PLUS MINUS
 %left TIMES DIVIDE
 %left UMINUS
