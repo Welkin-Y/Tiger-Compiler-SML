@@ -37,7 +37,8 @@ structure A = Absyn
 	DO OF NIL
 
 %nonassoc EQ NEQ LT LE GT GE DO OF
-%left THEN ELSE 
+%right THEN
+%right ELSE
 %left AND OR
 %left PLUS MINUS
 %left TIMES DIVIDE
