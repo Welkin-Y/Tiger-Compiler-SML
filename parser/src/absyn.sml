@@ -19,23 +19,19 @@ and exp = VarExp of var
         | AssignExp of {var: var, exp: exp, pos: pos}
         | IfExp of {test: exp, then': exp, else': exp option, pos: pos}
         | WhileExp of {test: exp, body: exp, pos: pos}
-	| ForExp of {var: symbol, escape: bool ref,
+		| ForExp of {var: symbol, escape: bool ref,
 		     lo: exp, hi: exp, body: exp, pos: pos}
         | BreakExp of pos
         | LetExp of {decs: dec list, body: exp, pos: pos}
         | ArrayExp of {typ: symbol, size: exp, init: exp, pos: pos}
 
 and dec = FunctionDec of fundec list
-        | VarDec of {name: symbol,
-		     escape: bool ref,
-		     typ: (symbol * pos) option,
-		     init: exp,
-		     pos: pos}
-        | TypeDec of {name: symbol, ty: ty, pos: pos} list
+        | VarDec of vardec
+        | TypeDec of tydec list
 
 and ty = NameTy of symbol * pos
-       | RecordTy of field list
-       | ArrayTy of symbol * pos
+        | RecordTy of field list
+        | ArrayTy of symbol * pos
 
 and oper = PlusOp | MinusOp | TimesOp | DivideOp
          | EqOp | NeqOp | LtOp | LeOp | GtOp | GeOp
@@ -47,6 +43,11 @@ withtype field = {name: symbol, escape: bool ref,
 		   result: (symbol * pos) option,
 		   body: exp,
 		   pos: pos}
-     
+   and vardec = {name: symbol,
+		     escape: bool ref,
+		     typ: (symbol * pos) option,
+		     init: exp,
+		     pos: pos}
+   and tydec = {name: symbol, ty: ty, pos: pos} 
 end
         

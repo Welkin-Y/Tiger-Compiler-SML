@@ -14,13 +14,16 @@ structure A = Absyn
   | BREAK | NIL
   | FUNCTION | VAR | TYPE | UMINUS
 
-%nonterm  exp of A.exp | program of A.exp | lvalue of A.var
-  | dec of A.dec | tydec of A.dec | vardec of A.dec | fundec of A.dec | decs of A.dec list 
+%nonterm  exp of A.exp | program of A.exp 
+  | lvalue of A.var
+  | dec of A.dec | decs of A.dec list 
+  | tydecs of A.tydec list | tydec of A.tydec 
+  | vardec of A.dec 
+  | fundecs of A.fundec list | fundec of A.fundec  
   | ty of A.ty | tyid of Symbol.symbol 
   | tyfield of A.field | tyfields of A.field list
   | args of A.exp list 
-  | expseq of (A.exp * A.pos) list
-  | seq_cont of (A.exp * A.pos) list | seq of (A.exp * A.pos) list
+  | expseq of (A.exp * A.pos) list | seq_cont of (A.exp * A.pos) list | seq of (A.exp * A.pos) list
 
 %pos int
 %verbose
@@ -113,17 +116,24 @@ tyfields: tyfield COMMA tyfields	(tyfield::tyfields)
 | 									(nil)
 
 (* declarition syntax *)
-dec: tydec							(tydec)
-| vardec							(vardec)
-| fundec							(fundec)
+dec: vardec							(vardec)
+| tydecs							(A.TypeDec(tydecs))
+| fundecs							(A.FunctionDec(fundecs))
 
-tydec: TYPE tyid EQ ty				(A.TypeDec([{name=tyid, ty=ty, pos=TYPEleft}]))		
+tydec: TYPE tyid EQ ty				({name=tyid, ty=ty, pos=TYPEleft})		
 
 vardec: VAR ID ASSIGN exp			(A.VarDec({name=Symbol.symbol(ID), escape=ref true, typ=NONE, init=exp, pos=VARleft}))
 | VAR ID COLON tyid ASSIGN exp		(A.VarDec({name=Symbol.symbol(ID), escape=ref true, typ=SOME(tyid,tyidleft), init=exp, pos=VARleft}))
 
-fundec: FUNCTION ID LPAREN tyfields RPAREN EQ exp	(A.FunctionDec([{name=Symbol.symbol(ID),params=tyfields, result=NONE, body=exp, pos=FUNCTIONleft}]))
-| FUNCTION ID LPAREN tyfields RPAREN COLON tyid EQ exp		(A.FunctionDec([{name=Symbol.symbol(ID),params=tyfields, result=SOME(tyid, tyidleft), body=exp, pos=FUNCTIONleft}]))
+(* A.fundec *)
+fundec: FUNCTION ID LPAREN tyfields RPAREN EQ exp			({name=Symbol.symbol(ID),params=tyfields, result=NONE, body=exp, pos=FUNCTIONleft})
+| FUNCTION ID LPAREN tyfields RPAREN COLON tyid EQ exp		({name=Symbol.symbol(ID),params=tyfields, result=SOME(tyid, tyidleft), body=exp, pos=FUNCTIONleft})
+
+tydecs: tydec tydecs				(tydec::tydecs)
+| tydec								(tydec::nil)
+
+fundecs: fundec fundecs				(fundec::fundecs)
+| fundec 							(fundec::nil)
 
 decs: dec decs						(dec::decs)
 |									(nil)
