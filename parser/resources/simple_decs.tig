@@ -1,0 +1,12 @@
+let
+    function func1 (a:int, b:int, c:int) = a + b + c
+    function func2 (a:int, b:int, c:int) = a * b * c
+    var a : string := "Hello"
+    var b : string := "World"
+    function func3 (a:int, b:int) = a + b
+    type ty1 = string
+    var d : ty1 := "!"
+    type ty2 = ty1
+    type ty3 = {first:ty1, second:ty2}
+in
+end
