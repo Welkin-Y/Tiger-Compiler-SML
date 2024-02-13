@@ -1,0 +1,17 @@
+LetExp([
+ TypeDec[
+  (a,
+   RecordTy[
+    (x,true,int),
+    (y,true,int)]),
+  (b,
+   RecordTy[
+    (x,true,a),
+    (y,true,int)])]],
+ SeqExp[
+  VarExp(
+   FieldVar(
+    FieldVar(
+     SimpleVar(b),
+     x),
+    x))])

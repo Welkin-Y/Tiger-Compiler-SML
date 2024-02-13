@@ -1,0 +1,15 @@
+LetExp([
+ TypeDec[
+  (a,
+   NameTy(b)),
+  (b,
+   NameTy(a)),
+  (tree,
+   RecordTy[
+    (key,true,int),
+    (children,true,treelist)]),
+  (treelist,
+   RecordTy[
+    (hd,true,tree),
+    (tl,true,treelist)])]],
+ SeqExp[])

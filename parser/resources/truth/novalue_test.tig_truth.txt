@@ -1,0 +1,4 @@
+LetExp([
+ VarDec(senpai,false,SOME(string),
+  StringExp("yaju"))],
+ SeqExp[])

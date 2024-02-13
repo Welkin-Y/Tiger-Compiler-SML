@@ -6,25 +6,15 @@ fun dropNewline str =
 
 val inp = TextIO.inputLine TextIO.stdIn;
 val direct = dropNewline (Option.valOf inp);
-val testPath = OS.FileSys.fullPath direct;
-val dir = OS.FileSys.openDir testPath;
-OS.FileSys.chDir testPath;
+val filename = OS.FileSys.fullPath direct;
 
-
-
-fun runTest (di) =
-    case OS.FileSys.readDir di of
-    NONE => print "\n------Done------\n"
-    | SOME f => parseHelper(f, di)
-and parseHelper (f, di) = 
-    let 
-    val _ = print("\n------Parsing " ^ f ^ "------\n");
-    val _ = ParseTest.parse TextIO.stdOut f;
+fun runTest (filename) = 
+    let
+    val _ = ParseTest.parse TextIO.stdErr filename;
     in
-    runTest di
+    ()
     end;
 
-runTest dir;
-OS.FileSys.closeDir dir;
+runTest filename;
 
 

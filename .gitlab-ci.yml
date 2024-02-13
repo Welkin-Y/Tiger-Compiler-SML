@@ -15,6 +15,7 @@ before_script:
   - apt-get update -qy
   - apt-get install -y smlnj
   - apt-get install -y ml-ulex
+  - apt-get install -y ml-yacc
   #- echo "Before script section"
   #- echo "For example you might run an update here or install a build dependency"
   #- echo "Or perhaps you might print out some debugging details"
@@ -33,11 +34,11 @@ test_lexer:
   script:
     - ./lexer/test/unitTest.py
 
-#test_parser:
-#stage: test
-#script:
-    # - echo "Do another parallel test here"
-    # - echo "For example run a lint test"
+test_parser:
+stage: test
+script:
+    - cd ./parser/test/
+    - ./run_test.sh ../resources
 
     #deploy1:
     #stage: deploy

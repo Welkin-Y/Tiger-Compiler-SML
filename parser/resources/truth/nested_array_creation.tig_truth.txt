@@ -1,0 +1,8 @@
+LetExp([
+ VarDec(v,false,NONE,
+  ArrayExp(arr2,
+   IntExp(3),
+   ArrayExp(int,
+    IntExp(3),
+    IntExp(1))))],
+ SeqExp[])
