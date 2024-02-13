@@ -37,7 +37,7 @@ struct
 				) 
 			| A.BreakExp(_) => ()
 			| A.LetExp({decs, body, pos}) => (
-					let val newEnv = traverseDecs(env, d, decs) in 
+					let val newEnv = traverseDecs(env, d + 1, decs) in 
 						traverseExp(newEnv, d + 1, body) end
 				)
 			| A.ArrayExp({typ, size, init, pos}) => (traverseExp(env, d, size); traverseExp(env, d, init))
@@ -62,7 +62,7 @@ struct
 											)
 									val newEnv = foldl traversparam env (#params func)
 								in
-									traverseExp(newEnv, d+1, #body func)
+									traverseExp(newEnv, d + 1, #body func)
 								end
 					in
 						List.app traversefunc funcs;

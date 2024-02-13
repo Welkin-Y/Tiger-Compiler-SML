@@ -94,6 +94,8 @@ exp: NIL                 			(A.NilExp)
 | LPAREN exp RPAREN           (exp)
 (*Sequence*)
 | seq                         (A.SeqExp(seq))
+| LPAREN RPAREN               (A.SeqExp([]))
+
 
 
 lvalue: ID                    (A.SimpleVar(Symbol.symbol(ID), IDleft))
