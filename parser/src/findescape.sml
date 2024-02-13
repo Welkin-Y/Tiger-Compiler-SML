@@ -33,7 +33,7 @@ struct
 					traverseExp(env, d, lo); 
 					traverseExp(env, d, hi);
 					escape := false; (* initially not escaping *)
-					let val newEnv = S.enter(env, var, (d, escape)) in traverseExp(newEnv, d+1, body) end 
+					let val newEnv = S.enter(env, var, (d, escape)) in traverseExp(newEnv, d, body) end 
 				) 
 			| A.BreakExp(_) => ()
 			| A.LetExp({decs, body, pos}) => (
