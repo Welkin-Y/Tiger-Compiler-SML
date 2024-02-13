@@ -16,10 +16,10 @@ structure A = Absyn
 
 %nonterm  exp of A.exp | program of A.exp 
   | lvalue of A.var
-  | dec of A.dec | decs of A.dec list 
+  | decs of A.dec list | tydecs_end of A.dec list | fundecs_end of A.dec list
   | tydecs of A.tydec list | tydec of A.tydec 
   | vardec of A.dec 
-  | fundecs of A.fundec list | fundec of A.fundec  
+  | fundecs of A.fundec list | fundec of A.fundec 
   | ty of A.ty | tyid of Symbol.symbol 
   | tyfield of A.field | tyfields of A.field list | tyfield_cont of A.field list
   | args of A.exp list 
@@ -133,16 +133,11 @@ tyfields: tyfield_cont				(tyfield_cont)
 | 									(nil)
 
 (* declarition syntax *)
-dec: vardec							(vardec)
-| tydecs							(A.TypeDec(tydecs))
-| fundecs							(A.FunctionDec(fundecs))
-
 tydec: TYPE tyid EQ ty				({name=tyid, ty=ty, pos=TYPEleft})		
 
 vardec: VAR ID ASSIGN exp			(A.VarDec({name=Symbol.symbol(ID), escape=ref true, typ=NONE, init=exp, pos=VARleft}))
 | VAR ID COLON tyid ASSIGN exp		(A.VarDec({name=Symbol.symbol(ID), escape=ref true, typ=SOME(tyid,tyidleft), init=exp, pos=VARleft}))
 
-(* A.fundec *)
 fundec: FUNCTION ID LPAREN tyfields RPAREN EQ exp			({name=Symbol.symbol(ID),params=tyfields, result=NONE, body=exp, pos=FUNCTIONleft})
 | FUNCTION ID LPAREN tyfields RPAREN COLON tyid EQ exp		({name=Symbol.symbol(ID),params=tyfields, result=SOME(tyid, tyidleft), body=exp, pos=FUNCTIONleft})
 
@@ -152,7 +147,17 @@ tydecs: tydec tydecs 				(tydec::tydecs)
 fundecs: fundec fundecs				(fundec::fundecs)
 | fundec 							(fundec::nil)
 
-decs: dec decs						(dec::decs)
+tydecs_end: vardec decs      		(vardec::decs)
+| fundecs fundecs_end				(A.FunctionDec(fundecs)::fundecs_end)
+|                        			(nil)
+
+fundecs_end: vardec decs 			(vardec::decs)
+| tydecs tydecs_end        			(A.TypeDec(tydecs)::tydecs_end)
+| 									(nil)
+
+decs: vardec decs					(vardec::decs)
+| tydecs tydecs_end					(A.TypeDec(tydecs)::tydecs_end)
+| fundecs fundecs_end 				(A.FunctionDec(fundecs)::fundecs_end)
 | 									(nil)
 
 
