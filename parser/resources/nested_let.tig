@@ -1,4 +1,7 @@
-let var aaa:=114514 in
-	let function f(mune:int):int = mune+aaa 
-	end
-in end
+let 
+	var aaa:=114514 
+in
+	let 
+		function f(mune:int):int = mune+aaa 
+	in end
+end
