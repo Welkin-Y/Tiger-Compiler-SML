@@ -1,0 +1,26 @@
+LetExp([
+ FunctionDec[
+  (createAdder,[
+   (x,true,int)],
+NONE,
+   LetExp([
+    FunctionDec[
+     (adder,[
+      (y,false,int)],
+NONE,
+      OpExp(PlusOp,
+       VarExp(
+        SimpleVar(x)),
+       VarExp(
+        SimpleVar(y))))]],
+    SeqExp[
+     SeqExp[
+      AssignExp(
+       SimpleVar(add5),
+       CallExp(createAdder,[
+        IntExp(5)])),
+      AssignExp(
+       SimpleVar(result),
+       CallExp(add5,[
+        IntExp(10)]))]]))]],
+ SeqExp[])

@@ -1,0 +1,11 @@
+let
+    function a(m: int, n: int): int = 
+        b(m, n)
+    function b(x: int, y: int): int = 
+        a(x, y)
+    type list = int
+    function min(a: int, b: int) = 
+        max(a, b)
+    function max(l: int, r: int) = 
+        min(l, r)
+in end

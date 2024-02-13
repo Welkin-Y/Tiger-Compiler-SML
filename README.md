@@ -28,34 +28,17 @@ sudo apt-get install -y python3 python3-pip
 Our codebase is organized as follows:
 
 ```
-lexer
-├── resources 
-│   ├── basic.tig
-│   ├── basicComment.tig
-│   ├── comment_jc977.tig
-│   ├── comment_qf.tig
-│   ├── id_jc977.tig
-│   ├── identifier_qf.tig
-│   ├── largeInt_qf.tig
-│   ├── leadingZeroInt_qf.tig
-│   ├── numbers.tig
-│   ├── queens.tig
-│   ├── string_qf.tig
-│   ├── string_zy.tig
-│   └── strings_jc977.tig
-├── src
-│   ├── driver.sml
-│   ├── errormsg.sml
-│   ├── resources.cm
-│   ├── tiger.lex
-│   ├── tiger.lex.sml
-│   ├── tokens.sig
-│   └── tokens.sml
-└── test
-    ├── jc977Test.sml
-    ├── qfTest.sml
-    ├── runTest.sh
-    └── simpleTest.sml
+553-compiler/
+├── lexer
+│   ├── resources
+│   ├── src
+│   └── test
+└── parser
+    ├── resources
+    │   ├── tmp
+    │   └── truth
+    ├── src
+    └── test
 ```
 
 - `resources` directory: Contains test tiger source code files.
@@ -63,6 +46,7 @@ lexer
 - `test` directory: Contains code for testing. `simpleTest.sml` is a small test program for running a single test, and `runTest.sh` is a script for customizing test runs.
 
 ## Running the Code
+### lexer
 
 We've developed test scripts to run all predefined tests under the `lexer/resources` directory.
 
@@ -82,15 +66,46 @@ You can also directly call our lexer for a specific test file using the followin
 >> smlCopy codeCM.make "lexer/src/resources.cm";
 >> Parse.parse "your-test-source-file";
 ```
+### parser
+We've developed test scripts to run all predefined tests under the `parser/resources` directory.
+
+
+To do this, follow these steps:
+
+1. Navigate to the parent directory of `parser/test`.
+2. Run the `runTest.sh` script:
+
+```
+cd /path/to/parser-parent/parser/test
+./runTest.sh ../resources
+```
+
+
 
 ## Design Overview
+### Lexer
 
 We leveraged ML-Lex to facilitate our DFA lexer implementation.
 
-### Comments
+#### Comments
 
 Our lexer handles comments by "absorbing" them. It also supports nested comments. We introduced a new state called `COMMENT` in ML-Lex. When we encounter `/*`, we transition to the `COMMENT` state. To handle nested comments, we use the `commentDepth` variable in `errormessage.sml` to record the depth of nested comments. We return to the `INITIAL` state only when we encounter `*/` and the `commentDepth` is 0. All content within the `COMMENT` state is ignored.
 
-### Strings
+#### Strings
 
 We defined a `STRING` state to handle special characters in string literals. The lexer enters the `STRING` state when it encounters a quotation mark. The `STRING` state machine deals with multiline string formats using a specially designed regex pattern `/f___f/` and replaces supported escaped characters. The string literals stored in tokens will be represented without escape characters and multiline indicators (`/`).
+
+### Parser
+We leveraged ML-Yacc to facilitate our parser implementation.We adapted our lexer to work with ML-Yacc.
+
+All mentioned grammar rules in textbook are implemented and tested. 
+#### shift-reduce conflict
+Our parser have **0** shift-reduce conflict and 0 reduce-reduce conflict.
+We used two methods to resolve the shift-reduce conflict:
+
+1. for shift-reduce conflicts due to precedence, we used the `%nonassoc`, `%left`, `%right` directive to resolve the conflict.
+
+2. for shift-reduce conflicts due to ambiguity like the rules related to `tydec`, `fundec`. We add additional rules to resolve the conflict.
+
+#### Escape
+We implemented our findescape function in `src/findescape.sml` to analyze the variable escaping over the absract syntax tree.

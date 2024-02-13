@@ -1,0 +1,10 @@
+WhileExp(
+ OpExp(EqOp,
+  StringExp("hello"),
+  StringExp("world")),
+ LetExp([
+  VarDec(a,false,NONE,
+   IntExp(1))],
+  SeqExp[
+   VarExp(
+    SimpleVar(a))]))

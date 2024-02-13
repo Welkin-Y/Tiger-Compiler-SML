@@ -1,0 +1,12 @@
+let function max(a: int, b: int, c: int): int = 
+    let function helper(x: int, y: int): int =
+        if 2 then x else y
+    in 
+        let function min(a: int, b: int): int =
+            (if 3 then a else b;
+            if 4 then b else c)
+        in end
+    end
+in
+    if 1 then a else b
+end

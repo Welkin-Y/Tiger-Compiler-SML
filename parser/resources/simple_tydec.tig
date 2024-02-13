@@ -1,0 +1,8 @@
+let
+type point = {x:int,y:string}
+type tree = {left: int, right: int, val: int}
+type nil_t = {}
+type size_t = int
+type arr = array of string
+in
+end

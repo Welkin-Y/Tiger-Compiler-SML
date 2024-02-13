@@ -1,0 +1,43 @@
+LetExp([
+ FunctionDec[
+  (a,[
+   (m,false,int),
+   (n,false,int)],
+SOME(int),
+   CallExp(b,[
+    VarExp(
+     SimpleVar(m)),
+    VarExp(
+     SimpleVar(n))])),
+  (b,[
+   (x,false,int),
+   (y,false,int)],
+SOME(int),
+   CallExp(a,[
+    VarExp(
+     SimpleVar(x)),
+    VarExp(
+     SimpleVar(y))]))],
+ TypeDec[
+  (list,
+   NameTy(int))],
+ FunctionDec[
+  (min,[
+   (a,false,int),
+   (b,false,int)],
+NONE,
+   CallExp(max,[
+    VarExp(
+     SimpleVar(a)),
+    VarExp(
+     SimpleVar(b))])),
+  (max,[
+   (l,false,int),
+   (r,false,int)],
+NONE,
+   CallExp(min,[
+    VarExp(
+     SimpleVar(l)),
+    VarExp(
+     SimpleVar(r))]))]],
+ SeqExp[])

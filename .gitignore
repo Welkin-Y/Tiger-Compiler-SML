@@ -1,5 +1,8 @@
 /workplace
 **/.cm
 .DS_Store
-**/tiger.lex.sml
 **/__pycache__
+
+**/tiger.lex.sml
+**/tiger.grm.*
+**/tmp

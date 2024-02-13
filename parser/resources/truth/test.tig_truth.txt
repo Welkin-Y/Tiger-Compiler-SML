@@ -1,0 +1,7 @@
+OpExp(PlusOp,
+ OpExp(PlusOp,
+  OpExp(PlusOp,
+   IntExp(1),
+   IntExp(1)),
+  IntExp(1)),
+ IntExp(1))

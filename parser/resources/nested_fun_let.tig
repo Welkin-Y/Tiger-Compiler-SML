@@ -1,0 +1,15 @@
+let 
+    var a : int := 1
+    function fun() =
+        let 
+            var a : int := 2
+        in
+            let 
+            in
+                a
+            end
+        end
+    in
+        fun()
+    end
+    
