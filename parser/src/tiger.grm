@@ -125,7 +125,7 @@ ty: tyid							(A.NameTy(tyid, tyidleft))
 
 tyfield: ID COLON tyid				({name=Symbol.symbol ID, escape=ref true, typ=tyid, pos=IDleft})
 
-tyfield_cont: tyfield COMMA tyfield 	(tyfield::tyfield::nil)
+tyfield_cont: tyfield COMMA tyfield 	(tyfield1::tyfield2::nil)
 | tyfield COMMA tyfield_cont			(tyfield::tyfield_cont)
 
 tyfields: tyfield_cont				(tyfield_cont)
