@@ -1,0 +1,4 @@
+/* An open parenthesis followed by a close parenthesis (two separate /
+/ tokens) is an expression that yields no value. Similarly, a let expression with /
+/ nothing between the in and end yields no value.*/
+let var senpai: string := "yaju" in end

@@ -1,0 +1,47 @@
+LetExp([
+ FunctionDec[
+  (max,[
+   (a,false,int),
+   (b,false,int),
+   (c,true,int)],
+SOME(int),
+   LetExp([
+    FunctionDec[
+     (helper,[
+      (x,false,int),
+      (y,false,int)],
+SOME(int),
+      IfExp(
+       IntExp(2),
+       VarExp(
+        SimpleVar(x)),
+       VarExp(
+        SimpleVar(y))))]],
+    SeqExp[
+     LetExp([
+      FunctionDec[
+       (min,[
+        (a,false,int),
+        (b,false,int)],
+SOME(int),
+        SeqExp[
+         IfExp(
+          IntExp(3),
+          VarExp(
+           SimpleVar(a)),
+          VarExp(
+           SimpleVar(b))),
+         IfExp(
+          IntExp(4),
+          VarExp(
+           SimpleVar(b)),
+          VarExp(
+           SimpleVar(c)))])]],
+      SeqExp[])]))]],
+ SeqExp[
+  IfExp(
+   IntExp(1),
+   VarExp(
+    SimpleVar(a)),
+   VarExp(
+    SimpleVar(b)))])

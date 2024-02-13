@@ -1,0 +1,18 @@
+LetExp([
+ TypeDec[
+  (point,
+   RecordTy[
+    (x,true,int),
+    (y,true,string)]),
+  (tree,
+   RecordTy[
+    (left,true,int),
+    (right,true,int),
+    (val,true,int)]),
+  (nil_t,
+   RecordTy[]),
+  (size_t,
+   NameTy(int)),
+  (arr,
+   ArrayTy(string))]],
+ SeqExp[])

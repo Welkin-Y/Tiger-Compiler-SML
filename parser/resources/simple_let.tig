@@ -1,0 +1,8 @@
+/*test case adapted from textbook p97 */
+let var a := 5
+	function f() : int = g(a)
+	function g(i: int) = f()
+	var b := 7
+	type tree = {key: int, children: treelist}
+	type treelist = {head: tree, tail: treelist}
+in f() end 

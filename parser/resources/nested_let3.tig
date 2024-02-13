@@ -1,0 +1,9 @@
+let 
+    var x := 1
+    var y := 2
+in
+    (let 
+    in
+        x := x + 1
+    end; x + y)
+end

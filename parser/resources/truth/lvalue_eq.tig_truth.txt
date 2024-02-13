@@ -1,0 +1,15 @@
+IfExp(
+ OpExp(EqOp,
+  VarExp(
+   SubscriptVar(
+    SimpleVar(row),
+    VarExp(
+     SimpleVar(r)))),
+  IntExp(0)),
+ OpExp(EqOp,
+  VarExp(
+   SubscriptVar(
+    SimpleVar(row),
+    VarExp(
+     SimpleVar(v)))),
+  IntExp(1)))

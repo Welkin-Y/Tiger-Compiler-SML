@@ -1,0 +1,55 @@
+LetExp([
+ FunctionDec[
+  (func1,[
+   (a,false,int),
+   (b,false,int),
+   (c,false,int)],
+NONE,
+   OpExp(PlusOp,
+    OpExp(PlusOp,
+     VarExp(
+      SimpleVar(a)),
+     VarExp(
+      SimpleVar(b))),
+    VarExp(
+     SimpleVar(c)))),
+  (func2,[
+   (a,false,int),
+   (b,false,int),
+   (c,false,int)],
+NONE,
+   OpExp(TimesOp,
+    OpExp(TimesOp,
+     VarExp(
+      SimpleVar(a)),
+     VarExp(
+      SimpleVar(b))),
+    VarExp(
+     SimpleVar(c))))],
+ VarDec(a,false,SOME(string),
+  StringExp("Hello")),
+ VarDec(b,false,SOME(string),
+  StringExp("World")),
+ FunctionDec[
+  (func3,[
+   (a,false,int),
+   (b,false,int)],
+NONE,
+   OpExp(PlusOp,
+    VarExp(
+     SimpleVar(a)),
+    VarExp(
+     SimpleVar(b))))],
+ TypeDec[
+  (ty1,
+   NameTy(string))],
+ VarDec(d,false,SOME(ty1),
+  StringExp("!")),
+ TypeDec[
+  (ty2,
+   NameTy(ty1)),
+  (ty3,
+   RecordTy[
+    (first,true,ty1),
+    (second,true,ty2)])]],
+ SeqExp[])
