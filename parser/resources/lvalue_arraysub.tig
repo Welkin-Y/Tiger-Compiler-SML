@@ -1,0 +1,5 @@
+let
+    var a := int[10] of 5
+in
+    a[3]
+end

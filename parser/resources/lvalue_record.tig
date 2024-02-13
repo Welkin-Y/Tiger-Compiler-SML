@@ -1,0 +1,6 @@
+let
+    type a = {x: int, y: int}
+    type b = {x: a, y: int}
+in
+    b.x.x
+end
