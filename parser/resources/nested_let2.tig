@@ -1,0 +1,9 @@
+let
+  var x := 5
+in
+  let
+    var y := x + 10
+  in
+    y * 2
+  end
+end
