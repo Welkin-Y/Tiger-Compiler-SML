@@ -7,7 +7,7 @@ struct
 	
 	fun traverseVar(env: escEnv, d: depth, s: A.var): unit =
 			case s of A.SimpleVar(name, _) => 
-					(case S.look(env, name) of SOME (d', r) => if d < d' then r := true else ()
+					(case S.look(env, name) of SOME (d', r) => if d > d' then r := true else ()
 						| NONE => ())
 			| A.FieldVar(var, _, _) => traverseVar(env, d, var)
 			| A.SubscriptVar(var, exp, _) => (traverseExp(env, d, exp);traverseVar(env, d, var))
@@ -38,7 +38,7 @@ struct
 			| A.BreakExp(_) => ()
 			| A.LetExp({decs, body, pos}) => (
 					let val newEnv = traverseDecs(env, d, decs) in 
-						traverseExp(newEnv, d, body) end
+						traverseExp(newEnv, d + 1, body) end
 				)
 			| A.ArrayExp({typ, size, init, pos}) => (traverseExp(env, d, size); traverseExp(env, d, init))
 
