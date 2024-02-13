@@ -35,10 +35,10 @@ test_lexer:
     - ./lexer/test/unitTest.py
 
 test_parser:
-stage: test
-script:
-    - cd ./parser/test/
-    - ./run_test.sh ../resources
+  stage: test
+  script:
+      - cd ./parser/test/
+      - ./run_test.sh ../resources
 
     #deploy1:
     #stage: deploy
