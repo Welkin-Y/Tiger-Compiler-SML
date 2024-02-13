@@ -38,7 +38,7 @@ test_parser:
   stage: test
   script:
       - cd ./parser/test/
-      - ./run_test.sh ../resources
+      - ./run-test.sh ../resources
 
     #deploy1:
     #stage: deploy
