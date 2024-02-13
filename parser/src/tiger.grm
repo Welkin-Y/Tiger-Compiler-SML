@@ -21,7 +21,7 @@ structure A = Absyn
   | vardec of A.dec 
   | fundecs of A.fundec list | fundec of A.fundec  
   | ty of A.ty | tyid of Symbol.symbol 
-  | tyfield of A.field | tyfields of A.field list | tyfield_end of A.field list
+  | tyfield of A.field | tyfields of A.field list | tyfield_cont of A.field list
   | args of A.exp list 
   | expseq of (A.exp * A.pos) list | seq_cont of (A.exp * A.pos) list | seq of (A.exp * A.pos) list
 
@@ -125,10 +125,10 @@ ty: tyid							(A.NameTy(tyid, tyidleft))
 
 tyfield: ID COLON tyid				({name=Symbol.symbol ID, escape=ref true, typ=tyid, pos=IDleft})
 
-tyfield_end: tyfield COMMA tyfield 	(tyfield::tyfield::nil)
-| tyfield COMMA tyfield_end			(tyfield::tyfield_end)
+tyfield_cont: tyfield COMMA tyfield 	(tyfield::tyfield::nil)
+| tyfield COMMA tyfield_cont			(tyfield::tyfield_cont)
 
-tyfields: tyfield COMMA tyfield_end	(tyfield::tyfield_end)
+tyfields: tyfield_cont				(tyfield_cont)
 | tyfield							(tyfield::nil)
 | 									(nil)
 
