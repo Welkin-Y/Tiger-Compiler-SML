@@ -11,5 +11,6 @@ $/ml-yacc-lib.cm
 ../src/symbol.sml
 ../src/tiger.lex
 ../src/tiger.grm
+../src/findescape.sml
 prabsyn.sml
 parsetest.sml
