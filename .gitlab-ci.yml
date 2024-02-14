@@ -37,6 +37,7 @@ test_lexer:
 test_parser:
   stage: test
   script:
+      - ./lexer/test/testLexerConsistency.py
       - cd ./parser/test/
       - ./run-test.sh ../resources
 
