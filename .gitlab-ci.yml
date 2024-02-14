@@ -16,11 +16,12 @@ before_script:
   - apt-get install -y smlnj
   - apt-get install -y ml-ulex
   - apt-get install -y ml-yacc
+  - apt-get install -y ml-yacc
   #- echo "Before script section"
   #- echo "For example you might run an update here or install a build dependency"
   #- echo "Or perhaps you might print out some debugging details"
 
-# after_script:
+# # after_script:
   #- echo "After script section"
   #- echo "For example you might do some cleanup here"
 
