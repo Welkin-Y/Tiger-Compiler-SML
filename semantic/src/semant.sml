@@ -9,8 +9,9 @@ struct
     type expty = {exp: Translate.exp, ty: T.ty}
 
 
-    fun transVar (venv: venv, tenv: tenv, var: A.var) = {exp = (), ty = T.INT}
-    fun transExp (venv: venv, tenv: tenv, var: A.exp) = {exp = (), ty = T.INT}
-    fun transDec (venv: venv, tenv: tenv, dec: A.dec) = {venv = venv, tenv = tenv}
-    fun transTy (tenv: tenv, ty: A.ty) = T.INT
+    fun transVar (venv, tenv, var) = {exp = (), ty = T.INT}
+    fun transExp (venv, tenv, exp) = {exp = (), ty = T.INT}
+    fun transDec (venv, tenv, dec) = {venv = venv, tenv = tenv}
+    fun transTy (tenv, ty) = T.INT
+    fun transProg (exp: A.exp) = (transExp (Env.base_venv, Env.base_tenv, exp); print "yeah";())
 end

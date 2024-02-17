@@ -12,9 +12,11 @@ $/ml-yacc-lib.cm
 ../../parser/src/tiger.lex
 ../../parser/src/tiger.grm
 ../../parser/src/findescape.sml
+../../parser/test/prabsyn.sml
 ../src/semant.sml
 ../src/types.sml
 ../src/semant.sig
 ../src/env.sig
 ../src/env.sml
+semanttest.sml
 

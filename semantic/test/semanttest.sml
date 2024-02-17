@@ -1,4 +1,4 @@
-structure SemantTest =
+structure ParserSemant =
 struct 
   structure TigerLrVals = TigerLrValsFun(structure Token = LrParser.Token)
   structure Lex = TigerLexFun(structure Tokens = TigerLrVals.Tokens)
@@ -15,7 +15,7 @@ struct
        in TextIO.closeIn file;
 	   	FindEscape.findEscape absyn;
 		PrintAbsyn.print(outStream, absyn);
-        Semant.transExp absyn
+        absyn
       end handle LrParser.ParseError => raise ErrorMsg.Error
 end
 
