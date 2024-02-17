@@ -1,1 +1,4 @@
-if 0 then "hello" else "hi"
+let
+    var a : int := 1
+in
+end

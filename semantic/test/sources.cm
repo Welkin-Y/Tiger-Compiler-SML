@@ -18,5 +18,6 @@ $/ml-yacc-lib.cm
 ../src/semant.sig
 ../src/env.sig
 ../src/env.sml
+../src/abbr.sml
 semanttest.sml
 

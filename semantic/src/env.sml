@@ -2,11 +2,11 @@ structure Env :> ENV =
 struct
 type access = unit
     (* to be implemented *)
-type ty = Types.ty
-datatype enventry = VarEntry of {ty: ty}
-                    | FunEntry of {formals: ty list, result: ty}
+
+datatype enventry = VarEntry of {ty: T.ty}
+                    | FunEntry of {formals: T.ty list, result: T.ty}
 val base_tenv = let 
-                val envmap : (ty Symbol.table) = Symbol.empty
+                val envmap : (T.ty Symbol.table) = Symbol.empty
                 val initlist = [(Symbol.symbol "int", Types.INT), 
                     (Symbol.symbol "string", Types.STRING), 
                     (Symbol.symbol "nil", Types.NIL),
