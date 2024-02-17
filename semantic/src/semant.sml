@@ -8,7 +8,6 @@ struct
     type tytenv = T.ty Symbol.table
     type expty = {exp: Translate.exp, ty: T.ty}
 
-
     fun transVar (venv , tenv, var) = {exp = (), ty = T.INT}
     and transExp (venv : tyvenv, tenv: tytenv, exp: A.exp) = 
         case exp of 
@@ -57,5 +56,7 @@ struct
                 end
           
     and transTy (tenv, ty) = T.INT
-    and transProg (exp: A.exp) = (transExp (Env.base_venv, Env.base_tenv, exp); print "\nSemantic Analysis Succeed\n";())
+    and transProg (exp: A.exp) = (transExp (Env.base_venv, Env.base_tenv, exp);
+     print "\nSemantic Analysis Succeed\n";
+     ())
 end
