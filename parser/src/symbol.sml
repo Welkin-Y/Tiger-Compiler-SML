@@ -7,6 +7,7 @@ sig
   val empty : 'a table
   val enter : 'a table * symbol * 'a -> 'a table
   val look  : 'a table * symbol -> 'a option
+  val app : ('a -> unit) -> 'a table -> unit
 end
 
 structure Symbol :> SYMBOL =
@@ -40,4 +41,5 @@ struct
   val empty = Table.empty
   val enter = Table.enter
   val look = Table.look
+  val app = Table.app
 end
