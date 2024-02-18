@@ -12,31 +12,69 @@ struct
     and transExp (venv : tyvenv ref, tenv: tytenv ref, exp: A.exp) = 
         case exp of 
             (*To check an IfExp we need to make sure: 1. test is int 2. then and else have same types*)
-            A.IfExp {test, then', else', pos} => let 
-                                                val {exp=expelse, ty=tyelse} = case else' of
-                                                    NONE => {exp=(), ty=T.INT}
-                                                    | SOME e => transExp (venv, tenv, e)
-                                                val {exp=_, ty=tythen} = transExp (venv, tenv, then')
-                                                val {exp=_, ty=tytest} = transExp (venv, tenv, test) 
-                                                in
-                                                case tytest of
-                                                    T.INT => ()
-                                                    | _ => raise ErrorMsg.Error;
-                                                if expelse = () then {exp=(), ty=tythen}
-                                                else if tythen = tyelse then {exp=(), ty=tythen}
-                                                else raise ErrorMsg.Error
-                                                end
+            A.IfExp {test, then', else', pos} => 
+            let 
+                val {exp=expelse, ty=tyelse} = case else' of
+                    NONE => {exp=(), ty=T.NIL}
+                    | SOME e => transExp (venv, tenv, e)
+                val {exp=_, ty=tythen} = transExp (venv, tenv, then')
+                val {exp=_, ty=tytest} = transExp (venv, tenv, test) 
+            in
+                case tytest of
+                    T.INT => ()
+                    | _ => raise ErrorMsg.Error;
+                if tythen <> tyelse then ErrorMsg.error pos (" Unmatched type: then exp is " ^ T.toString tythen ^ ", else exp is " ^ T.toString tyelse) else ();
+                {exp=(), ty=tythen}
+            end
+            | A.OpExp {left, oper, right, pos} =>
+            let
+                val {exp=_, ty=tyleft} = transExp (venv, tenv, left)
+                val {exp=_, ty=tyright} = transExp (venv, tenv, right)
+            in
+                case oper of
+                    A.PlusOp => if tyleft = T.INT andalso tyright = T.INT then {exp=(), ty=T.INT}
+                                else raise ErrorMsg.Error
+                    | A.MinusOp => if tyleft = T.INT andalso tyright = T.INT then {exp=(), ty=T.INT}
+                                else raise ErrorMsg.Error
+                    | A.TimesOp => if tyleft = T.INT andalso tyright = T.INT then {exp=(), ty=T.INT}
+                                else raise ErrorMsg.Error
+                    | A.DivideOp => if tyleft = T.INT andalso tyright = T.INT then {exp=(), ty=T.INT}
+                                else raise ErrorMsg.Error
+                    | A.EqOp => if tyleft = tyright then {exp=(), ty=T.INT}
+                                else raise ErrorMsg.Error
+                    | A.NeqOp => if tyleft = tyright then {exp=(), ty=T.INT}
+                                else raise ErrorMsg.Error
+                    | A.LtOp => if tyleft = tyright then {exp=(), ty=T.INT}
+                                else raise ErrorMsg.Error
+                    | A.LeOp => if tyleft = tyright then {exp=(), ty=T.INT}
+                                else raise ErrorMsg.Error
+                    | A.GtOp => if tyleft = tyright then {exp=(), ty=T.INT}
+                                else raise ErrorMsg.Error
+                    | A.GeOp => if tyleft = tyright then {exp=(), ty=T.INT}
+                                else raise ErrorMsg.Error
+            end
             (* Check Let Exp: 1. gothrough decs 2. go through body*)
             | A.LetExp {decs, body, pos} => let
-                                            val {venv=venv', tenv=tenv'} = foldl (fn (dec, {venv, tenv}) => transDec (venv, tenv, dec)) {venv=venv, tenv=tenv} decs
-                                            in
-                                            transExp (venv', tenv', body)
-                                            end
+                val {venv=venv', tenv=tenv'} = foldl (fn (dec, {venv, tenv}) => transDec (venv, tenv, dec)) {venv=venv, tenv=tenv} decs
+            in
+                print ("begin to check body\n");
+                transExp (venv', tenv', body)
+            end
             | A.IntExp _ => {exp=(), ty=T.INT}
             | A.StringExp _ => {exp=(), ty=T.STRING}
             | A.NilExp => {exp=(), ty=T.NIL}
-            (*Seq Exp do nothing for now*)
-            | A.SeqExp exps => {exp=(), ty=T.UNIT}
+            | A.SeqExp exps => let
+                val explist : Translate.exp list = []
+                fun helper ((exp, _), ty) = let
+                    val {exp=entryExp, ty=entryTy} = transExp (venv, tenv, exp)
+                in
+                    explist = explist @ [entryExp];
+                    entryTy
+                end
+            in
+                {exp=(), ty=foldl helper T.NIL exps}
+            end
+            
 
     and transDec (venv : tyvenv ref, tenv: tytenv ref, dec : A.dec) = 
         case dec of
