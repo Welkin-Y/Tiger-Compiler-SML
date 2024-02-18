@@ -71,8 +71,7 @@ struct
             val tenv = let val env: tytenv = Env.base_tenv in ref env end
         in
             transExp (venv, tenv, exp);
-            PrintEnv.printTyEnv (!tenv);
-            PrintEnv.printVarEnv (!venv)
+            PrintEnv.printEnv(!(venv),!(tenv))
         end;
         print "\nSemantic Analysis Succeed\n"
     )
