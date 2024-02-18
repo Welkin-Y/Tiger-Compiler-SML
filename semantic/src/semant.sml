@@ -57,5 +57,10 @@ struct
                 end
           
     and transTy (tenv, ty) = T.INT
-    and transProg (exp: A.exp) = (transExp (Env.base_venv, Env.base_tenv, exp); print "\nSemantic Analysis Succeed\n";())
+    and transProg (exp: A.exp) = (
+        transExp (Env.base_venv, Env.base_tenv, exp);
+        print "\nSemantic Analysis Succeed\n";
+        PrintEnv.printEnv (Env.base_venv, Env.base_tenv);
+        ()
+    )
 end

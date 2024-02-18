@@ -11,4 +11,12 @@ struct
   | NAME of Symbol.symbol * ty option ref
   | UNIT
 
+  fun toString (RECORD _) = "RECORD"
+    | toString NIL = "NIL"
+    | toString INT = "INT"
+    | toString STRING = "STRING"
+    | toString (ARRAY _) = "ARRAY"
+    | toString (NAME _) = "NAME"
+    | toString UNIT = "UNIT"
+
 end

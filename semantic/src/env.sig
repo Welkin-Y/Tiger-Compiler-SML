@@ -5,4 +5,5 @@ sig
                         | FunEntry of {formals: T.ty list, result: T.ty}
     val base_tenv : T.ty Symbol.table
     val base_venv : enventry Symbol.table
+    val enventryToString : enventry -> string
 end
