@@ -79,7 +79,7 @@ struct
 
     and transDec (venv : tyvenv, tenv: tytenv, dec : A.dec) = 
         case dec of
-            (*To check a VarDec: 1. the type of init should be same as ty if there are ty 2. add Var to venv*)
+            (*To check a VarDec: 0. TODO: the proposed type exists 1. the type of init should be same as ty if there are ty 2. add Var to venv*)
             A.VarDec{name, escape, typ, init, pos}
 
              => let
@@ -99,15 +99,36 @@ struct
                     end
                     else raise ErrorMsg.Error
                 end
-          
+            | A.TypeDec tydecs => 
+            let 
+            val {venv=newvenv, tenv=newtenv} = foldl (fn (tydec, {venv, tenv}) => transTyDec (venv, tenv, tydec)) {venv=venv, tenv=tenv} tydecs
+            in
+                PrintEnv.printEnv (newvenv, newtenv);
+                {venv=newvenv, tenv=newtenv}
+            end
+    and transTyDec (venv, tenv, tydec) = 
+        let
+            val {name=n, ty=t, pos=p} = tydec
+        in 
+        case t of
+            (* TODO: cross recursion check e.g. type a = b; type b = a & mutual recursive type def & self recursive type def*)
+            A.NameTy (nRefTo, p') => 
+            let
+                val t = case Symbol.look (tenv, nRefTo) of
+                    NONE => raise ErrorMsg.Error
+                    | SOME ty => SOME ty
+            in
+                {venv=venv, tenv=Symbol.enter (tenv, n, T.NAME (n, (ref t)))}
+            end
+           (*TODO: ArrayTy & RecordTy*)
+        end
     and transTy (tenv, ty) = T.INT
     and transProg (exp: A.exp) = (
         let 
             val venv = Env.base_venv
             val tenv = Env.base_tenv 
         in
-            transExp (venv, tenv, exp);
-            PrintEnv.printEnv (venv, tenv)
+            transExp (venv, tenv, exp)
         end;
         print "\nSemantic Analysis Succeed\n"
     )

@@ -16,7 +16,7 @@ struct
     | toString INT = "INT"
     | toString STRING = "STRING"
     | toString (ARRAY _) = "ARRAY"
-    | toString (NAME _) = "NAME"
+    | toString (NAME n) = "NAME" ^ " " ^ (toString (Option.valOf (!(#2 n))))
     | toString UNIT = "UNIT"
 
 end
