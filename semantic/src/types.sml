@@ -11,12 +11,20 @@ struct
   | NAME of Symbol.symbol * ty option ref
   | UNIT
 
-  fun toString (RECORD _) = "RECORD"
+  fun symbolTyListToString (symbolTyList: (Symbol.symbol * ty) list) =
+    let
+        fun pairToString (symbol, ty) = Symbol.name symbol ^ ": " ^ toString ty
+        val stringList = List.map pairToString symbolTyList
+    in
+        String.concatWith ", " stringList
+    end
+  and toString (RECORD fields) = "RECORD of " ^ (symbolTyListToString (#1 fields))
     | toString NIL = "NIL"
     | toString INT = "INT"
     | toString STRING = "STRING"
-    | toString (ARRAY _) = "ARRAY"
-    | toString (NAME n) = "NAME" ^ " " ^ (toString (Option.valOf (!(#2 n))))
+    | toString (ARRAY n) = "ARRAY of " ^ (toString (#1 n))
+    (*cannot handle recursive tydef for now*)
+    | toString (NAME n) = "NAME " ^ (toString (Option.valOf (!(#2 n))))
     | toString UNIT = "UNIT"
 
 end

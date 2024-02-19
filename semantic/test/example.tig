@@ -1,4 +1,4 @@
 let 
-    type int_t = int
+    type t = {x: int, y: string}
 in
 end

@@ -121,6 +121,31 @@ struct
                 {venv=venv, tenv=Symbol.enter (tenv, n, T.NAME (n, (ref t)))}
             end
            (*TODO: ArrayTy & RecordTy*)
+           | A.ArrayTy (nRefTo, p') =>
+            let
+                val t = case Symbol.look (tenv, nRefTo) of
+                    NONE => raise ErrorMsg.Error
+                    | SOME ty => ty
+            in
+                {venv=venv, tenv=Symbol.enter (tenv, n, T.ARRAY (t, ref ()))}
+            end
+            | A.RecordTy fields =>
+            let
+                val fieldlist = []
+                fun helper (field, fieldlist) = let
+                    val {name, escape, typ, pos} = field
+                    val ty = case Symbol.look (tenv, typ) of
+                        NONE => raise ErrorMsg.Error
+                        | SOME ty => ty
+                in
+                    (name, ty)::fieldlist
+
+                end
+                val newfieldlist = foldr helper fieldlist fields
+                val recordTy = T.RECORD (newfieldlist, ref())
+            in
+                {venv=venv, tenv=Symbol.enter (tenv, n, recordTy)}
+            end
         end
     and transTy (tenv, ty) = T.INT
     and transProg (exp: A.exp) = (
@@ -128,7 +153,9 @@ struct
             val venv = Env.base_venv
             val tenv = Env.base_tenv 
         in
-            transExp (venv, tenv, exp)
+
+            transExp (venv, tenv, exp);
+            PrintEnv.printEnv (venv, tenv)
         end;
         print "\nSemantic Analysis Succeed\n"
     )
