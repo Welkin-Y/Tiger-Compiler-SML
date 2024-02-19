@@ -7,9 +7,10 @@ struct
     type tyvenv = Env.enventry Symbol.table
     type tytenv = T.ty Symbol.table
     type expty = {exp: Translate.exp, ty: T.ty}
+    
 
     fun transVar (venv , tenv, var) = {exp = (), ty = T.INT}
-    and transExp (venv : tyvenv ref, tenv: tytenv ref, exp: A.exp) = 
+    and transExp (venv : tyvenv, tenv: tytenv, exp: A.exp) = 
         case exp of 
             (*To check an IfExp we need to make sure: 1. test is int 2. then and else have same types*)
             A.IfExp {test, then', else', pos} => 
@@ -76,7 +77,7 @@ struct
             end
             
 
-    and transDec (venv : tyvenv ref, tenv: tytenv ref, dec : A.dec) = 
+    and transDec (venv : tyvenv, tenv: tytenv, dec : A.dec) = 
         case dec of
             (*To check a VarDec: 1. the type of init should be same as ty if there are ty 2. add Var to venv*)
             A.VarDec{name, escape, typ, init, pos}
@@ -85,31 +86,28 @@ struct
                 val {exp=_, ty=tyinit} = transExp (venv, tenv, init)
                 val newtyp = case typ of
                     NONE => tyinit
-                    | SOME t => case Symbol.look (!(tenv), #1 t) of 
+                    | SOME t => case Symbol.look (tenv, #1 t) of 
                         NONE => raise ErrorMsg.Error
-                        | SOME typppp => typppp
+                        | SOME ty => ty
                 in
-                if newtyp = tyinit then {venv = let val newEnv: tyvenv = Symbol.enter(!(venv), name, Env.VarEntry {ty=tyinit}) in ref(newEnv) end, tenv = tenv}
+                if newtyp = tyinit then 
+                    let 
+                    val newVenv =  Symbol.enter(venv, name, Env.VarEntry {ty=tyinit})
+                    val _ = PrintEnv.printEnv (newVenv,tenv)
+                    in
+                    {venv = newVenv, tenv = tenv}
+                    end
                     else raise ErrorMsg.Error
                 end
           
     and transTy (tenv, ty) = T.INT
     and transProg (exp: A.exp) = (
         let 
-            val venv = let val env: tyvenv = Env.base_venv in ref env end
-            val tenv = let val env: tytenv = Env.base_tenv in ref env end
-        in
-            transExp (venv, tenv, exp)
-        end;
-        print "\nSemantic Analysis Succeed\n"
-    )
-    and prTransProg (exp: A.exp) = (
-        let 
-            val venv = let val env: tyvenv = Env.base_venv in ref env end
-            val tenv = let val env: tytenv = Env.base_tenv in ref env end
+            val venv = Env.base_venv
+            val tenv = Env.base_tenv 
         in
             transExp (venv, tenv, exp);
-            PrintEnv.printEnv(!(venv),!(tenv))
+            PrintEnv.printEnv (venv, tenv)
         end;
         print "\nSemantic Analysis Succeed\n"
     )
