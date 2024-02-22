@@ -1,4 +1,5 @@
 let 
-    type t = {x: int, y: string}
+    type t = {x: int, y: z}
+    type z = {a: int, b: t}
 in
 end
