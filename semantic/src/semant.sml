@@ -9,8 +9,7 @@ struct
     type expty = {exp: Translate.exp, ty: T.ty}
     
 
-    fun transVar (venv , tenv, var) = {exp = (), ty = T.INT}
-    and transExp (venv : tyvenv, tenv: tytenv, exp: A.exp) = 
+    fun transExp (venv : tyvenv, tenv: tytenv, exp: A.exp) = 
             case exp of 
                 (*To check an IfExp we need to make sure: 1. test is int 2. then and else have same types*)
                 A.IfExp {test, then', else', pos} => 
@@ -24,7 +23,7 @@ struct
                         case tytest of
                             T.INT => ()
                         | _ => raise ErrorMsg.Error;
-                        if tythen <> tyelse then ErrorMsg.error pos (" Unmatched type: then exp is " ^ T.toString tythen ^ ", else exp is " ^ T.toString tyelse) else ();
+                        if not (T.equals(tythen, tyelse)) then ErrorMsg.error pos (" Unmatched type: then exp is " ^ T.toString tythen ^ ", else exp is " ^ T.toString tyelse) else ();
                         {exp=(), ty=tythen}
                     end
             | A.OpExp {left, oper, right, pos} =>
@@ -33,25 +32,25 @@ struct
                     val {exp=_, ty=tyright} = transExp (venv, tenv, right)
                 in
                     case oper of
-                        A.PlusOp => if tyleft = T.INT andalso tyright = T.INT then {exp=(), ty=T.INT}
+                        A.PlusOp => if T.equals(tyleft, T.INT) andalso T.equals(tyright, T.INT) then {exp=(), ty=T.INT}
                             else raise ErrorMsg.Error
-                    | A.MinusOp => if tyleft = T.INT andalso tyright = T.INT then {exp=(), ty=T.INT}
+                    | A.MinusOp => if T.equals(tyleft, T.INT) andalso T.equals(tyright, T.INT) then {exp=(), ty=T.INT}
                         else raise ErrorMsg.Error
-                    | A.TimesOp => if tyleft = T.INT andalso tyright = T.INT then {exp=(), ty=T.INT}
+                    | A.TimesOp => if T.equals(tyleft, T.INT) andalso T.equals(tyright, T.INT) then {exp=(), ty=T.INT}
                         else raise ErrorMsg.Error
-                    | A.DivideOp => if tyleft = T.INT andalso tyright = T.INT then {exp=(), ty=T.INT}
+                    | A.DivideOp => if T.equals(tyleft, T.INT) andalso T.equals(tyright, T.INT) then {exp=(), ty=T.INT}
                         else raise ErrorMsg.Error
-                    | A.EqOp => if tyleft = tyright then {exp=(), ty=T.INT}
+                    | A.EqOp => if T.equals(tyleft, tyright) then {exp=(), ty=T.INT}
                         else raise ErrorMsg.Error
-                    | A.NeqOp => if tyleft = tyright then {exp=(), ty=T.INT}
+                    | A.NeqOp => if T.equals(tyleft, tyright) then {exp=(), ty=T.INT}
                         else raise ErrorMsg.Error
-                    | A.LtOp => if tyleft = tyright then {exp=(), ty=T.INT}
+                    | A.LtOp => if T.equals(tyleft, tyright) then {exp=(), ty=T.INT}
                         else raise ErrorMsg.Error
-                    | A.LeOp => if tyleft = tyright then {exp=(), ty=T.INT}
+                    | A.LeOp => if T.equals(tyleft, tyright) then {exp=(), ty=T.INT}
                         else raise ErrorMsg.Error
-                    | A.GtOp => if tyleft = tyright then {exp=(), ty=T.INT}
+                    | A.GtOp => if T.equals(tyleft, tyright) then {exp=(), ty=T.INT}
                         else raise ErrorMsg.Error
-                    | A.GeOp => if tyleft = tyright then {exp=(), ty=T.INT}
+                    | A.GeOp => if T.equals(tyleft, tyright) then {exp=(), ty=T.INT}
                         else raise ErrorMsg.Error
                 end
             (* Check Let Exp: 1. gothrough decs 2. go through body*)
@@ -82,14 +81,14 @@ struct
                     val {exp=_, ty=tyvar} = transVar (venv, tenv, var)
                     val {exp=_, ty=tyexp} = transExp (venv, tenv, exp)
                 in
-                    if tyvar = tyexp then {exp=(), ty=tyvar}
+                    if T.equals(tyvar, tyexp) then {exp=(), ty=tyvar}
                     else raise ErrorMsg.Error
                 end
             | A.WhileExp {test, body, pos} => let
                     val {exp=_, ty=tytest} = transExp (venv, tenv, test)
                     val {exp=_, ty=tybody} = transExp (venv, tenv, body)
                 in
-                    if tytest = T.INT then ()
+                    if T.equals(tytest, T.INT) then ()
                     else raise ErrorMsg.Error;
                     {exp=(), ty=tybody}
                 end
@@ -100,7 +99,7 @@ struct
                     val {exp=_, ty=tybody} = transExp (newVenv, tenv, body)
                 in          
                     PrintEnv.printEnv (newVenv, tenv);
-                    if tylo = T.INT andalso tyhi = T.INT then ()
+                    if T.equals(tylo, T.INT) andalso T.equals(tyhi, T.INT) then ()
                     else raise ErrorMsg.Error;
                     {exp=(), ty=tybody}
                 end
@@ -121,7 +120,7 @@ struct
                                     NONE => raise ErrorMsg.Error
                                 | SOME ty => ty
                     in
-                        if newtyp = tyinit then 
+                        if T.equals(newtyp, tyinit) then 
                             let 
                                 val newVenv =  Symbol.enter(venv, name, Env.VarEntry {ty=tyinit})
                                 val _ = PrintEnv.printEnv (newVenv,tenv)
@@ -132,7 +131,53 @@ struct
                     end
             | A.TypeDec tydecs => 
                 let 
-                    val {venv=newvenv, tenv=newtenv} = foldl (fn (tydec, {venv, tenv}) => transTyDec (venv, tenv, tydec)) {venv=venv, tenv=tenv} tydecs
+                    val uniqueAndTydecMap : ((T.unique * A.tydec) Symbol.table) = foldl (fn (tydec, tab) => 
+                        let
+                            val {name=n, ty=t, pos=_} = tydec
+                        in
+                            case t of
+                            A.RecordTy _ => Symbol.enter (tab, n, (ref (), tydec))
+                            | _ => tab
+                        end) Symbol.empty tydecs
+                    fun makeRec tydec = 
+                        let
+                            val {name=n, ty=t, pos=pos} = tydec
+                            val unique = case Symbol.look (uniqueAndTydecMap, n) of
+                                SOME (u,_) => SOME u
+                                | _ => NONE
+                            val recordFields = case t of
+                                A.RecordTy fields => foldr (fn (field, fieldlist) =>
+                                    let
+                                        val {name, escape, typ, pos} = field
+                                        val recordTydec = case Symbol.look (uniqueAndTydecMap, typ) of
+                                            SOME (_,rt) => SOME rt
+                                            | _ => NONE
+                                        val ty = case recordTydec of
+                                            NONE => (case Symbol.look (tenv, typ) of
+                                                NONE => (ErrorMsg.error pos ("Undefined type " ^ Symbol.name typ); NONE)
+                                                | SOME ty => SOME ty)
+                                            | _ => NONE
+                                    in
+                                        case recordTydec of
+                                            SOME rt => ((name, T.RECORD (fn () => makeRec rt)) :: fieldlist)
+                                            | _ => case ty of
+                                                SOME t => ((name, t) :: fieldlist)
+                                                | _ => fieldlist
+                                    end) [] fields
+                                | _ => []
+                        in
+                            case unique of
+                                NONE => raise ErrorMsg.Error
+                                | SOME u => (recordFields, u, n)
+                        end
+                    val (newvenv, newtenv) = foldl (fn (tydec, (venv, tenv)) => 
+                        let 
+                            val {name=n, ty=t, pos=_} = tydec
+                        in
+                            case t of
+                                A.RecordTy _ => (venv, Symbol.enter (tenv, n, T.RECORD (fn () => makeRec tydec)))
+                                | _ => transTyDec (venv, tenv, tydec)
+                        end) (venv, tenv) tydecs
                 in
                     PrintEnv.printEnv (newvenv, newtenv);
                     {venv=newvenv, tenv=newtenv}
@@ -144,6 +189,7 @@ struct
                     PrintEnv.printEnv (newvenv, newtenv);
                     {venv=newvenv, tenv=newtenv}
                 end
+    and transVar (venv , tenv, var) = {exp = (), ty = T.INT}
     and transTyDec (venv, tenv, tydec) = 
             let
                 val {name=n, ty=t, pos=p} = tydec
@@ -153,37 +199,21 @@ struct
                     A.NameTy (nRefTo, p') => 
                         let
                             val t = case Symbol.look (tenv, nRefTo) of
-                                    NONE => raise ErrorMsg.Error
-                                | SOME ty => SOME ty
+                                NONE => (ErrorMsg.error p' ("Undefined type " ^ Symbol.name nRefTo); T.NIL)
+                                | SOME ty => ty
                         in
-                            {venv=venv, tenv=Symbol.enter (tenv, n, T.NAME (n, (ref t)))}
+                            (venv, Symbol.enter (tenv, n, t))
                         end
                     (*TODO: ArrayTy & RecordTy*)
                 | A.ArrayTy (nRefTo, p') =>
                     let
                         val t = case Symbol.look (tenv, nRefTo) of
-                                NONE => raise ErrorMsg.Error
+                            NONE => (ErrorMsg.error p' ("Undefined type " ^ Symbol.name nRefTo); T.NIL)
                             | SOME ty => ty
                     in
-                        {venv=venv, tenv=Symbol.enter (tenv, n, T.ARRAY (t, ref ()))}
+                        (venv, Symbol.enter (tenv, n, T.ARRAY (t, ref ())))
                     end
-                | A.RecordTy fields =>
-                    let
-                        val fieldlist = []
-                        fun helper (field, fieldlist) = let
-                                    val {name, escape, typ, pos} = field
-                                    val ty = case Symbol.look (tenv, typ) of
-                                            NONE => raise ErrorMsg.Error
-                                        | SOME ty => ty
-                                in
-                                    (name, ty)::fieldlist
-
-                                end
-                        val newfieldlist = foldr helper fieldlist fields
-                        val recordTy = T.RECORD (newfieldlist, ref())
-                    in
-                        {venv=venv, tenv=Symbol.enter (tenv, n, recordTy)}
-                    end
+                | A.RecordTy fields => (venv, tenv)
             end
            
     and transFunDec (venv, tenv, fundec) = 
