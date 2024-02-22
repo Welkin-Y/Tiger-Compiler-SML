@@ -218,6 +218,7 @@ struct
            
     and transFunDec (venv, tenv, fundec) = 
             (* fundec = {name: symbol, params: field list, result: (symbol * pos) option, body: exp pos: pos}*)
+            (* TODO: recurse through body of fundec, handle recursive fundec*)
             let
                 val {name, params, result, body, pos} = fundec
                 val params_ty = []
