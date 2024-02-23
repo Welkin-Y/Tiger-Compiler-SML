@@ -1,10 +1,5 @@
 let
-
-    var x: int := 1
-    type point = {x: int, y: int}
-    var z := point {x = 1, y = 2}
-
-
+    type a = string
+    type b = a
 in
-    (x; z.x)
 end

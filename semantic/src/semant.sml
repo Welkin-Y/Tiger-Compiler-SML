@@ -164,8 +164,20 @@ struct
                 in
                     {exp=(), ty=ty}
                 end
-                (*0. check if the type of array exist in tenv 1. check if the type of init is same as the type of array*)
-            | A.ArrayExp {typ, size, init, pos} => {exp=(), ty=T.NIL} (*TODO*)
+            
+            
+            | A.ArrayExp {typ, size, init, pos} =>  (*TODO*)
+            (*0. check if the type of array exist in tenv 1. check if the type of init is same as the type of array*)
+            let 
+                val ty = case Symbol.look (tenv, typ) of
+                    NONE => raise ErrorMsg.Error
+                    | SOME ty => ty
+                val {exp=_, ty=tyinit} = transExp (venv, tenv, init)
+
+            in
+                if T.equals(ty, tyinit) then {exp=(), ty=T.ARRAY (ty, ref ())}
+                else raise ErrorMsg.Error
+            end
             
 
     and transDec (venv : tyvenv, tenv: tytenv, dec : A.dec) = 
@@ -280,7 +292,6 @@ struct
                     PrintEnv.printEnv (newvenv, newtenv);
                     {venv=newvenv, tenv=newtenv}
                 end
-    (*TODO: check if var exists in venv*)
     and transVar (venv , tenv, var) = let 
             val {exp=_, ty=ty} = case var of
                 A.SimpleVar (n, p) => 
@@ -323,12 +334,12 @@ struct
                     A.NameTy (nRefTo, p') => 
                         let
                             val t = case Symbol.look (tenv, nRefTo) of
-                                NONE => (ErrorMsg.error p' ("Undefined type " ^ Symbol.name nRefTo); T.NIL)
+                                NONE => raise ErrorMsg.Error
                                 | SOME ty => ty
                         in
                             (venv, Symbol.enter (tenv, n, t))
                         end
-                    (*TODO: ArrayTy & RecordTy*)
+                    (*ArrayTy*)
                 | A.ArrayTy (nRefTo, p') =>
                     let
                         val t = case Symbol.look (tenv, nRefTo) of
@@ -366,7 +377,7 @@ struct
                 PrintEnv.printEnv (newVenv, tenv);
                 {venv=newVenv, tenv=tenv}
             end
-    and transTy (tenv, ty) = T.INT
+    and transTy (tenv, ty) = T.INT (*TODO*)
     and transProg (exp: A.exp) = (
                 let 
                     val venv = Env.base_venv
