@@ -24,6 +24,7 @@ structure A = Absyn
   | tyfield of A.field | tyfields of A.field list | tyfield_cont of A.field list
   | args of A.exp list 
   | expseq of (A.exp * A.pos) list | seq_cont of (A.exp * A.pos) list | seq of (A.exp * A.pos) list
+  | reccrtlst of (A.symbol * A.exp * A.pos) list
 
 %pos int
 %verbose
@@ -90,11 +91,16 @@ exp: NIL                 			(A.NilExp)
 | lvalue                      (A.VarExp(lvalue))
 (* Array Creation*)
 | ID LBRACK exp RBRACK OF exp (A.ArrayExp({typ=Symbol.symbol(ID), size=exp1, init=exp2, pos=IDleft}))
+(* Record Creation*)
+| ID LBRACE reccrtlst RBRACE (A.RecordExp({fields=reccrtlst, typ=Symbol.symbol(ID), pos=IDleft}))
 (*Parentheses*)
 | LPAREN exp RPAREN           (exp)
 (*Sequence*)
 | seq                         (A.SeqExp(seq))
 | LPAREN RPAREN               (A.SeqExp([]))
+
+reccrtlst:  ID EQ exp            ((Symbol.symbol(ID), exp, IDleft)::nil)
+| reccrtlst COMMA ID EQ exp          ((Symbol.symbol(ID), exp, IDleft)::reccrtlst)
 
 
 
