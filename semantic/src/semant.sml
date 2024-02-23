@@ -103,7 +103,7 @@ struct
                     {exp=(), ty=tybody}
                 end
             | A.BreakExp _ => {exp=(), ty=T.NIL}
-             (*TODO 0. check if func exist 1. check if args align with definition *)
+             (*0. check if func exist 1. check if args align with definition *)
             | A.CallExp {func, args, pos} => let
                     val funcentry = case Symbol.look (venv, func) of
                         NONE => raise ErrorMsg.Error
@@ -207,10 +207,21 @@ struct
                     val {venv=newvenv, tenv=newtenv} = foldl (fn (fundec, {venv, tenv}) => transFunDec (venv, tenv, fundec)) {venv=venv, tenv=tenv} fundecs
                     (*recursively check the body of each function*)
                     val _ = print "begin to check body of each function\n"
+
                     val _ = map (fn (fundec :Absyn.fundec) => (
                         let 
                         val {name, params, result, body, pos} = fundec
-                        val {exp=bodyexp, ty=typ} = transExp (newvenv, newtenv, body)
+                        (* add all args var into a tmp venv to check body*)
+                        val tmpvenv = foldl (fn (param, venv) => 
+                            let
+                                val {name, escape, typ, pos} = param
+                                val ty = case Symbol.look (tenv, typ) of
+                                    NONE => raise ErrorMsg.Error
+                                | SOME ty => ty
+                            in
+                                Symbol.enter (venv, name, Env.VarEntry {ty=ty})
+                            end) newvenv params
+                        val {exp=bodyexp, ty=typ} = transExp (tmpvenv, newtenv, body)
                         (*check if expty consistent with the delared function ty*)
                         in
                         case result of
@@ -229,7 +240,40 @@ struct
                     PrintEnv.printEnv (newvenv, newtenv);
                     {venv=newvenv, tenv=newtenv}
                 end
-    and transVar (venv , tenv, var) = {exp = (), ty = T.INT} (*TODO: check if the variable defined*)
+    (*TODO: check if var exists in venv*)
+    and transVar (venv , tenv, var) = let 
+            val {exp=_, ty=ty} = case var of
+                A.SimpleVar (n, p) => 
+                    (case Symbol.look (venv, n) of
+                        NONE => raise ErrorMsg.Error
+                        | SOME entry => case entry of
+                            Env.VarEntry {ty=ty} => {exp=(), ty=ty}
+                            | _ => raise ErrorMsg.Error)
+                | A.FieldVar (var, n, p) =>
+                    let
+                        val {exp=_, ty=ty} = transVar (venv, tenv, var)
+                        val genfun = case ty of
+                            T.RECORD genfun => genfun
+                            | _ => raise ErrorMsg.Error
+                        val (fields, _, _) = genfun ()
+                    in
+                        case List.find (fn (name, _) => name = n) fields of
+                            NONE => raise ErrorMsg.Error
+                            | SOME (_, ty) => {exp=(), ty=ty}
+                    end
+                | A.SubscriptVar (var, exp, p) => 
+                    let
+                        val {exp=_, ty=ty} = transVar (venv, tenv, var)
+                        val {exp=_, ty=tyexp} = transExp (venv, tenv, exp)
+                    in
+                        if T.equals(tyexp, T.INT) then ()
+                        else raise ErrorMsg.Error;
+                        {exp=(), ty=ty}
+                    end
+
+        in
+            {exp = (), ty = ty}
+        end 
     and transTyDec (venv, tenv, tydec) = 
             let
                 val {name=n, ty=t, pos=p} = tydec
@@ -258,7 +302,7 @@ struct
            
     and transFunDec (venv, tenv, fundec) = 
             (* fundec = {name: symbol, params: field list, result: (symbol * pos) option, body: exp pos: pos}*)
-            (* TODO: recurse through body of fundec, handle recursive fundec*)
+            (* recurse through body of fundec, handle recursive fundec*)
             let
                 val {name, params, result, body, pos} = fundec
                 val params_ty = []

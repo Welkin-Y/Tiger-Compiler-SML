@@ -1,10 +1,11 @@
 let
-    function c(m: int, n: int): int = 
-        m + n
-    var x: int := 1
-    function a(m: int, n: int): int = 
-        b(m, n)
-    function b(x: int, y: int): int = 
-        b(x-1, y/2)
 
-in end
+    var x: int := 1
+    var y:= int [5] of 1
+    type point = {x: int, y: int}
+    var z := point {x = 1, y = 2}
+
+
+in
+    (x; y[0]; z.x; z.y)
+end
