@@ -124,7 +124,47 @@ struct
                 in
                     {exp=(), ty=result}
                 end
-            | A.RecordExp {fields, typ, pos} => {exp=(), ty=T.NIL} (*TODO*)
+                (*0. check if the type of record exist in tenv 1. check if the field name&type aigned with definition*)
+            | A.RecordExp {fields, typ, pos} => let
+                    val ty = case Symbol.look (tenv, typ) of
+                        NONE => raise ErrorMsg.Error
+                        | SOME ty => ty
+                    val genfun = case ty of
+                        T.RECORD genfun => genfun
+                        | _ => raise ErrorMsg.Error
+                    val (recordFields, _, _) = genfun ()
+                    (*check if the number of fields align with the number of recordFields*)
+                    val _ = if (length fields) = (length recordFields) then ()
+                        else raise ErrorMsg.Error
+                        (*check if the field name&type can be found in definition*)
+                    val _ = map (fn (field) =>
+                        let
+                            val (symbol, exp, pos) = field
+                            val {exp=_, ty=tyexp} = transExp (venv, tenv, exp)
+                            (*check if the field name can be found in definition*)
+                            
+                        in
+                            case List.find (fn (name, _) => name = symbol) recordFields of
+                                NONE => raise ErrorMsg.Error
+                                | SOME (name, ty) => 
+                                    if T.equals(tyexp, ty) then ()
+                                    else raise ErrorMsg.Error
+                        end) fields
+                    (* check if all recordFields can be find in field*)
+                    val _ = map (fn (name, typ) =>
+                        
+                        case List.find (fn (symbol, exp, pos) => symbol = name) fields of
+                            NONE => raise ErrorMsg.Error
+                            | SOME (symbol, exp, pos) => let
+                                val {exp=_, ty=tyexp} = transExp (venv, tenv, exp)
+                            in
+                                if T.equals(tyexp, typ) then ()
+                                else raise ErrorMsg.Error
+                            end) recordFields
+                in
+                    {exp=(), ty=ty}
+                end
+                (*0. check if the type of array exist in tenv 1. check if the type of init is same as the type of array*)
             | A.ArrayExp {typ, size, init, pos} => {exp=(), ty=T.NIL} (*TODO*)
             
 

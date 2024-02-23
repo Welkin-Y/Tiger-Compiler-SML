@@ -14,7 +14,7 @@ struct
 	  val (absyn, _) = TigerP.parse(30,lexer,parseerror,())
        in TextIO.closeIn file;
 	   	FindEscape.findEscape absyn;
-		(* PrintAbsyn.print(outStream, absyn); *)
+		PrintAbsyn.print(outStream, absyn);
         absyn
       end handle LrParser.ParseError => raise ErrorMsg.Error
 end
