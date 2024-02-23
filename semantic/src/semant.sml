@@ -8,7 +8,6 @@ struct
     type tytenv = T.ty Symbol.table
     type expty = {exp: Translate.exp, ty: T.ty}
     
-
     fun transExp (venv : tyvenv, tenv: tytenv, exp: A.exp) = 
             case exp of 
                 (*To check an IfExp we need to make sure: 1. test is int 2. then and else have same types*)
@@ -104,7 +103,27 @@ struct
                     {exp=(), ty=tybody}
                 end
             | A.BreakExp _ => {exp=(), ty=T.NIL}
-            | A.CallExp {func, args, pos} => {exp=(), ty=T.NIL} (*TODO*)
+             (*TODO 0. check if func exist 1. check if args align with definition *)
+            | A.CallExp {func, args, pos} => let
+                    val funcentry = case Symbol.look (venv, func) of
+                        NONE => raise ErrorMsg.Error
+                        | SOME entry => entry
+                    val {formals, result} = case funcentry of
+                        Env.FunEntry record => record
+                        | _ => raise ErrorMsg.Error
+                    (*check if the number of args align with the number of formals*)
+                    val _ = if (length args) = (length formals) then ()
+                        else raise ErrorMsg.Error
+                    val _ = map (fn (arg, formal) =>
+                        let
+                            val {exp=_, ty=tyarg} = transExp (venv, tenv, arg)
+                        in
+                            if T.equals(tyarg, formal) then ()
+                            else raise ErrorMsg.Error
+                        end) (ListPair.zip(args, formals))
+                in
+                    {exp=(), ty=result}
+                end
             | A.RecordExp {fields, typ, pos} => {exp=(), ty=T.NIL} (*TODO*)
             | A.ArrayExp {typ, size, init, pos} => {exp=(), ty=T.NIL} (*TODO*)
             
@@ -184,12 +203,33 @@ struct
                 end
             | A.FunctionDec fundecs => 
                 let
+                    (*recursively check the signature of each function*)
                     val {venv=newvenv, tenv=newtenv} = foldl (fn (fundec, {venv, tenv}) => transFunDec (venv, tenv, fundec)) {venv=venv, tenv=tenv} fundecs
+                    (*recursively check the body of each function*)
+                    val _ = print "begin to check body of each function\n"
+                    val _ = map (fn (fundec :Absyn.fundec) => (
+                        let 
+                        val {name, params, result, body, pos} = fundec
+                        val {exp=bodyexp, ty=typ} = transExp (newvenv, newtenv, body)
+                        (*check if expty consistent with the delared function ty*)
+                        in
+                        case result of
+                        NONE => if (T.equals(typ, T.NIL)) then ()
+                            else raise ErrorMsg.Error
+                        | SOME (sym, _) => let 
+                            val symty = case Symbol.look (newtenv, sym) of
+                                NONE => raise ErrorMsg.Error
+                                | SOME ty => ty
+                            in
+                            if (T.equals(typ, symty)) then ()
+                                else raise ErrorMsg.Error
+                            end
+                        end)) fundecs
                 in
                     PrintEnv.printEnv (newvenv, newtenv);
                     {venv=newvenv, tenv=newtenv}
                 end
-    and transVar (venv , tenv, var) = {exp = (), ty = T.INT}
+    and transVar (venv , tenv, var) = {exp = (), ty = T.INT} (*TODO: check if the variable defined*)
     and transTyDec (venv, tenv, tydec) = 
             let
                 val {name=n, ty=t, pos=p} = tydec

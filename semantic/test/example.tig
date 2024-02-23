@@ -1,4 +1,10 @@
 let
-    type list = {value: int; next: list}
-in
-end
+    function c(m: int, n: int): int = 
+        m + n
+    var x: int := 1
+    function a(m: int, n: int): int = 
+        b(m, n)
+    function b(x: int, y: int): int = 
+        b(x-1, y/2)
+
+in end
