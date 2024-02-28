@@ -1,0 +1,5 @@
+let
+    function func(a:int, b:int):int = a + b
+in
+    func(1, 2)
+end

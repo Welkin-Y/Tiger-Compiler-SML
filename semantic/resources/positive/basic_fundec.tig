@@ -1,9 +1,9 @@
 let 
-    function func1() = let
-        val x := 1
-        val y := 2
+    function func() = 
+    let
+        var a := "hello"
     in
-        print(x + y)
+        print(a)
     end
 in
 end

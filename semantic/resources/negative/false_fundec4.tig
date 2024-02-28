@@ -1,0 +1,5 @@
+let
+    function func() = "Hello, World!"
+in
+    func()
+end

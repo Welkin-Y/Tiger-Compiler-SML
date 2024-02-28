@@ -1,0 +1,9 @@
+let 
+    function fun() : int = 
+        let 
+            var x = 1
+        in
+            x
+        end
+in
+end

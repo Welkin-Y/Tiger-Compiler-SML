@@ -80,7 +80,7 @@ struct
                                 entryTy
                             end
                 in
-                    {exp=(), ty=foldl helper T.NIL exps}
+                    {exp=(), ty=foldl helper T.UNIT exps}
                 end
             | A.VarExp var => transVar (venv, tenv, var)
             | A.AssignExp {var, exp, pos} => let
@@ -113,20 +113,20 @@ struct
              (*0. check if func exist 1. check if args align with definition *)
             | A.CallExp {func, args, pos} => let
                     val funcentry = case Symbol.look (venv, func) of
-                        NONE => raise ErrorMsg.Error
+                        NONE => (ErrorMsg.error pos ("Undefined function " ^ Symbol.name func); raise ErrorMsg.Error)
                         | SOME entry => entry
                     val {formals, result} = case funcentry of
                         Env.FunEntry record => record
                         | _ => raise ErrorMsg.Error
                     (*check if the number of args align with the number of formals*)
                     val _ = if (length args) = (length formals) then ()
-                        else raise ErrorMsg.Error
+                        else (ErrorMsg.error pos ("Unmatched number of args: function " ^ Symbol.name func ^ " has " ^ Int.toString (length formals) ^ " args, but called with " ^ Int.toString (length args)); raise ErrorMsg.Error)
                     val _ = map (fn (arg, formal) =>
                         let
                             val {exp=_, ty=tyarg} = transExp (venv, tenv, arg)
                         in
                             if T.equals(tyarg, formal) then ()
-                            else raise ErrorMsg.Error
+                            else (ErrorMsg.error pos ("Unmatched type: arg is " ^ T.toString tyarg ^ ", but formal is " ^ T.toString formal); raise ErrorMsg.Error)
                         end) (ListPair.zip(args, formals))
                 in
                     {exp=(), ty=result}
@@ -288,11 +288,11 @@ struct
                             else ( ErrorMsg.error pos ("Unmatched type: function " ^ Symbol.name name ^ " return type is " ^ T.toString typ ^ ", but declared as unit"); raise ErrorMsg.Error) 
                         | SOME (sym, _) => let 
                             val symty = case Symbol.look (newtenv, sym) of
-                                NONE => raise ErrorMsg.Error
+                                NONE => (ErrorMsg.error pos ("Undefined type " ^ Symbol.name sym); raise ErrorMsg.Error)
                                 | SOME ty => ty
                             in
                             if (T.equals(typ, symty)) then ()
-                                else raise ErrorMsg.Error
+                                else ( ErrorMsg.error pos ("Unmatched type: function " ^ Symbol.name name ^ " return type is " ^ T.toString typ ^ ", but declared as " ^ Symbol.name sym ^ " type " ^ T.toString symty); raise ErrorMsg.Error)
                             end
                         end)) fundecs
                 in
@@ -375,7 +375,7 @@ struct
                             ty::params_ty
                         end
                 val newparams_ty = foldr helper params_ty params
-                val res_ty = case result of NONE => raise ErrorMsg.Error
+                val res_ty = case result of NONE => T.UNIT
                     | SOME (sym, _) => 
                         case Symbol.look (tenv, sym) of
                             NONE => raise ErrorMsg.Error

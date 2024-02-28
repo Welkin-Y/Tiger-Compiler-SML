@@ -1,0 +1,9 @@
+let
+    function func() = let
+        var a := 5
+    in
+        
+    end
+in
+    func()
+end
