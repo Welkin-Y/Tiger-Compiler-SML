@@ -1,0 +1,6 @@
+let
+    type list = {val: int; next: list}
+    val head := list {val = 0, next = nil}
+in
+    head
+end

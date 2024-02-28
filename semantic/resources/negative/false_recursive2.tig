@@ -1,0 +1,6 @@
+let 
+    type c = a
+    type a = int
+    type b = c
+in
+end

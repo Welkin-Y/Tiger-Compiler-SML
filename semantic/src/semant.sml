@@ -2,6 +2,9 @@
 (* dummy Translate *)
 structure Translate = struct type exp = unit end
 
+(*TODO: fix ifelse typechecking *)
+(*TODO: subtyping system: all types belongs to nil *)
+(*TODO: unit is subtype of all types*)
 structure Semant :> SEMANT =
 struct
     type tyvenv = Env.enventry Symbol.table
@@ -148,7 +151,7 @@ struct
                                 NONE => raise ErrorMsg.Error
                                 | SOME (name, ty) => 
                                     if T.equals(tyexp, ty) then ()
-                                    else raise ErrorMsg.Error
+                                    else (print("type error"^(Int.toString pos));raise ErrorMsg.Error)
                         end) fields
                     (* check if all recordFields can be find in field*)
                     val _ = map (fn (name, typ) =>
