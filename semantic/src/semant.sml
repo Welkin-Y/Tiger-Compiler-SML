@@ -5,6 +5,8 @@ structure Translate = struct type exp = unit end
 (*TODO: fix ifelse typechecking *)
 (*TODO: subtyping system: all types belongs to nil *)
 (*TODO: unit is subtype of all types*)
+(*TODO:Nil must be used in a context where its type can be determined, that is: *)
+(*TODO: comparison can be done between nil and other record type*)
 structure Semant :> SEMANT =
 struct
     type tyvenv = Env.enventry Symbol.table
@@ -25,7 +27,9 @@ struct
                         case tytest of
                             T.INT => ()
                         | _ => raise ErrorMsg.Error;
-                        if not (T.equals(tythen, tyelse)) then ErrorMsg.error pos (" Unmatched type: then exp is " ^ T.toString tythen ^ ", else exp is " ^ T.toString tyelse) else ();
+                        if not (T.equals(tythen, tyelse)) then (ErrorMsg.error pos (" Unmatched type: then exp is " ^ T.toString tythen ^ ", else exp is " ^ T.toString tyelse); 
+                        raise ErrorMsg.Error)
+                         else ();
                         {exp=(), ty=tythen}
                     end
             | A.OpExp {left, oper, right, pos} =>
@@ -280,8 +284,8 @@ struct
                         (*check if expty consistent with the delared function ty*)
                         in
                         case result of
-                        NONE => if (T.equals(typ, T.NIL)) then ()
-                            else raise ErrorMsg.Error
+                        NONE => if (T.equals(typ, T.UNIT)) then ()
+                            else ( ErrorMsg.error pos ("Unmatched type: function " ^ Symbol.name name ^ " return type is " ^ T.toString typ ^ ", but declared as unit"); raise ErrorMsg.Error) 
                         | SOME (sym, _) => let 
                             val symty = case Symbol.look (newtenv, sym) of
                                 NONE => raise ErrorMsg.Error
@@ -337,7 +341,8 @@ struct
                     A.NameTy (nRefTo, p') => 
                         let
                             val t = case Symbol.look (tenv, nRefTo) of
-                                NONE => raise ErrorMsg.Error
+                                NONE => (ErrorMsg.error p' ("Undefined type " ^ Symbol.name nRefTo);
+                                raise ErrorMsg.Error)
                                 | SOME ty => ty
                         in
                             (venv, Symbol.enter (tenv, n, t))
@@ -346,7 +351,7 @@ struct
                 | A.ArrayTy (nRefTo, p') =>
                     let
                         val t = case Symbol.look (tenv, nRefTo) of
-                            NONE => (ErrorMsg.error p' ("Undefined type " ^ Symbol.name nRefTo); T.NIL)
+                            NONE => (ErrorMsg.error p' ("Undefined type " ^ Symbol.name nRefTo); raise ErrorMsg.Error)
                             | SOME ty => ty
                     in
                         (venv, Symbol.enter (tenv, n, T.ARRAY (t, ref ())))
@@ -364,7 +369,7 @@ struct
                         let
                             val {name, escape, typ, pos} = param
                             val ty = case Symbol.look (tenv, typ) of
-                                    NONE => raise ErrorMsg.Error
+                                    NONE => ( ErrorMsg.error pos ("Undefined type " ^ Symbol.name typ); raise ErrorMsg.Error)
                                 | SOME ty => ty
                         in
                             ty::params_ty

@@ -1,0 +1,9 @@
+let 
+    function func1() = let
+        val x := 1
+        val y := 2
+    in
+        print(x + y)
+    end
+in
+end

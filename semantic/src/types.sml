@@ -33,6 +33,8 @@ struct
     | (STRING, STRING) => true
     | (ARRAY a1, ARRAY a2) => #2 a1 = #2 a2
     | (UNIT, UNIT) => true
+    | (NIL, RECORD _) => true
+    | (RECORD _, NIL) => true
     | _ => false
 
 end
