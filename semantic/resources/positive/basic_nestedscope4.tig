@@ -1,0 +1,10 @@
+let
+    type a = array of string
+    function f():a = let
+        var a : a := string [5] of "hello"
+    in
+        a
+    end
+in
+    f()
+end
