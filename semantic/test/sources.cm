@@ -19,7 +19,7 @@ $/ml-yacc-lib.cm
 ../src/semant.sig
 ../src/env.sig
 ../src/env.sml
-../src/abbr.sml
+../src/typechecker.sml
 ../src/print_env.sml
 semanttest.sml
 

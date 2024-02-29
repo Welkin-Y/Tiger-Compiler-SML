@@ -34,14 +34,10 @@ struct
                     val {exp=_, ty=tyright} = transExp (venv, tenv, right, loopDepth)
                 in
                     case oper of
-                        A.PlusOp => if T.equals(tyleft, T.INT) andalso T.equals(tyright, T.INT) then {exp=(), ty=T.INT}
-                            else (ErrorMsg.error pos ("PlusOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
-                    | A.MinusOp => if T.equals(tyleft, T.INT) andalso T.equals(tyright, T.INT) then {exp=(), ty=T.INT}
-                        else (ErrorMsg.error pos ("MinusOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
-                    | A.TimesOp => if T.equals(tyleft, T.INT) andalso T.equals(tyright, T.INT) then {exp=(), ty=T.INT}
-                        else (ErrorMsg.error pos ("TimesOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
-                    | A.DivideOp => if T.equals(tyleft, T.INT) andalso T.equals(tyright, T.INT) then {exp=(), ty=T.INT}
-                        else (ErrorMsg.error pos ("DivideOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
+                        A.PlusOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
+                    | A.MinusOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
+                    | A.TimesOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
+                    | A.DivideOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
                     | A.EqOp => if T.equals(tyleft, tyright) then case tyleft of
                             T.INT => {exp=(), ty=T.INT}
                             | T.RECORD f => {exp=(), ty=T.RECORD f}
@@ -54,14 +50,10 @@ struct
                             | T.ARRAY t => {exp=(), ty=T.ARRAY t}
                             | _ => (ErrorMsg.error pos ("NeqOp: expect int or record or array, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
                         else (ErrorMsg.error pos ("NeqOp: expect same type, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
-                    | A.LtOp => if T.equals(tyleft, tyright) andalso T.equals(T.INT, tyleft) then {exp=(), ty=T.INT}
-                        else (ErrorMsg.error pos ("LtOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
-                    | A.LeOp => if T.equals(tyleft, tyright) andalso T.equals(T.INT, tyleft) then {exp=(), ty=T.INT}
-                        else (ErrorMsg.error pos ("LeOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
-                    | A.GtOp => if T.equals(tyleft, tyright) andalso T.equals(T.INT, tyleft) then {exp=(), ty=T.INT}
-                        else (ErrorMsg.error pos ("GtOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
-                    | A.GeOp => if T.equals(tyleft, tyright) andalso T.equals(T.INT, tyleft) then {exp=(), ty=T.INT}
-                        else (ErrorMsg.error pos ("GeOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
+                    | A.LtOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
+                    | A.LeOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
+                    | A.GtOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
+                    | A.GeOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
                 end
             (* Check Let Exp: 1. gothrough decs 2. go through body*)
             | A.LetExp {decs, body, pos} => 
