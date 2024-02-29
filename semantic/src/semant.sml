@@ -215,7 +215,28 @@ struct
                         | _ => (ErrorMsg.error pos ("Unmatched type: var " ^ Symbol.name name ^ " is " ^ T.toString tyinit ^ ", but declared as " ^ T.toString newtyp); raise ErrorMsg.Error)
                     end
             | A.TypeDec tydecs => 
-                let 
+                let
+                    val newvenv : (Env.enventry Symbol.table) ref = ref venv
+                    val newtenv : (T.ty Symbol.table) ref = ref tenv
+                    val aliasTable : ((unit Symbol.table) Symbol.table) ref = ref Symbol.empty
+                    fun updateAlias (name, ty) = 
+                        case Symbol.look (!aliasTable, name) of
+                            SOME alias => Symbol.appi (fn (n, _) => (newtenv := Symbol.enter (!newtenv, n, ty); updateAlias (n, ty))) alias
+                            | NONE => ()
+                    val tydecTable : ((A.tydec * T.unique) Symbol.table) = foldl (fn (tydec, tab) => 
+                        let
+                            val {name=name, ty=ty, pos=pos} = tydec
+                        in
+                            case ty of
+                                A.NameTy (n, p) => case Symbol.look (!newtenv, n) of
+                                    NONE => (* TODO *)
+                                    | SOME ty => (
+                                        newtenv := Symbol.enter (newtenv, name, ty);
+                                        case Symbol.look (!aliasTable, name) of
+                                            NONE => aliasTable := Symbol.enter (!aliasTable, name, Symbol.empty)
+                                            | SOME _ => (* TODO *)
+                                    )
+                        end) Symbol.empty tydecs
                     val uniqueAndTydecMap : ((T.unique * A.tydec) Symbol.table) = foldl (fn (tydec, tab) => 
                         let
                             val {name=n, ty=t, pos=_} = tydec
