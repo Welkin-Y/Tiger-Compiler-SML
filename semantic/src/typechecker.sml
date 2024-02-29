@@ -17,13 +17,14 @@ struct
 
     fun checkEqType pos (tyleft, tyright) = 
             if T.equals(tyleft, tyright) 
-            then {exp=(), ty=tyleft}
+            then {exp=(), ty=T.INT}
             else (ErrorMsg.error pos ("TypeError: Expect same type, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
 
     fun checkEqOp oper pos (tyleft, tyright) =
             case tyleft of T.INT => checkEqType pos (tyleft, tyright)
             | T.RECORD f => checkEqType pos (tyleft, tyright)
             | T.ARRAY t => checkEqType pos (tyleft, tyright)
+            | T.NIL => checkEqType pos (tyleft, tyright)
             | _ => let val msg = "TypeError: Unsupported operand type(s) for " ^ 
                         (opToString oper) ^ ": expect int or record or array, but got " ^ T.toString tyleft 
                 in

@@ -1,0 +1,6 @@
+let
+    type rec = { x: int, y: int }
+    var  v = rec { x = 1, y = 2 }
+in
+    if v <> nil then ()
+end
