@@ -1,0 +1,4 @@
+let 
+    type t = array of t
+in
+end

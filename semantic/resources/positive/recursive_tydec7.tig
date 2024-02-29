@@ -1,0 +1,5 @@
+let 
+    type arrrec = array of rec
+    type recarr = {arr: arrrec}
+in
+end

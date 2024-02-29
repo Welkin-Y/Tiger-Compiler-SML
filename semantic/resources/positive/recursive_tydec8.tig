@@ -1,0 +1,5 @@
+let
+    type a = rec
+    type rec = { x: a }
+in
+end
