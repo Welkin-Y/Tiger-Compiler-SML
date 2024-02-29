@@ -1,6 +1,7 @@
 
 (* dummy Translate *)
 structure Translate = struct type exp = unit end
+structure TC = TypeChecker
 (*TODO: recursive name type e.g. type a = b; type b = int*)
 structure Semant :> SEMANT =
 struct
@@ -34,26 +35,16 @@ struct
                     val {exp=_, ty=tyright} = transExp (venv, tenv, right, loopDepth)
                 in
                     case oper of
-                        A.PlusOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
-                    | A.MinusOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
-                    | A.TimesOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
-                    | A.DivideOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
-                    | A.EqOp => if T.equals(tyleft, tyright) then case tyleft of
-                            T.INT => {exp=(), ty=T.INT}
-                            | T.RECORD f => {exp=(), ty=T.RECORD f}
-                            | T.ARRAY t => {exp=(), ty=T.ARRAY t}
-                            | _ => (ErrorMsg.error pos ("EqOp: expect int or record or array, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
-                        else (ErrorMsg.error pos ("EqOp: expect same type, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
-                    | A.NeqOp => if T.equals(tyleft, tyright) then case tyleft of
-                            T.INT => {exp=(), ty=T.INT}
-                            | T.RECORD f => {exp=(), ty=T.RECORD f}
-                            | T.ARRAY t => {exp=(), ty=T.ARRAY t}
-                            | _ => (ErrorMsg.error pos ("NeqOp: expect int or record or array, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
-                        else (ErrorMsg.error pos ("NeqOp: expect same type, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
-                    | A.LtOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
-                    | A.LeOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
-                    | A.GtOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
-                    | A.GeOp => TypeChecker.checkIntOp oper pos (tyleft, tyright)
+                        A.PlusOp => TC.checkIntOp oper pos (tyleft, tyright)
+                    | A.MinusOp => TC.checkIntOp oper pos (tyleft, tyright)
+                    | A.TimesOp => TC.checkIntOp oper pos (tyleft, tyright)
+                    | A.DivideOp => TC.checkIntOp oper pos (tyleft, tyright)
+                    | A.EqOp => TC.checkEqOp oper pos (tyleft, tyright)
+                    | A.NeqOp => TC.checkEqOp oper pos (tyleft, tyright)
+                    | A.LtOp => TC.checkIntOp oper pos (tyleft, tyright)
+                    | A.LeOp => TC.checkIntOp oper pos (tyleft, tyright)
+                    | A.GtOp => TC.checkIntOp oper pos (tyleft, tyright)
+                    | A.GeOp => TC.checkIntOp oper pos (tyleft, tyright)
                 end
             (* Check Let Exp: 1. gothrough decs 2. go through body*)
             | A.LetExp {decs, body, pos} => 
