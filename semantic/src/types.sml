@@ -28,7 +28,7 @@ struct
 
   fun equals (ty1, ty2) = case (ty1, ty2) of
     (RECORD f1, RECORD f2) => #2 (f1()) = #2 (f2())
-    | (NIL, NIL) => true
+    (* | (NIL, NIL) => true *) (*nil cannot equals to nil because nil can only be used when the type can be determined*)
     | (INT, INT) => true
     | (STRING, STRING) => true
     | (ARRAY a1, ARRAY a2) => #2 a1 = #2 a2

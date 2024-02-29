@@ -1,32 +1,28 @@
 
 (* dummy Translate *)
 structure Translate = struct type exp = unit end
-
-(*TODO: fix ifelse typechecking *)
-(*TODO: subtyping system: all types belongs to nil *)
-(*TODO: unit is subtype of all types*)
-(*TODO:Nil must be used in a context where its type can be determined, that is: *)
-(*TODO: comparison can be done between nil and other record type*)
+(*TODO: recursive name type e.g. type a = b; type b = int*)
 structure Semant :> SEMANT =
 struct
     type tyvenv = Env.enventry Symbol.table
     type tytenv = T.ty Symbol.table
     type expty = {exp: Translate.exp, ty: T.ty}
     
-    fun transExp (venv : tyvenv, tenv: tytenv, exp: A.exp) = 
+    fun transExp (venv : tyvenv, tenv: tytenv, exp: A.exp, loopDepth: int) = 
             case exp of 
                 (*To check an IfExp we need to make sure: 1. test is int 2. then and else have same types*)
                 A.IfExp {test, then', else', pos} => 
                     let 
+                        val {exp=_, ty=tythen} = transExp (venv, tenv, then', loopDepth)
                         val {exp=expelse, ty=tyelse} = case else' of
-                                NONE => {exp=(), ty=T.NIL}
-                            | SOME e => transExp (venv, tenv, e)
-                        val {exp=_, ty=tythen} = transExp (venv, tenv, then')
-                        val {exp=_, ty=tytest} = transExp (venv, tenv, test) 
+                                NONE => {exp=(), ty=tythen}
+                            | SOME e => transExp (venv, tenv, e, loopDepth)
+
+                        val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth) 
                     in
                         case tytest of
                             T.INT => ()
-                        | _ => raise ErrorMsg.Error;
+                        | _ => (ErrorMsg.error pos "test expression should be int"; raise ErrorMsg.Error);
                         if not (T.equals(tythen, tyelse)) then (ErrorMsg.error pos (" Unmatched type: then exp is " ^ T.toString tythen ^ ", else exp is " ^ T.toString tyelse); 
                         raise ErrorMsg.Error)
                          else ();
@@ -34,38 +30,46 @@ struct
                     end
             | A.OpExp {left, oper, right, pos} =>
                 let
-                    val {exp=_, ty=tyleft} = transExp (venv, tenv, left)
-                    val {exp=_, ty=tyright} = transExp (venv, tenv, right)
+                    val {exp=_, ty=tyleft} = transExp (venv, tenv, left, loopDepth)
+                    val {exp=_, ty=tyright} = transExp (venv, tenv, right, loopDepth)
                 in
                     case oper of
                         A.PlusOp => if T.equals(tyleft, T.INT) andalso T.equals(tyright, T.INT) then {exp=(), ty=T.INT}
-                            else raise ErrorMsg.Error
+                            else (ErrorMsg.error pos ("PlusOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
                     | A.MinusOp => if T.equals(tyleft, T.INT) andalso T.equals(tyright, T.INT) then {exp=(), ty=T.INT}
-                        else raise ErrorMsg.Error
+                        else (ErrorMsg.error pos ("MinusOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
                     | A.TimesOp => if T.equals(tyleft, T.INT) andalso T.equals(tyright, T.INT) then {exp=(), ty=T.INT}
-                        else raise ErrorMsg.Error
+                        else (ErrorMsg.error pos ("TimesOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
                     | A.DivideOp => if T.equals(tyleft, T.INT) andalso T.equals(tyright, T.INT) then {exp=(), ty=T.INT}
-                        else raise ErrorMsg.Error
-                    | A.EqOp => if T.equals(tyleft, tyright) then {exp=(), ty=T.INT}
-                        else raise ErrorMsg.Error
-                    | A.NeqOp => if T.equals(tyleft, tyright) then {exp=(), ty=T.INT}
-                        else raise ErrorMsg.Error
-                    | A.LtOp => if T.equals(tyleft, tyright) then {exp=(), ty=T.INT}
-                        else raise ErrorMsg.Error
-                    | A.LeOp => if T.equals(tyleft, tyright) then {exp=(), ty=T.INT}
-                        else raise ErrorMsg.Error
-                    | A.GtOp => if T.equals(tyleft, tyright) then {exp=(), ty=T.INT}
-                        else raise ErrorMsg.Error
-                    | A.GeOp => if T.equals(tyleft, tyright) then {exp=(), ty=T.INT}
-                        else raise ErrorMsg.Error
+                        else (ErrorMsg.error pos ("DivideOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
+                    | A.EqOp => if T.equals(tyleft, tyright) then case tyleft of
+                            T.INT => {exp=(), ty=T.INT}
+                            | T.RECORD f => {exp=(), ty=T.RECORD f}
+                            | T.ARRAY t => {exp=(), ty=T.ARRAY t}
+                            | _ => (ErrorMsg.error pos ("EqOp: expect int or record or array, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
+                        else (ErrorMsg.error pos ("EqOp: expect same type, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
+                    | A.NeqOp => if T.equals(tyleft, tyright) then case tyleft of
+                            T.INT => {exp=(), ty=T.INT}
+                            | T.RECORD f => {exp=(), ty=T.RECORD f}
+                            | T.ARRAY t => {exp=(), ty=T.ARRAY t}
+                            | _ => (ErrorMsg.error pos ("NeqOp: expect int or record or array, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
+                        else (ErrorMsg.error pos ("NeqOp: expect same type, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
+                    | A.LtOp => if T.equals(tyleft, tyright) andalso T.equals(T.INT, tyleft) then {exp=(), ty=T.INT}
+                        else (ErrorMsg.error pos ("LtOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
+                    | A.LeOp => if T.equals(tyleft, tyright) andalso T.equals(T.INT, tyleft) then {exp=(), ty=T.INT}
+                        else (ErrorMsg.error pos ("LeOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
+                    | A.GtOp => if T.equals(tyleft, tyright) andalso T.equals(T.INT, tyleft) then {exp=(), ty=T.INT}
+                        else (ErrorMsg.error pos ("GtOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
+                    | A.GeOp => if T.equals(tyleft, tyright) andalso T.equals(T.INT, tyleft) then {exp=(), ty=T.INT}
+                        else (ErrorMsg.error pos ("GeOp: expect int*int, but got " ^ T.toString tyleft ^ " and " ^ T.toString tyright); raise ErrorMsg.Error)
                 end
             (* Check Let Exp: 1. gothrough decs 2. go through body*)
             | A.LetExp {decs, body, pos} => 
                 let
-                    val {venv=venv', tenv=tenv'} = foldl (fn (dec, {venv, tenv}) => transDec (venv, tenv, dec)) {venv=venv, tenv=tenv} decs
+                    val {venv=venv', tenv=tenv'} = foldl (fn (dec, {venv, tenv}) => transDec (venv, tenv, dec, loopDepth)) {venv=venv, tenv=tenv} decs
                 in
                     print ("begin to check body\n");
-                    transExp (venv', tenv', body)
+                    transExp (venv', tenv', body, loopDepth)
                 end
             | A.IntExp _ => {exp=(), ty=T.INT}
             | A.StringExp _ => {exp=(), ty=T.STRING}
@@ -74,7 +78,7 @@ struct
                 let
                     val explist : Translate.exp list = []
                     fun helper ((exp, _), ty) = let
-                                val {exp=entryExp, ty=entryTy} = transExp (venv, tenv, exp)
+                                val {exp=entryExp, ty=entryTy} = transExp (venv, tenv, exp, loopDepth)
                             in
                                 explist = explist @ [entryExp];
                                 entryTy
@@ -82,34 +86,35 @@ struct
                 in
                     {exp=(), ty=foldl helper T.UNIT exps}
                 end
-            | A.VarExp var => transVar (venv, tenv, var)
+            | A.VarExp var => transVar (venv, tenv, var, loopDepth)
             | A.AssignExp {var, exp, pos} => let
-                    val {exp=_, ty=tyvar} = transVar (venv, tenv, var)
-                    val {exp=_, ty=tyexp} = transExp (venv, tenv, exp)
+                    val {exp=_, ty=tyvar} = transVar (venv, tenv, var, loopDepth)
+                    val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth)
                 in
                     if T.equals(tyvar, tyexp) then {exp=(), ty=tyvar}
                     else raise ErrorMsg.Error
                 end
             | A.WhileExp {test, body, pos} => let
-                    val {exp=_, ty=tytest} = transExp (venv, tenv, test)
-                    val {exp=_, ty=tybody} = transExp (venv, tenv, body)
+                    val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth)
+                    val {exp=_, ty=tybody} = transExp (venv, tenv, body, loopDepth+1)
                 in
                     if T.equals(tytest, T.INT) then ()
-                    else raise ErrorMsg.Error;
+                    else (ErrorMsg.error pos "test expression should be int"; raise ErrorMsg.Error);
                     {exp=(), ty=tybody}
                 end
             | A.ForExp {var, escape, lo, hi, body, pos} => let
-                    val {exp=_, ty=tylo} = transExp (venv, tenv, lo)
-                    val {exp=_, ty=tyhi} = transExp (venv, tenv, hi)
+                    val {exp=_, ty=tylo} = transExp (venv, tenv, lo, loopDepth)
+                    val {exp=_, ty=tyhi} = transExp (venv, tenv, hi, loopDepth)
                     val newVenv = Symbol.enter (venv, var, Env.VarEntry {ty=T.INT})
-                    val {exp=_, ty=tybody} = transExp (newVenv, tenv, body)
+                    val {exp=_, ty=tybody} = transExp (newVenv, tenv, body, loopDepth+1)
                 in          
                     PrintEnv.printEnv (newVenv, tenv);
                     if T.equals(tylo, T.INT) andalso T.equals(tyhi, T.INT) then ()
-                    else raise ErrorMsg.Error;
+                    else (ErrorMsg.error pos "lo and hi should be int"; raise ErrorMsg.Error);
                     {exp=(), ty=tybody}
                 end
-            | A.BreakExp _ => {exp=(), ty=T.NIL}
+            | A.BreakExp pos => if loopDepth > 0 then {exp=(), ty=T.UNIT}
+                else (ErrorMsg.error pos "break statement not within loop"; raise ErrorMsg.Error)
              (*0. check if func exist 1. check if args align with definition *)
             | A.CallExp {func, args, pos} => let
                     val funcentry = case Symbol.look (venv, func) of
@@ -123,7 +128,7 @@ struct
                         else (ErrorMsg.error pos ("Unmatched number of args: function " ^ Symbol.name func ^ " has " ^ Int.toString (length formals) ^ " args, but called with " ^ Int.toString (length args)); raise ErrorMsg.Error)
                     val _ = map (fn (arg, formal) =>
                         let
-                            val {exp=_, ty=tyarg} = transExp (venv, tenv, arg)
+                            val {exp=_, ty=tyarg} = transExp (venv, tenv, arg, loopDepth)
                         in
                             if T.equals(tyarg, formal) then ()
                             else (ErrorMsg.error pos ("Unmatched type: arg is " ^ T.toString tyarg ^ ", but formal is " ^ T.toString formal); raise ErrorMsg.Error)
@@ -147,7 +152,7 @@ struct
                     val _ = map (fn (field) =>
                         let
                             val (symbol, exp, pos) = field
-                            val {exp=_, ty=tyexp} = transExp (venv, tenv, exp)
+                            val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth)
                             (*check if the field name can be found in definition*)
                             
                         in
@@ -163,7 +168,7 @@ struct
                         case List.find (fn (symbol, exp, pos) => symbol = name) fields of
                             NONE => raise ErrorMsg.Error
                             | SOME (symbol, exp, pos) => let
-                                val {exp=_, ty=tyexp} = transExp (venv, tenv, exp)
+                                val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth)
                             in
                                 if T.equals(tyexp, typ) then ()
                                 else raise ErrorMsg.Error
@@ -179,7 +184,7 @@ struct
                 val ty = case Symbol.look (tenv, typ) of
                     NONE => raise ErrorMsg.Error
                     | SOME ty => ty
-                val {exp=_, ty=tyinit} = transExp (venv, tenv, init)
+                val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth)
 
             in
                 if T.equals(ty, tyinit) then {exp=(), ty=T.ARRAY (ty, ref ())}
@@ -187,11 +192,11 @@ struct
             end
             
 
-    and transDec (venv : tyvenv, tenv: tytenv, dec : A.dec) = 
+    and transDec (venv : tyvenv, tenv: tytenv, dec : A.dec, loopDepth: int) = 
             case dec of
                 (*To check a VarDec: 0. TODO: the proposed type exists 1. the type of init should be same as ty if there are ty 2. add Var to venv*)
                 A.VarDec{name, escape, typ, init, pos}=> let
-                        val {exp=_, ty=tyinit} = transExp (venv, tenv, init)
+                        val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth)
                         val newtyp = case typ of
                                 NONE => tyinit
                             | SOME t => case Symbol.look (tenv, #1 t) of 
@@ -205,7 +210,9 @@ struct
                             in
                                 {venv = newVenv, tenv = tenv}
                             end
-                        else raise ErrorMsg.Error
+                        else case newtyp of
+                            T.NIL => (ErrorMsg.error pos ("Using nil to initialize variable without type"); raise ErrorMsg.Error)
+                        | _ => (ErrorMsg.error pos ("Unmatched type: var " ^ Symbol.name name ^ " is " ^ T.toString tyinit ^ ", but declared as " ^ T.toString newtyp); raise ErrorMsg.Error)
                     end
             | A.TypeDec tydecs => 
                 let 
@@ -254,7 +261,7 @@ struct
                         in
                             case t of
                                 A.RecordTy _ => (venv, Symbol.enter (tenv, n, T.RECORD (fn () => makeRec tydec)))
-                                | _ => transTyDec (venv, tenv, tydec)
+                                | _ => transTyDec (venv, tenv, tydec, loopDepth)
                         end) (venv, tenv) tydecs
                 in
                     PrintEnv.printEnv (newvenv, newtenv);
@@ -263,7 +270,7 @@ struct
             | A.FunctionDec fundecs => 
                 let
                     (*recursively check the signature of each function*)
-                    val {venv=newvenv, tenv=newtenv} = foldl (fn (fundec, {venv, tenv}) => transFunDec (venv, tenv, fundec)) {venv=venv, tenv=tenv} fundecs
+                    val {venv=newvenv, tenv=newtenv} = foldl (fn (fundec, {venv, tenv}) => transFunDec (venv, tenv, fundec, loopDepth)) {venv=venv, tenv=tenv} fundecs
                     (*recursively check the body of each function*)
                     val _ = print "begin to check body of each function\n"
 
@@ -280,7 +287,7 @@ struct
                             in
                                 Symbol.enter (venv, name, Env.VarEntry {ty=ty})
                             end) newvenv params
-                        val {exp=bodyexp, ty=typ} = transExp (tmpvenv, newtenv, body)
+                        val {exp=bodyexp, ty=typ} = transExp (tmpvenv, newtenv, body, 0)
                         (*check if expty consistent with the delared function ty*)
                         in
                         case result of
@@ -299,7 +306,7 @@ struct
                     PrintEnv.printEnv (newvenv, newtenv);
                     {venv=newvenv, tenv=newtenv}
                 end
-    and transVar (venv , tenv, var) = let 
+    and transVar (venv:tyvenv , tenv:tytenv, var: A.var, loopDepth: int) = let 
             val {exp=_, ty=ty} = case var of
                 A.SimpleVar (n, p) => 
                     (case Symbol.look (venv, n) of
@@ -309,7 +316,7 @@ struct
                             | _ => raise ErrorMsg.Error)
                 | A.FieldVar (var, n, p) =>
                     let
-                        val {exp=_, ty=ty} = transVar (venv, tenv, var)
+                        val {exp=_, ty=ty} = transVar (venv, tenv, var, loopDepth)
                         val genfun = case ty of
                             T.RECORD genfun => genfun
                             | _ => raise ErrorMsg.Error
@@ -321,8 +328,8 @@ struct
                     end
                 | A.SubscriptVar (var, exp, p) => 
                     let
-                        val {exp=_, ty=ty} = transVar (venv, tenv, var)
-                        val {exp=_, ty=tyexp} = transExp (venv, tenv, exp)
+                        val {exp=_, ty=ty} = transVar (venv, tenv, var, loopDepth)
+                        val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth)
                     in
                         if T.equals(tyexp, T.INT) then ()
                         else raise ErrorMsg.Error;
@@ -332,12 +339,11 @@ struct
         in
             {exp = (), ty = ty}
         end 
-    and transTyDec (venv, tenv, tydec) = 
+    and transTyDec (venv:tyvenv, tenv:tytenv, tydec:A.tydec, loopDepth: int) = 
             let
                 val {name=n, ty=t, pos=p} = tydec
             in 
                 case t of
-                    (* TODO: cross recursion check e.g. type a = b; type b = a & mutual recursive type def & self recursive type def*)
                     A.NameTy (nRefTo, p') => 
                         let
                             val t = case Symbol.look (tenv, nRefTo) of
@@ -359,7 +365,7 @@ struct
                 | A.RecordTy fields => (venv, tenv)
             end
            
-    and transFunDec (venv, tenv, fundec) = 
+    and transFunDec (venv:tyvenv, tenv:tytenv, fundec:A.fundec, loopDepth: int) = 
             (* fundec = {name: symbol, params: field list, result: (symbol * pos) option, body: exp pos: pos}*)
             (* recurse through body of fundec, handle recursive fundec*)
             let
@@ -392,7 +398,7 @@ struct
                     val tenv = Env.base_tenv 
                 in
 
-                    transExp (venv, tenv, exp);
+                    transExp (venv, tenv, exp, 0);
                     PrintEnv.printEnv (venv, tenv)
                 end;
                 print "\nSemantic Analysis Succeed\n"

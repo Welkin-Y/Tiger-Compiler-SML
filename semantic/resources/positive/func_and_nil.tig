@@ -1,0 +1,8 @@
+let
+    type linkedNode = {
+        value : any,
+        next : linkedNode
+    }
+    function empty() : linkedNode = nil
+in
+end

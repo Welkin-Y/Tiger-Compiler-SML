@@ -1,0 +1,10 @@
+let 
+    type a = int
+    type b = string
+    type c = b
+
+    var v0 : c := "hello"
+    var v1 : a := 1
+in
+    v0 + v1
+end
