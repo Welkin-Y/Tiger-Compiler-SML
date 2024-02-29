@@ -235,7 +235,7 @@ struct
                                 | _ => []
                         in
                             case unique of
-                                NONE => (ErrorMsg.error pos ("Undefined type " ^ Symbol.name n); (recordFields, T.NIL, n))
+                                NONE => (ErrorMsg.error pos ("Undefined type " ^ Symbol.name n); raise ErrorMsg.Error)
                                 | SOME u => (recordFields, u, n)
                         end
                     val (newvenv, newtenv) = foldl (fn (tydec, (venv, tenv)) => 

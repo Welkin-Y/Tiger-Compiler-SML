@@ -1,0 +1,8 @@
+let
+    type a = {x: int, y: int}
+    type b = {x: int, y: int}
+    var a: a := a {x: 1, y: 2}
+    var b: b := b {x: 3, y: 4}
+in
+    a := b
+end

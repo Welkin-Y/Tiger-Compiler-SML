@@ -1,0 +1,8 @@
+let
+    type a = array of int
+    type b = array of int
+    var va : a := int [5] of 0
+    var vb : b := int [5] of 0
+in
+    va := vb
+end 
