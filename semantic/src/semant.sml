@@ -278,7 +278,21 @@ struct
                                             | _ => NONE
                                     in
                                         case tyNu of
-                                            SOME tyNu => ((name, T.RECORD (fn () => makeRec tyNu)) :: fieldlist)
+                                            SOME tyNu => let
+                                                val tydec = #1 tyNu
+                                                val {name=_, ty=t, pos=_} = tydec
+                                            in
+                                                case t of 
+                                                    A.RecordTy _ => ((name, T.RECORD (fn () => makeRec tyNu)) :: fieldlist)
+                                                    | A.ArrayTy _ => 
+                                                        let
+                                                            val arrTy = T.ARRAY (makeArr tyNu)
+                                                        in
+                                                            newtenv := Symbol.enter (!newtenv, typ, arrTy);
+                                                            ((name, arrTy) :: fieldlist)
+                                                        end
+                                                    | _ => fieldlist
+                                            end
                                             | _ => case ty of
                                                 SOME t => ((name, t) :: fieldlist)
                                                 | _ => fieldlist
@@ -287,16 +301,52 @@ struct
                         in
                             (recordFields, unique, n)
                         end
-
+                    and makeArr (tydec, unique) = 
+                        let
+                            val {name=n, ty=t, pos=pos} = tydec
+                            val _ = (tyTable := #1 (Symbol.remove (!tyTable, n)))
+                            val elementTy = case t of
+                                A.ArrayTy (symbol, p) => (case Symbol.look (!newtenv, symbol) of
+                                    SOME ty => SOME ty
+                                    | NONE => (
+                                        case Symbol.look (!tyTable, symbol) of
+                                            SOME tyNu => let
+                                                val (tydec, unique) = tyNu
+                                                val {name=n', ty=t', pos=pos'} = tydec
+                                            in
+                                                case t' of
+                                                    A.RecordTy _ => SOME (T.RECORD (fn () => makeRec tyNu))
+                                                    | A.ArrayTy _ => 
+                                                        let
+                                                            val arrTy = T.ARRAY (makeArr tyNu)
+                                                        in
+                                                            newtenv := Symbol.enter (!newtenv, symbol, arrTy);
+                                                            SOME arrTy
+                                                        end
+                                                    | _ => NONE
+                                            end
+                                            | NONE => (ErrorMsg.error pos ("Undefined type " ^ Symbol.name symbol); NONE)
+                                    ))
+                                | _ => NONE
+                        in
+                            case elementTy of
+                                SOME ty => (ty, unique)
+                                | NONE => (ErrorMsg.error pos ("Undefined type " ^ Symbol.name n); (T.NIL, ref ()))
+                        end
                 in
                     Symbol.appi (fn (name, tyNu) => 
                         let
                             val (tydec, unique) = tyNu
                             val {name=_, ty=t, pos=_} = tydec
                         in
-                            case t of
-                                A.RecordTy _ => newtenv := Symbol.enter (!newtenv, name, T.RECORD (fn () => makeRec tyNu))
-                                |  _ => (*TODO*)()
+                            case Symbol.look (!tyTable, name) of
+                                NONE => ()
+                                | SOME _ => (
+                                    case t of
+                                        A.RecordTy _ => newtenv := Symbol.enter (!newtenv, name, T.RECORD (fn () => makeRec tyNu))
+                                        | A.ArrayTy _ => newtenv := Symbol.enter (!newtenv, name, T.ARRAY (makeArr tyNu))
+                                        | _ => ()
+                                )
                         end) (!tyTable);
                     PrintEnv.printEnv (!newvenv, !newtenv);
                     {venv=(!newvenv), tenv=(!newtenv)}

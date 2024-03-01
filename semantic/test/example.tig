@@ -1,11 +1,5 @@
 let
-    type l = {a: b, b: tree}
-    type b = a
-    type a = c
-    type c = int
-    type d = {a: int, b: e}
-    type e = d
-    type m = array of int
-    type tree = {a: e, b: l}
+    type a = array of b
+    type b = {x: a}
 in
 end

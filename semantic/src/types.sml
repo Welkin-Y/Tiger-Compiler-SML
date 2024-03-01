@@ -23,7 +23,10 @@ struct
     | toString NIL = "NIL"
     | toString INT = "INT"
     | toString STRING = "STRING"
-    | toString (ARRAY n) = "ARRAY of " ^ (toString (#1 n))
+    | toString (ARRAY n) = "ARRAY of " ^ (
+      case #1 n of
+        RECORD f => "RECORD " ^ (Symbol.name (#3 (f())))
+        | a => toString a)
     | toString UNIT = "UNIT"
 
   fun equals (ty1, ty2) = case (ty1, ty2) of
