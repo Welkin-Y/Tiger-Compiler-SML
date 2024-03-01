@@ -1,5 +1,1 @@
-let
-    var a :int := for i := 1 to 5 do i 
-in
-    a
-end
+for i := 10 to 15 do print("wow")

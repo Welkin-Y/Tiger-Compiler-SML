@@ -1,5 +1,1 @@
-let
-in
-    while 1 do
-        print("Hello, World!")
-end
+while "hi" <> "hello" do (1+2;())

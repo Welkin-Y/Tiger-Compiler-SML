@@ -77,7 +77,8 @@ struct
                     val {exp=_, ty=tybody} = transExp (venv, tenv, body, loopDepth+1)
                 in
                     TC.checkIsType pos (tytest, T.INT);
-                    {exp=(), ty=tybody}
+                    TC.checkIsType pos (tybody, T.UNIT);
+                    {exp=(), ty=T.UNIT}
                 end
             | A.ForExp {var, escape, lo, hi, body, pos} => let
                     val {exp=_, ty=tylo} = transExp (venv, tenv, lo, loopDepth)
@@ -88,7 +89,8 @@ struct
                     PrintEnv.printEnv (newVenv, tenv);
                     TC.checkIsType pos (tylo, T.INT);
                     TC.checkIsType pos (tyhi, T.INT);
-                    {exp=(), ty=tybody}
+                    TC.checkIsType pos (tybody, T.UNIT);
+                    {exp=(), ty=T.UNIT}
                 end
             | A.BreakExp pos => if loopDepth > 0 then {exp=(), ty=T.UNIT}
                 else (ErrorMsg.error pos "SyntaxError: break outside loop"; raise ErrorMsg.Error)

@@ -1,0 +1,5 @@
+let
+    var a :int := for i := 1 to 5 do i
+in
+    a
+end
