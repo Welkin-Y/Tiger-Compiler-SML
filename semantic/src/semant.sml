@@ -303,7 +303,9 @@ struct
                         val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth)
                     in
                         TC.checkIsType p (tyexp, T.INT);
-                        {exp=(), ty=ty}
+                        case ty of 
+                            T.ARRAY (ty', _) => {exp=(), ty=ty'}
+                            | _ => (ErrorMsg.error p ("TypeError: not an array type " ^ T.toString ty); raise ErrorMsg.Error)
                     end
 
         in
