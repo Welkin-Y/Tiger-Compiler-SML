@@ -160,7 +160,7 @@ struct
                     | SOME ty => ty
                 val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth)
             in  
-                case ty of T.ARRAY (ty',_) => (TC.checkSameType pos (ty', tyinit); {exp=(), ty=ty'})
+                case ty of T.ARRAY (ty',_) => (TC.checkSameType pos (ty', tyinit); {exp=(), ty=ty})
                 | _ => (ErrorMsg.error pos ("TypeError: not an array type " ^ Symbol.name typ); raise ErrorMsg.Error)
             end
             

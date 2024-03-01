@@ -1,0 +1,8 @@
+let
+    type intarr = array of int 
+    var col := intarr [3] of 0
+    var i := 0
+    var j := 3
+in
+if col[i]=j then " 0" else " . "
+end

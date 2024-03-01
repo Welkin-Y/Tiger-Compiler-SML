@@ -1,7 +1,7 @@
 let
-    type a = array of string
-    function f():a = let
-        var a : a := string [5] of "hello"
+    type arr = array of string
+    function f():arr = let
+        var a := arr [5] of "hello"
     in
         a
     end
