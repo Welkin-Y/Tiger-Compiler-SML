@@ -1,0 +1,8 @@
+let 
+in
+    (let 
+        var a := 3
+    in
+    end;
+    a)
+end

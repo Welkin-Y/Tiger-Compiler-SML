@@ -1,0 +1,10 @@
+let
+    type a = {x: int, y: int}
+    function f():a = let
+        var a := a {x=1, y=2}
+    in
+        a
+    end
+in
+    f()
+end
