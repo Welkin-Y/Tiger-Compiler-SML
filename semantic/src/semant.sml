@@ -70,7 +70,7 @@ struct
                     val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth)
                 in
                     TC.checkSameType pos (tyvar, tyexp);
-                    {exp=(), ty=tyvar}
+                    {exp=(), ty=T.UNIT}
                 end
             | A.WhileExp {test, body, pos} => let
                     val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth)
@@ -160,9 +160,8 @@ struct
                     | SOME ty => ty
                 val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth)
             in  
-                (case ty of T.ARRAY (ty',_) => TC.checkSameType pos (ty', tyinit)
-                | _ => (ErrorMsg.error pos ("TypeError: not an array type " ^ Symbol.name typ); raise ErrorMsg.Error));
-                {exp=(), ty=T.ARRAY (ty, ref ())}
+                case ty of T.ARRAY (ty',_) => (TC.checkSameType pos (ty', tyinit); {exp=(), ty=ty'})
+                | _ => (ErrorMsg.error pos ("TypeError: not an array type " ^ Symbol.name typ); raise ErrorMsg.Error)
             end
             
 
