@@ -246,7 +246,7 @@ struct
                                             | _ => NONE
                                         val ty = case tyNu of
                                             NONE => (case Symbol.look (!newtenv, typ) of
-                                                NONE => (NONE => TC.undefinedTypeErr pos typ; NONE)
+                                                NONE => (TC.undefinedTypeErr pos typ; NONE)
                                                 | SOME ty => SOME ty)
                                             | _ => NONE
                                     in
