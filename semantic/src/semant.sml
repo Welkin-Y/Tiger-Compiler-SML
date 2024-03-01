@@ -21,12 +21,7 @@ struct
 
                         val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth) 
                     in
-                        case tytest of
-                            T.INT => ()
-                        | _ => (ErrorMsg.error pos "test expression should be int"; raise ErrorMsg.Error);
-                        if not (T.equals(tythen, tyelse)) then (ErrorMsg.error pos (" Unmatched type: then exp is " ^ T.toString tythen ^ ", else exp is " ^ T.toString tyelse); 
-                        raise ErrorMsg.Error)
-                         else ();
+                        TC.checkIfExp pos (tytest, tythen, tyelse);
                         {exp=(), ty=tythen}
                     end
             | A.OpExp {left, oper, right, pos} =>
@@ -35,16 +30,16 @@ struct
                     val {exp=_, ty=tyright} = transExp (venv, tenv, right, loopDepth)
                 in
                     case oper of
-                        A.PlusOp => TC.checkIntOp oper pos (tyleft, tyright)
-                    | A.MinusOp => TC.checkIntOp oper pos (tyleft, tyright)
-                    | A.TimesOp => TC.checkIntOp oper pos (tyleft, tyright)
-                    | A.DivideOp => TC.checkIntOp oper pos (tyleft, tyright)
-                    | A.EqOp => TC.checkEqOp oper pos (tyleft, tyright)
-                    | A.NeqOp => TC.checkEqOp oper pos (tyleft, tyright)
-                    | A.LtOp => TC.checkIntOp oper pos (tyleft, tyright)
-                    | A.LeOp => TC.checkIntOp oper pos (tyleft, tyright)
-                    | A.GtOp => TC.checkIntOp oper pos (tyleft, tyright)
-                    | A.GeOp => TC.checkIntOp oper pos (tyleft, tyright)
+                        A.PlusOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.MinusOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.TimesOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.DivideOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.EqOp => (TC.checkEqOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.NeqOp => (TC.checkEqOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.LtOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.LeOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.GtOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.GeOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
                 end
             (* Check Let Exp: 1. gothrough decs 2. go through body*)
             | A.LetExp {decs, body, pos} => 
@@ -74,15 +69,14 @@ struct
                     val {exp=_, ty=tyvar} = transVar (venv, tenv, var, loopDepth)
                     val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth)
                 in
-                    if T.equals(tyvar, tyexp) then {exp=(), ty=tyvar}
-                    else (ErrorMsg.error pos ("Unmatched type: var is " ^ T.toString tyvar ^ ", but exp is " ^ T.toString tyexp); raise ErrorMsg.Error)
+                    TC.checkSameType pos (tyvar, tyexp);
+                    {exp=(), ty=tyvar}
                 end
             | A.WhileExp {test, body, pos} => let
                     val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth)
                     val {exp=_, ty=tybody} = transExp (venv, tenv, body, loopDepth+1)
                 in
-                    if T.equals(tytest, T.INT) then ()
-                    else (ErrorMsg.error pos "test expression should be int"; raise ErrorMsg.Error);
+                    TC.checkIsType pos (tytest, T.INT);
                     {exp=(), ty=tybody}
                 end
             | A.ForExp {var, escape, lo, hi, body, pos} => let
@@ -92,29 +86,28 @@ struct
                     val {exp=_, ty=tybody} = transExp (newVenv, tenv, body, loopDepth+1)
                 in          
                     PrintEnv.printEnv (newVenv, tenv);
-                    if T.equals(tylo, T.INT) andalso T.equals(tyhi, T.INT) then ()
-                    else (ErrorMsg.error pos "lo and hi should be int"; raise ErrorMsg.Error);
+                    TC.checkIsType pos (tylo, T.INT);
+                    TC.checkIsType pos (tyhi, T.INT);
                     {exp=(), ty=tybody}
                 end
             | A.BreakExp pos => if loopDepth > 0 then {exp=(), ty=T.UNIT}
-                else (ErrorMsg.error pos "break statement not within loop"; raise ErrorMsg.Error)
+                else (ErrorMsg.error pos "SyntaxError: break outside loop"; raise ErrorMsg.Error)
              (*0. check if func exist 1. check if args align with definition *)
             | A.CallExp {func, args, pos} => let
                     val funcentry = case Symbol.look (venv, func) of
-                        NONE => (ErrorMsg.error pos ("Undefined function " ^ Symbol.name func); raise ErrorMsg.Error)
+                        NONE => TC.undefinedErr pos func
                         | SOME entry => entry
                     val {formals, result} = case funcentry of
                         Env.FunEntry record => record
-                        | _ => (ErrorMsg.error pos ("Not a function " ^ Symbol.name func); raise ErrorMsg.Error)
+                        | _ => (ErrorMsg.error pos ("SyntaxError: not a function " ^ Symbol.name func); raise ErrorMsg.Error)
                     (*check if the number of args align with the number of formals*)
                     val _ = if (length args) = (length formals) then ()
-                        else (ErrorMsg.error pos ("Unmatched number of args: function " ^ Symbol.name func ^ " has " ^ Int.toString (length formals) ^ " args, but called with " ^ Int.toString (length args)); raise ErrorMsg.Error)
+                        else (ErrorMsg.error pos ("TypeError: " ^ Symbol.name func ^ " () takes " ^ Int.toString (length formals) ^ " positional argument(s) but called with" ^ Int.toString (length args) ^ " argument(s)"); raise ErrorMsg.Error)
                     val _ = map (fn (arg, formal) =>
                         let
                             val {exp=_, ty=tyarg} = transExp (venv, tenv, arg, loopDepth)
                         in
-                            if T.equals(tyarg, formal) then ()
-                            else (ErrorMsg.error pos ("Unmatched type: arg is " ^ T.toString tyarg ^ ", but formal is " ^ T.toString formal); raise ErrorMsg.Error)
+                            TC.checkSameType pos (tyarg, formal)
                         end) (ListPair.zip(args, formals))
                 in
                     {exp=(), ty=result}
@@ -122,15 +115,15 @@ struct
                 (*0. check if the type of record exist in tenv 1. check if the field name&type aigned with definition*)
             | A.RecordExp {fields, typ, pos} => let
                     val ty = case Symbol.look (tenv, typ) of
-                        NONE => (ErrorMsg.error pos ("Undefined type " ^ Symbol.name typ); raise ErrorMsg.Error)
+                        NONE => TC.undefinedErr pos typ
                         | SOME ty => ty
                     val genfun = case ty of
                         T.RECORD genfun => genfun
-                        | _ => (ErrorMsg.error pos ("Not a record type " ^ Symbol.name typ); raise ErrorMsg.Error)
+                        | _ => (ErrorMsg.error pos ("TypeError: not a record type " ^ Symbol.name typ); raise ErrorMsg.Error)
                     val (recordFields, _, _) = genfun ()
                     (*check if the number of fields align with the number of recordFields*)
                     val _ = if (length fields) = (length recordFields) then ()
-                        else (ErrorMsg.error pos ("Unmatched number of fields: record " ^ Symbol.name typ ^ " has " ^ Int.toString (length recordFields) ^ " fields, but called with " ^ Int.toString (length fields)); raise ErrorMsg.Error)
+                        else (ErrorMsg.error pos ("TypeError: unmatched number of fields: record " ^ Symbol.name typ ^ " has " ^ Int.toString (length recordFields) ^ " fields, but called with " ^ Int.toString (length fields)); raise ErrorMsg.Error)
                         (*check if the field name&type can be found in definition*)
                     val _ = map (fn (field) =>
                         let
@@ -140,21 +133,19 @@ struct
                             
                         in
                             case List.find (fn (name, _) => name = symbol) recordFields of
-                                NONE => (ErrorMsg.error pos ("Undefined field " ^ Symbol.name symbol); raise ErrorMsg.Error)
+                                NONE => TC.undefinedErr pos symbol
                                 | SOME (name, ty) => 
-                                    if T.equals(tyexp, ty) then ()
-                                    else (ErrorMsg.error pos ("Unmatched type: field " ^ Symbol.name symbol ^ " is " ^ T.toString tyexp ^ ", but declared as " ^ T.toString ty); raise ErrorMsg.Error)
+                                    TC.checkSameType pos (tyexp, ty)
                         end) fields
                     (* check if all recordFields can be find in field*)
                     val _ = map (fn (name, typ) =>
                         
                         case List.find (fn (symbol, exp, pos) => symbol = name) fields of
-                            NONE => (ErrorMsg.error pos ("Undefined field " ^ Symbol.name name); raise ErrorMsg.Error)
+                            NONE => TC.undefinedErr pos name
                             | SOME (symbol, exp, pos) => let
                                 val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth)
                             in
-                                if T.equals(tyexp, typ) then ()
-                                else (ErrorMsg.error pos ("Unmatched type: field " ^ Symbol.name symbol ^ " is " ^ T.toString tyexp ^ ", but declared as " ^ T.toString typ); raise ErrorMsg.Error)
+                                TC.checkSameType pos (tyexp, typ)
                             end) recordFields
                 in
                     {exp=(), ty=ty}
@@ -165,13 +156,13 @@ struct
             (*0. check if the type of array exist in tenv 1. check if the type of init is same as the type of array*)
             let 
                 val ty = case Symbol.look (tenv, typ) of
-                    NONE => (ErrorMsg.error pos ("Undefined type " ^ Symbol.name typ); raise ErrorMsg.Error)
+                    NONE => TC.undefinedErr pos typ
                     | SOME ty => ty
                 val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth)
 
             in
-                if T.equals(ty, tyinit) then {exp=(), ty=T.ARRAY (ty, ref ())}
-                else raise ErrorMsg.Error
+                TC.checkSameType pos (ty, tyinit);
+                {exp=(), ty=T.ARRAY (ty, ref ())}
             end
             
 
@@ -183,7 +174,7 @@ struct
                         val newtyp = case typ of
                                 NONE => tyinit
                             | SOME t => case Symbol.look (tenv, #1 t) of 
-                                    NONE => (ErrorMsg.error pos ("Undefined type " ^ Symbol.name (#1 t)); raise ErrorMsg.Error)
+                                    NONE => TC.undefinedErr pos (#1 t)
                                 | SOME ty => ty
                     in
                         if T.equals(newtyp, tyinit) then 
@@ -194,8 +185,8 @@ struct
                                 {venv = newVenv, tenv = tenv}
                             end
                         else case newtyp of
-                            T.NIL => (ErrorMsg.error pos ("Using nil to initialize variable without type"); raise ErrorMsg.Error)
-                        | _ => (ErrorMsg.error pos ("Unmatched type: var " ^ Symbol.name name ^ " is " ^ T.toString tyinit ^ ", but declared as " ^ T.toString newtyp); raise ErrorMsg.Error)
+                            T.NIL => (ErrorMsg.error pos ("SyntaxError: using nil to initialize variable without type"); raise ErrorMsg.Error)
+                        | _ => (ErrorMsg.error pos ("TypeError: unmatched type: var " ^ Symbol.name name ^ " is " ^ T.toString tyinit ^ ", but declared as " ^ T.toString newtyp); raise ErrorMsg.Error)
                     end
             | A.TypeDec tydecs => 
                 let 
@@ -222,7 +213,7 @@ struct
                                             | _ => NONE
                                         val ty = case recordTydec of
                                             NONE => (case Symbol.look (tenv, typ) of
-                                                NONE => (ErrorMsg.error pos ("Undefined type " ^ Symbol.name typ); NONE)
+                                                NONE => TC.undefinedErr pos typ
                                                 | SOME ty => SOME ty)
                                             | _ => NONE
                                     in
@@ -235,7 +226,7 @@ struct
                                 | _ => []
                         in
                             case unique of
-                                NONE => (ErrorMsg.error pos ("Undefined type " ^ Symbol.name n); raise ErrorMsg.Error)
+                                NONE => TC.undefinedErr pos n
                                 | SOME u => (recordFields, u, n)
                         end
                     val (newvenv, newtenv) = foldl (fn (tydec, (venv, tenv)) => 
@@ -265,7 +256,7 @@ struct
                             let
                                 val {name, escape, typ, pos} = param
                                 val ty = case Symbol.look (tenv, typ) of
-                                    NONE => (ErrorMsg.error pos ("Undefined type " ^ Symbol.name typ); raise ErrorMsg.Error)
+                                    NONE => TC.undefinedErr pos typ
                                 | SOME ty => ty
                             in
                                 Symbol.enter (venv, name, Env.VarEntry {ty=ty})
@@ -274,15 +265,13 @@ struct
                         (*check if expty consistent with the delared function ty*)
                         in
                         case result of
-                        NONE => if (T.equals(typ, T.UNIT)) then ()
-                            else ( ErrorMsg.error pos ("Unmatched type: function " ^ Symbol.name name ^ " return type is " ^ T.toString typ ^ ", but declared as unit"); raise ErrorMsg.Error) 
+                        NONE => TC.checkIsType pos (typ, T.UNIT)
                         | SOME (sym, _) => let 
                             val symty = case Symbol.look (newtenv, sym) of
-                                NONE => (ErrorMsg.error pos ("Undefined type " ^ Symbol.name sym); raise ErrorMsg.Error)
+                                NONE => TC.undefinedErr pos sym
                                 | SOME ty => ty
                             in
-                            if (T.equals(typ, symty)) then ()
-                                else ( ErrorMsg.error pos ("Unmatched type: function " ^ Symbol.name name ^ " return type is " ^ T.toString typ ^ ", but declared as " ^ Symbol.name sym ^ " type " ^ T.toString symty); raise ErrorMsg.Error)
+                                TC.checkSameType pos (typ, symty)
                             end
                         end)) fundecs
                 in
@@ -293,20 +282,20 @@ struct
             val {exp=_, ty=ty} = case var of
                 A.SimpleVar (n, p) => 
                     (case Symbol.look (venv, n) of
-                        NONE => (ErrorMsg.error p ("Undefined variable " ^ Symbol.name n); raise ErrorMsg.Error)
+                        NONE => TC.undefinedErr p n
                         | SOME entry => case entry of
                             Env.VarEntry {ty=ty} => {exp=(), ty=ty}
-                            | _ => (ErrorMsg.error p ("Not a variable " ^ Symbol.name n); raise ErrorMsg.Error))
+                            | _ => (ErrorMsg.error p ("TypeError: not a variable " ^ Symbol.name n); raise ErrorMsg.Error))
                 | A.FieldVar (var, n, p) =>
                     let
                         val {exp=_, ty=ty} = transVar (venv, tenv, var, loopDepth)
                         val genfun = case ty of
                             T.RECORD genfun => genfun
-                            | _ => (ErrorMsg.error p ("Not a record type " ^ T.toString ty); raise ErrorMsg.Error)
+                            | _ => (ErrorMsg.error p ("TypeError: not a record type " ^ T.toString ty); raise ErrorMsg.Error)
                         val (fields, _, _) = genfun ()
                     in
                         case List.find (fn (name, _) => name = n) fields of
-                            NONE => (ErrorMsg.error p ("Undefined field " ^ Symbol.name n); raise ErrorMsg.Error)
+                            NONE => TC.undefinedErr p n
                             | SOME (_, ty) => {exp=(), ty=ty}
                     end
                 | A.SubscriptVar (var, exp, p) => 
@@ -314,8 +303,7 @@ struct
                         val {exp=_, ty=ty} = transVar (venv, tenv, var, loopDepth)
                         val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth)
                     in
-                        if T.equals(tyexp, T.INT) then ()
-                        else (ErrorMsg.error p "subscript expression should be int"; raise ErrorMsg.Error);
+                        TC.checkIsType p (tyexp, T.INT);
                         {exp=(), ty=ty}
                     end
 
@@ -330,8 +318,7 @@ struct
                     A.NameTy (nRefTo, p') => 
                         let
                             val t = case Symbol.look (tenv, nRefTo) of
-                                NONE => (ErrorMsg.error p' ("Undefined type " ^ Symbol.name nRefTo);
-                                raise ErrorMsg.Error)
+                                NONE => TC.undefinedErr p' nRefTo
                                 | SOME ty => ty
                         in
                             (venv, Symbol.enter (tenv, n, t))
@@ -340,7 +327,7 @@ struct
                 | A.ArrayTy (nRefTo, p') =>
                     let
                         val t = case Symbol.look (tenv, nRefTo) of
-                            NONE => (ErrorMsg.error p' ("Undefined type " ^ Symbol.name nRefTo); raise ErrorMsg.Error)
+                            NONE => TC.undefinedErr p' nRefTo
                             | SOME ty => ty
                     in
                         (venv, Symbol.enter (tenv, n, T.ARRAY (t, ref ())))
@@ -358,7 +345,7 @@ struct
                         let
                             val {name, escape, typ, pos} = param
                             val ty = case Symbol.look (tenv, typ) of
-                                    NONE => ( ErrorMsg.error pos ("Undefined type " ^ Symbol.name typ); raise ErrorMsg.Error)
+                                    NONE => TC.undefinedErr pos typ
                                 | SOME ty => ty
                         in
                             ty::params_ty
@@ -367,7 +354,7 @@ struct
                 val res_ty = case result of NONE => T.UNIT
                     | SOME (sym, _) => 
                         case Symbol.look (tenv, sym) of
-                            NONE => (ErrorMsg.error pos ("Undefined type " ^ Symbol.name sym); raise ErrorMsg.Error)
+                            NONE => TC.undefinedErr pos sym
                         | SOME ty => ty
                 val newVenv = Symbol.enter (venv, name, Env.FunEntry {formals=newparams_ty, result=res_ty}) 
             in
