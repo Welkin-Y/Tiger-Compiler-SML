@@ -159,9 +159,9 @@ struct
                     NONE => TC.undefinedTypeErr pos typ
                     | SOME ty => ty
                 val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth)
-
-            in
-                TC.checkSameType pos (ty, tyinit);
+            in  
+                (case ty of T.ARRAY (ty',_) => TC.checkSameType pos (ty', tyinit)
+                | _ => (ErrorMsg.error pos ("TypeError: not an array type " ^ Symbol.name typ); raise ErrorMsg.Error));
                 {exp=(), ty=T.ARRAY (ty, ref ())}
             end
             
