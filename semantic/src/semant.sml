@@ -188,57 +188,141 @@ struct
                         | _ => (ErrorMsg.error pos ("TypeError: unmatched type: var " ^ Symbol.name name ^ " is " ^ T.toString tyinit ^ ", but declared as " ^ T.toString newtyp); raise ErrorMsg.Error)
                     end
             | A.TypeDec tydecs => 
-                let 
-                    val uniqueAndTydecMap : ((T.unique * A.tydec) Symbol.table) = foldl (fn (tydec, tab) => 
+                let
+                    val newvenv : (Env.enventry Symbol.table) ref = ref venv
+                    val newtenv : (T.ty Symbol.table) ref = ref tenv
+                    val aliasTable : ((unit Symbol.table) Symbol.table) ref = ref Symbol.empty
+                    val tyTable : ((A.tydec * T.unique) Symbol.table) ref = ref Symbol.empty
+                    fun updateAlias (name, ty) = 
+                        case Symbol.look (!tyTable, name) of
+                            NONE => ()
+                            | SOME _ => (
+                                newtenv := Symbol.enter (!newtenv, name, ty);
+                                tyTable := #1 (Symbol.remove (!tyTable, name));
+                                case Symbol.look (!aliasTable, name) of
+                                    SOME alias => Symbol.appi (fn (n, _) => updateAlias (n, ty)) alias
+                                    | NONE => ()
+                            )
+                    fun updateAliasRecAndArr (name, tyNu) = (
+                        tyTable := Symbol.enter (!tyTable, name, tyNu);
+                        case Symbol.look (!aliasTable, name) of
+                            NONE => ()
+                            | SOME alias => Symbol.appi (fn (n, _) => updateAliasRecAndArr (n, tyNu)) alias
+                    )
+                    val _ = foldl (fn (tydec, _) => 
                         let
-                            val {name=n, ty=t, pos=_} = tydec
+                            val {name=name, ty=ty, pos=pos} = tydec
                         in
-                            case t of
-                            A.RecordTy _ => Symbol.enter (tab, n, (ref (), tydec))
-                            | _ => tab
-                        end) Symbol.empty tydecs
-                    fun makeRec tydec = 
+                            case ty of
+                                A.NameTy (n, p) => (
+                                    tyTable := Symbol.enter (!tyTable, name, (tydec, ref ()));
+                                    case Symbol.look (!newtenv, n) of
+                                        NONE => (case Symbol.look (!tyTable, n) of
+                                            NONE => 
+                                                aliasTable := Symbol.enter (!aliasTable, n, Symbol.enter (case Symbol.look (!aliasTable, n) of
+                                                    SOME aT => aT
+                                                    | NONE => Symbol.empty, name, ()))
+                                            | SOME tyNu => 
+                                                (let
+                                                    val (tydec, unique) = tyNu
+                                                    val {name=n, ty=t, pos=pos} = tydec
+                                                in
+                                                    case t of 
+                                                        A.NameTy _ => ErrorMsg.error pos ("Illegal alias cycle.")
+                                                        | _ => updateAliasRecAndArr (name, tyNu)
+                                                end))
+                                        | SOME ty => updateAlias (name, ty))
+                                | _ => updateAliasRecAndArr (name, (tydec, ref ()))
+                        end) () tydecs
+                    fun makeRec (tydec, unique) = 
                         let
                             val {name=n, ty=t, pos=pos} = tydec
-                            val unique = case Symbol.look (uniqueAndTydecMap, n) of
-                                SOME (u,_) => SOME u
-                                | _ => NONE
                             val recordFields = case t of
                                 A.RecordTy fields => foldr (fn (field, fieldlist) =>
                                     let
                                         val {name, escape, typ, pos} = field
-                                        val recordTydec = case Symbol.look (uniqueAndTydecMap, typ) of
-                                            SOME (_,rt) => SOME rt
+                                        val tyNu = case Symbol.look (!tyTable, typ) of
+                                            SOME tyNu => SOME tyNu
                                             | _ => NONE
-                                        val ty = case recordTydec of
-                                            NONE => (case Symbol.look (tenv, typ) of
-                                                NONE => TC.undefinedTypeErr pos typ
+                                        val ty = case tyNu of
+                                            NONE => (case Symbol.look (!newtenv, typ) of
+                                                NONE => (NONE => TC.undefinedTypeErr pos typ; NONE)
                                                 | SOME ty => SOME ty)
                                             | _ => NONE
                                     in
-                                        case recordTydec of
-                                            SOME rt => ((name, T.RECORD (fn () => makeRec rt)) :: fieldlist)
+                                        case tyNu of
+                                            SOME tyNu => let
+                                                val tydec = #1 tyNu
+                                                val {name=_, ty=t, pos=_} = tydec
+                                            in
+                                                case t of 
+                                                    A.RecordTy _ => ((name, T.RECORD (fn () => makeRec tyNu)) :: fieldlist)
+                                                    | A.ArrayTy _ => 
+                                                        let
+                                                            val arrTy = T.ARRAY (makeArr tyNu)
+                                                        in
+                                                            newtenv := Symbol.enter (!newtenv, typ, arrTy);
+                                                            ((name, arrTy) :: fieldlist)
+                                                        end
+                                                    | _ => fieldlist
+                                            end
                                             | _ => case ty of
                                                 SOME t => ((name, t) :: fieldlist)
                                                 | _ => fieldlist
                                     end) [] fields
                                 | _ => []
                         in
-                            case unique of
-                                NONE => TC.undefinedNameErr pos n
-                                | SOME u => (recordFields, u, n)
+                            (recordFields, unique, n)
                         end
-                    val (newvenv, newtenv) = foldl (fn (tydec, (venv, tenv)) => 
-                        let 
-                            val {name=n, ty=t, pos=_} = tydec
+                    and makeArr (tydec, unique) = 
+                        let
+                            val {name=n, ty=t, pos=pos} = tydec
+                            val _ = (tyTable := #1 (Symbol.remove (!tyTable, n)))
+                            val elementTy = case t of
+                                A.ArrayTy (symbol, p) => (case Symbol.look (!newtenv, symbol) of
+                                    SOME ty => SOME ty
+                                    | NONE => (
+                                        case Symbol.look (!tyTable, symbol) of
+                                            SOME tyNu => let
+                                                val (tydec, unique) = tyNu
+                                                val {name=n', ty=t', pos=pos'} = tydec
+                                            in
+                                                case t' of
+                                                    A.RecordTy _ => SOME (T.RECORD (fn () => makeRec tyNu))
+                                                    | A.ArrayTy _ => 
+                                                        let
+                                                            val arrTy = T.ARRAY (makeArr tyNu)
+                                                        in
+                                                            newtenv := Symbol.enter (!newtenv, symbol, arrTy);
+                                                            SOME arrTy
+                                                        end
+                                                    | _ => NONE
+                                            end
+                                            | NONE => (TC.undefinedTypeErr pos symbol; NONE)
+                                    ))
+                                | _ => NONE
                         in
-                            case t of
-                                A.RecordTy _ => (venv, Symbol.enter (tenv, n, T.RECORD (fn () => makeRec tydec)))
-                                | _ => transTyDec (venv, tenv, tydec, loopDepth)
-                        end) (venv, tenv) tydecs
+                            case elementTy of
+                                SOME ty => (ty, unique)
+                                | NONE => (TC.undefinedTypeErr pos n; (T.NIL, ref ()))
+                        end
                 in
-                    PrintEnv.printEnv (newvenv, newtenv);
-                    {venv=newvenv, tenv=newtenv}
+                    Symbol.appi (fn (name, tyNu) => 
+                        let
+                            val (tydec, unique) = tyNu
+                            val {name=_, ty=t, pos=_} = tydec
+                        in
+                            case Symbol.look (!tyTable, name) of
+                                NONE => ()
+                                | SOME _ => (
+                                    case t of
+                                        A.RecordTy _ => newtenv := Symbol.enter (!newtenv, name, T.RECORD (fn () => makeRec tyNu))
+                                        | A.ArrayTy _ => newtenv := Symbol.enter (!newtenv, name, T.ARRAY (makeArr tyNu))
+                                        | _ => ()
+                                )
+                        end) (!tyTable);
+                    PrintEnv.printEnv (!newvenv, !newtenv);
+                    {venv=(!newvenv), tenv=(!newtenv)}
                 end
             | A.FunctionDec fundecs => 
                 let
