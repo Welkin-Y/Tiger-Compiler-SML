@@ -95,7 +95,7 @@ struct
              (*0. check if func exist 1. check if args align with definition *)
             | A.CallExp {func, args, pos} => let
                     val funcentry = case Symbol.look (venv, func) of
-                        NONE => TC.undefinedErr pos func
+                        NONE => TC.undefinedNameErr pos func
                         | SOME entry => entry
                     val {formals, result} = case funcentry of
                         Env.FunEntry record => record
@@ -115,7 +115,7 @@ struct
                 (*0. check if the type of record exist in tenv 1. check if the field name&type aigned with definition*)
             | A.RecordExp {fields, typ, pos} => let
                     val ty = case Symbol.look (tenv, typ) of
-                        NONE => TC.undefinedErr pos typ
+                        NONE => TC.undefinedTypeErr pos typ
                         | SOME ty => ty
                     val genfun = case ty of
                         T.RECORD genfun => genfun
@@ -133,7 +133,7 @@ struct
                             
                         in
                             case List.find (fn (name, _) => name = symbol) recordFields of
-                                NONE => TC.undefinedErr pos symbol
+                                NONE => TC.undefinedNameErr pos symbol
                                 | SOME (name, ty) => 
                                     TC.checkSameType pos (tyexp, ty)
                         end) fields
@@ -141,7 +141,7 @@ struct
                     val _ = map (fn (name, typ) =>
                         
                         case List.find (fn (symbol, exp, pos) => symbol = name) fields of
-                            NONE => TC.undefinedErr pos name
+                            NONE => TC.undefinedNameErr pos name
                             | SOME (symbol, exp, pos) => let
                                 val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth)
                             in
@@ -156,7 +156,7 @@ struct
             (*0. check if the type of array exist in tenv 1. check if the type of init is same as the type of array*)
             let 
                 val ty = case Symbol.look (tenv, typ) of
-                    NONE => TC.undefinedErr pos typ
+                    NONE => TC.undefinedTypeErr pos typ
                     | SOME ty => ty
                 val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth)
 
@@ -174,7 +174,7 @@ struct
                         val newtyp = case typ of
                                 NONE => tyinit
                             | SOME t => case Symbol.look (tenv, #1 t) of 
-                                    NONE => TC.undefinedErr pos (#1 t)
+                                    NONE => TC.undefinedTypeErr pos (#1 t)
                                 | SOME ty => ty
                     in
                         if T.equals(newtyp, tyinit) then 
@@ -213,7 +213,7 @@ struct
                                             | _ => NONE
                                         val ty = case recordTydec of
                                             NONE => (case Symbol.look (tenv, typ) of
-                                                NONE => TC.undefinedErr pos typ
+                                                NONE => TC.undefinedTypeErr pos typ
                                                 | SOME ty => SOME ty)
                                             | _ => NONE
                                     in
@@ -226,7 +226,7 @@ struct
                                 | _ => []
                         in
                             case unique of
-                                NONE => TC.undefinedErr pos n
+                                NONE => TC.undefinedNameErr pos n
                                 | SOME u => (recordFields, u, n)
                         end
                     val (newvenv, newtenv) = foldl (fn (tydec, (venv, tenv)) => 
@@ -256,7 +256,7 @@ struct
                             let
                                 val {name, escape, typ, pos} = param
                                 val ty = case Symbol.look (tenv, typ) of
-                                    NONE => TC.undefinedErr pos typ
+                                    NONE => TC.undefinedTypeErr pos typ
                                 | SOME ty => ty
                             in
                                 Symbol.enter (venv, name, Env.VarEntry {ty=ty})
@@ -268,7 +268,7 @@ struct
                         NONE => TC.checkIsType pos (typ, T.UNIT)
                         | SOME (sym, _) => let 
                             val symty = case Symbol.look (newtenv, sym) of
-                                NONE => TC.undefinedErr pos sym
+                                NONE => TC.undefinedTypeErr pos sym
                                 | SOME ty => ty
                             in
                                 TC.checkSameType pos (typ, symty)
@@ -282,7 +282,7 @@ struct
             val {exp=_, ty=ty} = case var of
                 A.SimpleVar (n, p) => 
                     (case Symbol.look (venv, n) of
-                        NONE => TC.undefinedErr p n
+                        NONE => TC.undefinedNameErr p n
                         | SOME entry => case entry of
                             Env.VarEntry {ty=ty} => {exp=(), ty=ty}
                             | _ => (ErrorMsg.error p ("TypeError: not a variable " ^ Symbol.name n); raise ErrorMsg.Error))
@@ -295,7 +295,7 @@ struct
                         val (fields, _, _) = genfun ()
                     in
                         case List.find (fn (name, _) => name = n) fields of
-                            NONE => TC.undefinedErr p n
+                            NONE => TC.undefinedNameErr p n
                             | SOME (_, ty) => {exp=(), ty=ty}
                     end
                 | A.SubscriptVar (var, exp, p) => 
@@ -318,7 +318,7 @@ struct
                     A.NameTy (nRefTo, p') => 
                         let
                             val t = case Symbol.look (tenv, nRefTo) of
-                                NONE => TC.undefinedErr p' nRefTo
+                                NONE => TC.undefinedTypeErr p' nRefTo
                                 | SOME ty => ty
                         in
                             (venv, Symbol.enter (tenv, n, t))
@@ -327,7 +327,7 @@ struct
                 | A.ArrayTy (nRefTo, p') =>
                     let
                         val t = case Symbol.look (tenv, nRefTo) of
-                            NONE => TC.undefinedErr p' nRefTo
+                            NONE => TC.undefinedTypeErr p' nRefTo
                             | SOME ty => ty
                     in
                         (venv, Symbol.enter (tenv, n, T.ARRAY (t, ref ())))
@@ -345,7 +345,7 @@ struct
                         let
                             val {name, escape, typ, pos} = param
                             val ty = case Symbol.look (tenv, typ) of
-                                    NONE => TC.undefinedErr pos typ
+                                    NONE => TC.undefinedTypeErr pos typ
                                 | SOME ty => ty
                         in
                             ty::params_ty
@@ -354,14 +354,13 @@ struct
                 val res_ty = case result of NONE => T.UNIT
                     | SOME (sym, _) => 
                         case Symbol.look (tenv, sym) of
-                            NONE => TC.undefinedErr pos sym
+                            NONE => TC.undefinedTypeErr pos sym
                         | SOME ty => ty
                 val newVenv = Symbol.enter (venv, name, Env.FunEntry {formals=newparams_ty, result=res_ty}) 
             in
                 PrintEnv.printEnv (newVenv, tenv);
                 {venv=newVenv, tenv=tenv}
             end
-    and transTy (tenv, ty) = T.INT (*TODO*)
     and transProg (exp: A.exp) = (
                 let 
                     val venv = Env.base_venv

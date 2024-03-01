@@ -52,7 +52,10 @@ struct
                                         (ErrorMsg.error pos msg; raise ErrorMsg.Error)
                                 end
 
-        fun undefinedErr pos name =
+        fun undefinedNameErr pos name =
                         (ErrorMsg.error pos ("NameError: name " ^ Symbol.name name ^ " is not defined"); raise ErrorMsg.Error)
+
+        fun undefinedTypeErr pos name =
+                        (ErrorMsg.error pos ("TypeError: type " ^ Symbol.name name ^ " is not defined"); raise ErrorMsg.Error)
 
 end
