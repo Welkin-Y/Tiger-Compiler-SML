@@ -30,16 +30,16 @@ struct
                     val {exp=_, ty=tyright} = transExp (venv, tenv, right, loopDepth)
                 in
                     case oper of
-                        A.PlusOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.MinusOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.TimesOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.DivideOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                        A.PlusOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.MinusOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.TimesOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.DivideOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
                     | A.EqOp => (TC.checkEqOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
                     | A.NeqOp => (TC.checkEqOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.LtOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.LeOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.GtOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.GeOp => (TC.checkIntOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.LtOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.LeOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.GtOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    | A.GeOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
                 end
             (* Check Let Exp: 1. gothrough decs 2. go through body*)
             | A.LetExp {decs, body, pos} => 

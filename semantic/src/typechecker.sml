@@ -34,6 +34,7 @@ struct
 
         fun checkEqOp oper pos (tyleft, tyright) =
                         case tyleft of T.INT => checkSameType pos (tyleft, tyright)
+                        | T.STRING => checkSameType pos (tyleft, tyright)
                         | T.RECORD f => checkSameType pos (tyleft, tyright)
                         | T.ARRAY t => checkSameType pos (tyleft, tyright)
                         | T.NIL => checkSameType pos (tyleft, tyright)
@@ -44,8 +45,9 @@ struct
                                 end
             
     
-        fun checkIntOp oper pos (tyleft, tyright) = 
+        fun checkIntStringOp oper pos (tyleft, tyright) = 
                         case tyleft of T.INT => checkSameType pos (tyleft, tyright)
+                        | T.STRING => checkSameType pos (tyleft, tyright)
                         | _ => let val msg = "TypeError: Unsupported operand type(s) for " ^ 
                                                 (opToString oper) ^ ": expect " ^ T.toString T.INT ^ ", but got " ^ T.toString tyleft 
                                 in
