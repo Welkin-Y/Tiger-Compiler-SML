@@ -178,7 +178,7 @@ struct
                     in
                         if T.equals(newtyp, tyinit) then 
                             let 
-                                val newVenv =  Symbol.enter(venv, name, Env.VarEntry {ty=tyinit})
+                                val newVenv =  Symbol.enter(venv, name, Env.VarEntry {ty=newtyp})
                                 val _ = PrintEnv.printEnv (newVenv,tenv)
                             in
                                 {venv = newVenv, tenv = tenv}
