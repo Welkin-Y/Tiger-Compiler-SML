@@ -1,0 +1,5 @@
+let
+    function fun(a:int, b:int):int = (a + b; "hello")
+in
+    fun(1, 2)
+end

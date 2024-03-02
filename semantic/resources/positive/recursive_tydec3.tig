@@ -1,0 +1,5 @@
+let
+    type a = array of b
+    type b = int
+in
+end

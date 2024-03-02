@@ -30,18 +30,28 @@ Our codebase is organized as follows:
 
 ```
 553-compiler/
+├── examples
+│   ├── negative
+│   └── positive
 ├── lexer
-│   ├── resources
-│   ├── src
-│   └── test
-└── parser
+│   ├── resources
+│   ├── src
+│   └── test
+├── parser
+│   ├── resources
+│   │   ├── tmp
+│   │   └── truth
+│   ├── src
+│   └── test
+└── semantic
     ├── resources
-    │   ├── tmp
-    │   └── truth
+    │   ├── negative
+    │   ├── positive
+    │   └── tmp
     ├── src
     └── test
 ```
-
+- `examples` directory: Contains test tiger source code files from textbook
 - `resources` directory: Contains test tiger source code files.
 - `src` directory: Contains our main work, with the primary component being `src/tiger.lex`. Other files are provided by the textbook. We've also made improvements to `src/errormsg.sml` for better testing.
 - `test` directory: Contains code for testing. `simpleTest.sml` is a small test program for running a single test, and `runTest.sh` is a script for customizing test runs.
@@ -57,14 +67,14 @@ To do this, follow these steps:
 2. Run the `runTest.sh` script:
 
 ```
->> bashCopy codecd /path/to/lexer-parent/
+>> cd /path/to/lexer-parent/
 >> lexer/test/runTest.sh
 ```
 
 You can also directly call our lexer for a specific test file using the following SML code:
 
 ```
->> smlCopy codeCM.make "lexer/src/resources.cm";
+>> CM.make "lexer/src/resources.cm";
 >> Parse.parse "your-test-source-file";
 ```
 ### parser
@@ -108,5 +118,12 @@ We used two methods to resolve the shift-reduce conflict:
 
 2. for shift-reduce conflicts due to ambiguity like the rules related to `tydec`, `fundec`. We add additional rules to resolve the conflict.
 
-#### Escape
-We implemented our findescape function in `src/findescape.sml` to analyze the variable escaping over the absract syntax tree.
+
+
+### Semantic Analysis
+**note**: We uses **2 late days** for this phase and we fixed the bug in the parser phase. Request for regrading is appreciated.
+
+We implemented our semantic analysis body in `src/semant.sml` and tested it with the self-defined and provided test cases.
+
+We implemented our findescape function in `parser/src/findescape.sml` to analyze the variable escaping over the absract syntax tree.
+

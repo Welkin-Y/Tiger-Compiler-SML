@@ -1,0 +1,22 @@
+/* print a linked list */
+let 
+    type node = {val:int, next:node}
+    var tl : node := node {val=2, next=nil}
+    var rt := node {val=1, next=tl}
+    
+    function fun(root: node) = 
+    let function helper(root: node):unit = 
+        if root <> nil then (
+            print(chr(root.val));
+            helper(root.next) 
+        )           
+    in
+        helper(root)
+    end
+    
+in
+    (
+        fun(nil);
+        fun(rt)
+    )    
+end

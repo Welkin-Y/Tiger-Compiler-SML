@@ -1,0 +1,7 @@
+let
+    type rec = {x : int, y : int}
+    var r1 := rec {x = 1, y = 2}
+    var r2 :rec := nil
+in
+    r2 := r1
+end

@@ -1,0 +1,6 @@
+/* Different record types may use the same field names */
+let
+    type intlist = {hd: int, tl: intlist}
+    type tree = {key: int, children: treelist}
+    type treelist = {hd: tree, tl: treelist}
+in end

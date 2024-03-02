@@ -7,6 +7,8 @@ sig
   val empty : 'a table
   val enter : 'a table * symbol * 'a -> 'a table
   val look  : 'a table * symbol -> 'a option
+  val appi : ((symbol * 'a) -> unit) -> 'a table -> unit
+  val remove : 'a table * symbol -> 'a table * 'a
 end
 
 structure Symbol :> SYMBOL =
@@ -33,11 +35,13 @@ struct
 
   fun name(s,n) = s
 
-  structure Table = IntMapTable(type key = symbol
+  structure Table = RedBlackMapTable(type key = symbol
 				fun getInt(s,n) = n)
 
   type 'a table= 'a Table.table
   val empty = Table.empty
   val enter = Table.enter
   val look = Table.look
+  val appi = Table.appi
+  val remove = Table.remove
 end
