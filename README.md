@@ -67,14 +67,14 @@ To do this, follow these steps:
 2. Run the `runTest.sh` script:
 
 ```
->> bashCopy codecd /path/to/lexer-parent/
+>> cd /path/to/lexer-parent/
 >> lexer/test/runTest.sh
 ```
 
 You can also directly call our lexer for a specific test file using the following SML code:
 
 ```
->> smlCopy codeCM.make "lexer/src/resources.cm";
+>> CM.make "lexer/src/resources.cm";
 >> Parse.parse "your-test-source-file";
 ```
 ### parser
