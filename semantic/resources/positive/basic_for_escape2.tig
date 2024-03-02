@@ -1,0 +1,6 @@
+for i := 5 to 10 do 
+    let
+        function f():int = i
+    in
+        (f();())
+    end
