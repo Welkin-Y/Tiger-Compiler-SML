@@ -1,0 +1,9 @@
+let
+    type linkedNode = {
+        value : int,
+        next : linkedNode
+    }
+    var node := linkedNode{value = 0, next = nil}
+    function empty() : nil = node
+in
+end

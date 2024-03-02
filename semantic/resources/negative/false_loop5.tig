@@ -1,0 +1,4 @@
+ /* i may not be assigned to. */
+for i := 10 to 15 do ( 
+    i := 3
+)

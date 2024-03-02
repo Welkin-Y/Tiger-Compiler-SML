@@ -1,0 +1,13 @@
+let
+    var a := 2
+    function f():int = 
+    let
+        var x := 1
+        var y := 2
+        function f2(b:int):int = x+y+a+b
+    in
+        f2(a)
+    end
+in
+    f()
+end

@@ -1,0 +1,7 @@
+let
+    function a() = ()
+    var a:=1
+    
+in
+    a()
+end

@@ -1,0 +1,6 @@
+let 
+    type namedArray = {name: string, value: arr}
+    type arr = array of b
+    type b = int
+in
+end

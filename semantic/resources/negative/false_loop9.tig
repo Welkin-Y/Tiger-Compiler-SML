@@ -1,0 +1,6 @@
+for i:= 10 to 11 do
+    let
+        var j := 12
+    in
+        i := 222
+    end

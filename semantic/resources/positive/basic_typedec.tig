@@ -1,0 +1,4 @@
+let 
+    type int_t = int
+in
+end

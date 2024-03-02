@@ -1,0 +1,6 @@
+for i := 102 to 2000 do
+    let
+        function func(i : int) = i := 10
+    in
+        func(i)
+    end

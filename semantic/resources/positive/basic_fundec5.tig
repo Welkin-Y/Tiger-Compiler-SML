@@ -1,0 +1,9 @@
+let
+    function func() = let
+        var a := 5
+    in
+        (((((((print("hi"))))))))
+    end
+in
+    func()
+end

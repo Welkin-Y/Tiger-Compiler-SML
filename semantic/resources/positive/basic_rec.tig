@@ -1,0 +1,6 @@
+let
+    type rec = { x: int, y: int, z: int }
+    var rec = rec { x = 1, y = 2, z = 3 }
+in
+    (rec.x; rec.y; rec.z)
+end

@@ -1,0 +1,10 @@
+let
+in
+    (if 1 > 2 then ();
+    if 1 < 2 then ();
+    if 1 = 2 then ();
+    if 1 <> 2 then ();
+    if 1 >= 2 then ();
+    if 1 <= 2 then ()
+)
+end

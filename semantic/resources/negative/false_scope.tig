@@ -1,0 +1,10 @@
+let
+    var a := 0
+    function f(x:int):int = a
+in
+    let 
+        var a := "hey"
+    in
+        f(a)
+    end
+end
