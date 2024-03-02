@@ -1,5 +1,7 @@
-let
+let 
     type a = array of b
-    type b = {x: a}
+    type b = a
+
+    
 in
 end

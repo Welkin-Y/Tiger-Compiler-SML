@@ -49,5 +49,6 @@ withtype field = {name: symbol, escape: bool ref,
 		     init: exp,
 		     pos: pos}
    and tydec = {name: symbol, ty: ty, pos: pos} 
+
 end
         
