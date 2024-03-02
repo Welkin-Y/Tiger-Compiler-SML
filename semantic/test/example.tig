@@ -1,0 +1,7 @@
+let 
+    type a = array of b
+    type b = a
+
+    
+in
+end

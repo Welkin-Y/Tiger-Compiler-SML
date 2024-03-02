@@ -1,0 +1,7 @@
+let
+    type a = {x: int , y: a}
+    var val := a {x = 1 , y = nil}
+    var val2 := a {x = 2 , y = val}
+in
+    if 2 then val.y else val2.y
+end

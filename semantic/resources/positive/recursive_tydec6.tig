@@ -1,0 +1,7 @@
+let
+type recarr = {name: string, arr: arra, aa: a} 
+type arra = array of a
+type  a = {name: string, age: number}
+type number = int
+in
+end

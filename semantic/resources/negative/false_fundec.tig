@@ -1,0 +1,10 @@
+let 
+    function func() = 
+    let
+        var x := 1
+        var y := 2
+    in
+        print(x + y)
+    end
+in
+end

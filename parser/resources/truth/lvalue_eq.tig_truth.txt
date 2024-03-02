@@ -12,4 +12,5 @@ IfExp(
     SimpleVar(row),
     VarExp(
      SimpleVar(v)))),
-  IntExp(1)))
+  IntExp(1)),
+ IntExp(0))

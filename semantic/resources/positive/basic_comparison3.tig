@@ -1,0 +1,11 @@
+let
+in
+   (
+    if "hi" > "hi" then ();
+   if "hi" >= "hi" then ();
+   if "hi" < "hi" then ();
+   if "hi" <= "hi" then ();
+   if "hi" = "hi" then ();
+   if "hi" <> "hi" then ()
+   ) 
+end

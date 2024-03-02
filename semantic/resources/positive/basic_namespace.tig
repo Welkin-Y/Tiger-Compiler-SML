@@ -1,0 +1,6 @@
+let
+    var a := 12
+    function a():int = 12
+in
+    a()
+end

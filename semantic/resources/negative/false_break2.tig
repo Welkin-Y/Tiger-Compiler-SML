@@ -1,0 +1,8 @@
+let 
+    function func0() = 
+        break
+    function func1() =
+        for i := 5 to 10 do func0()
+    
+in
+end

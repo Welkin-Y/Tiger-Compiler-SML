@@ -1,0 +1,4 @@
+let
+in
+    for i := 1 to "string" do i
+end

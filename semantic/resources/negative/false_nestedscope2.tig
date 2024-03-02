@@ -1,0 +1,8 @@
+let 
+    function f() = let 
+        var x := 1
+    in
+    end
+in
+    x
+end

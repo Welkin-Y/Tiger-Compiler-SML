@@ -1,0 +1,5 @@
+let 
+    function func():string = 5
+in
+    func()
+end

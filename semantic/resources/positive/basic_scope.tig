@@ -1,0 +1,10 @@
+let
+    var a := 1
+    function f(x:string):string = x
+in
+    let 
+        var a := "hey"
+    in
+        f(a)
+    end
+end

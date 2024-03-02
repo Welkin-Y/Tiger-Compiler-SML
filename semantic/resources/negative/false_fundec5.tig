@@ -1,0 +1,4 @@
+let 
+    function fun():string = ()
+in
+end

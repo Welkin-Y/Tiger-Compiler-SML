@@ -1,0 +1,6 @@
+for i := 1 to 10 do 
+    let 
+        var i := 2
+    in
+        i := 10086
+    end

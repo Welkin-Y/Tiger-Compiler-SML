@@ -1,0 +1,6 @@
+let
+    type rec = {hi: int; lo: int}
+    var rec := rec {hi=1, lo=2}
+in
+    rec.a
+end

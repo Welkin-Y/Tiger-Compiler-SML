@@ -1,0 +1,4 @@
+let 
+    type t = {x: int; y: string}
+in
+end
