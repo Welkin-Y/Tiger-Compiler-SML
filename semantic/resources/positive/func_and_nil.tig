@@ -1,6 +1,6 @@
 let
     type linkedNode = {
-        value : any,
+        value : int,
         next : linkedNode
     }
     function empty() : linkedNode = nil
