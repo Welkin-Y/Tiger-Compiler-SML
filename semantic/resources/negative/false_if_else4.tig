@@ -1,0 +1,2 @@
+/* error : if-then returns non unit */
+if 1 then 2
