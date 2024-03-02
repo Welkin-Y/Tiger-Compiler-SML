@@ -190,7 +190,28 @@ struct
                         | _ => (ErrorMsg.error pos ("TypeError: unmatched type: var " ^ Symbol.name name ^ " is " ^ T.toString tyinit ^ ", but declared as " ^ T.toString newtyp); raise ErrorMsg.Error)
                     end
             | A.TypeDec tydecs => 
-                let
+                let 
+                    (*check if there are duplicated field names in the same record type*)
+                    val _ = map (fn (tydec) => 
+                        let
+                            val {name, ty, pos} = tydec
+                        in
+                            case ty of 
+                                A.RecordTy fields => let
+                                    val fieldNames = []
+                                    fun helper (field, fieldNames) = 
+                                        let
+                                            val {name, escape, typ, pos} = field
+                                        in
+                                            case List.find (fn n => n = Symbol.name name) fieldNames of
+                                                NONE => ((Symbol.name name)::fieldNames)
+                                                | SOME _ => (ErrorMsg.error pos ("TypeError: reused field name " ^ Symbol.name name); raise ErrorMsg.Error)
+                                        end
+                                in  
+                                foldr helper fieldNames fields 
+                                end
+                                | _ => []
+                        end) tydecs 
                     val newvenv : (Env.enventry Symbol.table) ref = ref venv
                     val newtenv : (T.ty Symbol.table) ref = ref tenv
                     val aliasTable : ((unit Symbol.table) Symbol.table) ref = ref Symbol.empty
