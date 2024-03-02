@@ -20,9 +20,12 @@ struct
                             | SOME e => transExp (venv, tenv, e, loopDepth)
 
                         val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth) 
+
+                        val flag = ref true
                     in
-                        TC.checkIfExp pos (tytest, tythen, tyelse);
-                        {exp=(), ty=tythen}
+                        TC.checkIsType pos (tytest, T.INT);
+                        TC.checkSameType pos (tythen, tyelse) handle _ => (flag := false);
+                        if !flag then {exp=(), ty=tythen} else {exp=(), ty=T.BOTTOM}
                     end
             | A.OpExp {left, oper, right, pos} =>
                 let

@@ -9,6 +9,7 @@ struct
   | STRING
   | ARRAY of ty * unique
   | UNIT
+  | BOTTOM
 
   fun symbolTyListToString (symbolTyList: (Symbol.symbol * ty) list) =
     let
@@ -28,6 +29,7 @@ struct
         RECORD f => "RECORD " ^ (Symbol.name (#3 (f())))
         | a => toString a)
     | toString UNIT = "UNIT"
+    | toString BOTTOM = "BOTTOM"
 
   fun equals (ty1, ty2) = case (ty1, ty2) of
     (RECORD f1, RECORD f2) => #2 (f1()) = #2 (f2())
@@ -38,6 +40,9 @@ struct
     | (UNIT, UNIT) => true
     | (NIL, RECORD _) => true
     | (RECORD _, NIL) => true
+    | (BOTTOM, _) => true
+    | (_, BOTTOM) => false
     | _ => false
+    
 
 end
