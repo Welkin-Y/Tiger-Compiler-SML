@@ -1,6 +1,5 @@
 let 
-    type rec = {id: int, name: string, peers: arrrec}
-    type arrrec = array of rec
+    type arrrec = array of recarr
     type recarr = {arr: arrrec}
 in
 end

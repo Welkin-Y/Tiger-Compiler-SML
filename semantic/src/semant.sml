@@ -211,6 +211,14 @@ struct
                             NONE => ()
                             | SOME alias => Symbol.appi (fn (n, _) => updateAliasRecAndArr (n, tyNu)) alias
                     )
+                    val reuseChecker = foldl (fn (tydec, table) =>
+                        let
+                            val {name=name, ty=_, pos=pos} = tydec
+                        in
+                            case Symbol.look (table, name) of
+                                NONE => Symbol.enter (table, name, ())
+                                | SOME _ => (TC.reusedNameErr pos name; table)
+                        end) Symbol.empty tydecs
                     val _ = foldl (fn (tydec, _) => 
                         let
                             val {name=name, ty=ty, pos=pos} = tydec
@@ -230,7 +238,7 @@ struct
                                                     val {name=n, ty=t, pos=pos} = tydec
                                                 in
                                                     case t of 
-                                                        A.NameTy _ => ErrorMsg.error pos ("Illegal alias cycle.")
+                                                        A.NameTy _ => TC.undefinedTypeErr pos n
                                                         | _ => updateAliasRecAndArr (name, tyNu)
                                                 end))
                                         | SOME ty => updateAlias (name, ty))
@@ -263,6 +271,7 @@ struct
                                                         let
                                                             val arrTy = T.ARRAY (makeArr tyNu)
                                                         in
+                                                            tyTable := #1 (Symbol.remove (!tyTable, typ));
                                                             newtenv := Symbol.enter (!newtenv, typ, arrTy);
                                                             ((name, arrTy) :: fieldlist)
                                                         end
@@ -279,7 +288,6 @@ struct
                     and makeArr (tydec, unique) = 
                         let
                             val {name=n, ty=t, pos=pos} = tydec
-                            val _ = (tyTable := #1 (Symbol.remove (!tyTable, n)))
                             val elementTy = case t of
                                 A.ArrayTy (symbol, p) => (case Symbol.look (!newtenv, symbol) of
                                     SOME ty => SOME ty
@@ -287,12 +295,13 @@ struct
                                         case Symbol.look (!tyTable, symbol) of
                                             SOME tyNu => let
                                                 val (tydec, unique) = tyNu
-                                                val {name=n', ty=t', pos=pos'} = tydec
+                                                val {name=_, ty=t', pos=_} = tydec
                                             in
                                                 case t' of
                                                     A.RecordTy _ => SOME (T.RECORD (fn () => makeRec tyNu))
                                                     | A.ArrayTy _ => 
                                                         let
+                                                            val _ = (tyTable := #1 (Symbol.remove (!tyTable, symbol)))
                                                             val arrTy = T.ARRAY (makeArr tyNu)
                                                         in
                                                             newtenv := Symbol.enter (!newtenv, symbol, arrTy);
@@ -306,7 +315,7 @@ struct
                         in
                             case elementTy of
                                 SOME ty => (ty, unique)
-                                | NONE => (TC.undefinedTypeErr pos n; (T.NIL, ref ()))
+                                | NONE => (T.NIL, ref ())
                         end
                 in
                     Symbol.appi (fn (name, tyNu) => 
@@ -319,7 +328,10 @@ struct
                                 | SOME _ => (
                                     case t of
                                         A.RecordTy _ => newtenv := Symbol.enter (!newtenv, name, T.RECORD (fn () => makeRec tyNu))
-                                        | A.ArrayTy _ => newtenv := Symbol.enter (!newtenv, name, T.ARRAY (makeArr tyNu))
+                                        | A.ArrayTy (symbol, _) => (
+                                            tyTable := #1 (Symbol.remove (!tyTable, name));
+                                            newtenv := Symbol.enter (!newtenv, name, T.ARRAY (makeArr tyNu))
+                                        )
                                         | _ => ()
                                 )
                         end) (!tyTable);
@@ -393,35 +405,9 @@ struct
                             T.ARRAY (ty', _) => {exp=(), ty=ty'}
                             | _ => (ErrorMsg.error p ("TypeError: not an array type " ^ T.toString ty); raise ErrorMsg.Error)
                     end
-
         in
             {exp = (), ty = ty}
-        end 
-    and transTyDec (venv:tyvenv, tenv:tytenv, tydec:A.tydec, loopDepth: int) = 
-            let
-                val {name=n, ty=t, pos=p} = tydec
-            in 
-                case t of
-                    A.NameTy (nRefTo, p') => 
-                        let
-                            val t = case Symbol.look (tenv, nRefTo) of
-                                NONE => TC.undefinedTypeErr p' nRefTo
-                                | SOME ty => ty
-                        in
-                            (venv, Symbol.enter (tenv, n, t))
-                        end
-                    (*ArrayTy*)
-                | A.ArrayTy (nRefTo, p') =>
-                    let
-                        val t = case Symbol.look (tenv, nRefTo) of
-                            NONE => TC.undefinedTypeErr p' nRefTo
-                            | SOME ty => ty
-                    in
-                        (venv, Symbol.enter (tenv, n, T.ARRAY (t, ref ())))
-                    end
-                | A.RecordTy fields => (venv, tenv)
-            end
-           
+        end
     and transFunDec (venv:tyvenv, tenv:tytenv, fundec:A.fundec, loopDepth: int) = 
             (* fundec = {name: symbol, params: field list, result: (symbol * pos) option, body: exp pos: pos}*)
             (* recurse through body of fundec, handle recursive fundec*)

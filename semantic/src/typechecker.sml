@@ -62,4 +62,7 @@ struct
         fun undefinedTypeErr pos name =
                         (ErrorMsg.error pos ("TypeError: type " ^ Symbol.name name ^ " is not defined"); raise ErrorMsg.Error)
 
+        fun reusedNameErr pos name =
+                        (ErrorMsg.error pos ("NameError: name " ^ Symbol.name name ^ " is already defined in the group"); raise ErrorMsg.Error)
+
 end
