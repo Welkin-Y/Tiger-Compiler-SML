@@ -28,9 +28,11 @@ struct
 
 
         fun checkIfExp pos (tytest, tythen, tyelse) = 
-                        if T.equals(tytest, T.INT) andalso T.equals(tythen, tyelse) 
-                        then ()
-                        else (ErrorMsg.error pos ("TypeError: Expect int for if condition, and then and else should have same type, but got " ^ T.toString tytest ^ " and " ^ T.toString tythen ^ " and " ^ T.toString tyelse); raise ErrorMsg.Error)
+                        if T.equals(tytest, T.INT)  
+                        then (if T.equals(tythen, tyelse) 
+                                then ()
+                                else (ErrorMsg.error pos ("TypeError: Expect same type for then and else, but got " ^ T.toString tythen ^ " and " ^ T.toString tyelse); raise ErrorMsg.Error))
+                        else (ErrorMsg.error pos ("TypeError: Expect int for if condition, but got " ^ T.toString tytest ); raise ErrorMsg.Error)
 
         fun checkEqOp oper pos (tyleft, tyright) =
                         case tyleft of T.INT => checkSameType pos (tyleft, tyright)

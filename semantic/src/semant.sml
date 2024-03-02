@@ -16,7 +16,7 @@ struct
                     let 
                         val {exp=_, ty=tythen} = transExp (venv, tenv, then', loopDepth)
                         val {exp=expelse, ty=tyelse} = case else' of
-                                NONE => {exp=(), ty=tythen}
+                                NONE => {exp=(), ty=T.UNIT}
                             | SOME e => transExp (venv, tenv, e, loopDepth)
 
                         val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth) 
