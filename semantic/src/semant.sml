@@ -9,25 +9,25 @@ struct
     type tytenv = T.ty Symbol.table
     type expty = {exp: Translate.exp, ty: T.ty}
     
-    fun transExp (venv : tyvenv, tenv: tytenv, exp: A.exp, loopDepth: int) = 
+    fun transExp (venv : tyvenv, tenv: tytenv, exp: A.exp, loopDepth: int, forbidden : (Symbol.symbol list)) = 
             case exp of 
                 (*To check an IfExp we need to make sure: 1. test is int 2. then and else have same types*)
                 A.IfExp {test, then', else', pos} => 
                     let 
-                        val {exp=_, ty=tythen} = transExp (venv, tenv, then', loopDepth)
+                        val {exp=_, ty=tythen} = transExp (venv, tenv, then', loopDepth, forbidden)
                         val {exp=expelse, ty=tyelse} = case else' of
                                 NONE => {exp=(), ty=T.UNIT}
-                            | SOME e => transExp (venv, tenv, e, loopDepth)
+                            | SOME e => transExp (venv, tenv, e, loopDepth, forbidden)
 
-                        val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth) 
+                        val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth, forbidden) 
                     in
                         TC.checkIfExp pos (tytest, tythen, tyelse);
                         {exp=(), ty=tythen}
                     end
             | A.OpExp {left, oper, right, pos} =>
                 let
-                    val {exp=_, ty=tyleft} = transExp (venv, tenv, left, loopDepth)
-                    val {exp=_, ty=tyright} = transExp (venv, tenv, right, loopDepth)
+                    val {exp=_, ty=tyleft} = transExp (venv, tenv, left, loopDepth, forbidden)
+                    val {exp=_, ty=tyright} = transExp (venv, tenv, right, loopDepth, forbidden)
                 in
                     case oper of
                         A.PlusOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
@@ -44,10 +44,21 @@ struct
             (* Check Let Exp: 1. gothrough decs 2. go through body*)
             | A.LetExp {decs, body, pos} => 
                 let
-                    val {venv=venv', tenv=tenv'} = foldl (fn (dec, {venv, tenv}) => transDec (venv, tenv, dec, loopDepth)) {venv=venv, tenv=tenv} decs
+                    val {venv=venv', tenv=tenv', forbidden=forbidden'} = foldl (fn (dec, {venv, tenv, forbidden}) => 
+                    let
+                        val forbidden = case dec of 
+                        A.VarDec {name, escape, typ, init, pos} => (
+                            case List.find (fn n => n = name) forbidden of
+                            NONE => forbidden
+                            | SOME _ => List.filter (fn n => n <> name) forbidden)
+                        | _ => forbidden
+                        val {venv=venv, tenv=tenv} = transDec (venv, tenv, dec, loopDepth, forbidden)
+                    in
+                        {venv=venv, tenv=tenv, forbidden=forbidden}
+                    end) {venv=venv, tenv=tenv, forbidden=forbidden} decs
                 in
                     print ("begin to check body\n");
-                    transExp (venv', tenv', body, loopDepth)
+                    transExp (venv', tenv', body, loopDepth, forbidden')
                 end
             | A.IntExp _ => {exp=(), ty=T.INT}
             | A.StringExp _ => {exp=(), ty=T.STRING}
@@ -56,7 +67,7 @@ struct
                 let
                     val explist : Translate.exp list = []
                     fun helper ((exp, _), ty) = let
-                                val {exp=entryExp, ty=entryTy} = transExp (venv, tenv, exp, loopDepth)
+                                val {exp=entryExp, ty=entryTy} = transExp (venv, tenv, exp, loopDepth, forbidden)
                             in
                                 explist = explist @ [entryExp];
                                 entryTy
@@ -64,27 +75,37 @@ struct
                 in
                     {exp=(), ty=foldl helper T.UNIT exps}
                 end
-            | A.VarExp var => transVar (venv, tenv, var, loopDepth)
-            | A.AssignExp {var, exp, pos} => let
-                    val {exp=_, ty=tyvar} = transVar (venv, tenv, var, loopDepth)
-                    val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth)
+            | A.VarExp var => transVar (venv, tenv, var, loopDepth, forbidden)
+            | A.AssignExp {var : A.var, exp: A.exp, pos :A.pos} => let
+                    (*if var name in forbidden, raise error*)
+                    val _ = case var of
+                        A.SimpleVar (name, pos) => (case List.find (fn n => n = name) forbidden of
+                            NONE => ()
+                            | SOME _ => (ErrorMsg.error pos ("TypeError: reassign to for loop variable " ^ Symbol.name (name)); raise ErrorMsg.Error) )
+                        | _ => ()
+                    val {exp=_, ty=tyvar} = transVar (venv, tenv, var, loopDepth, forbidden)
+                    val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth, forbidden)
                 in
                     TC.checkSameType pos (tyvar, tyexp);
                     {exp=(), ty=T.UNIT}
                 end
             | A.WhileExp {test, body, pos} => let
-                    val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth)
-                    val {exp=_, ty=tybody} = transExp (venv, tenv, body, loopDepth+1)
+                    val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth, forbidden)
+                    val {exp=_, ty=tybody} = transExp (venv, tenv, body, loopDepth+1, forbidden)
                 in
                     TC.checkIsType pos (tytest, T.INT);
                     TC.checkIsType pos (tybody, T.UNIT);
                     {exp=(), ty=T.UNIT}
                 end
             | A.ForExp {var, escape, lo, hi, body, pos} => let
-                    val {exp=_, ty=tylo} = transExp (venv, tenv, lo, loopDepth)
-                    val {exp=_, ty=tyhi} = transExp (venv, tenv, hi, loopDepth)
+                    val {exp=_, ty=tylo} = transExp (venv, tenv, lo, loopDepth, forbidden)
+                    val {exp=_, ty=tyhi} = transExp (venv, tenv, hi, loopDepth, forbidden)
+                    (*if the id in forbidden raise error*)
+                    val forbidden = case List.find (fn n => n = var) forbidden of
+                        NONE => var::forbidden
+                        | SOME _ => (ErrorMsg.error pos ("TypeError: reassign to for loop variable name " ^ Symbol.name var); raise ErrorMsg.Error)
                     val newVenv = Symbol.enter (venv, var, Env.VarEntry {ty=T.INT})
-                    val {exp=_, ty=tybody} = transExp (newVenv, tenv, body, loopDepth+1)
+                    val {exp=_, ty=tybody} = transExp (newVenv, tenv, body, loopDepth+1, forbidden)
                 in          
                     PrintEnv.printEnv (newVenv, tenv);
                     TC.checkIsType pos (tylo, T.INT);
@@ -107,7 +128,7 @@ struct
                         else (ErrorMsg.error pos ("TypeError: " ^ Symbol.name func ^ " () takes " ^ Int.toString (length formals) ^ " positional argument(s) but called with" ^ Int.toString (length args) ^ " argument(s)"); raise ErrorMsg.Error)
                     val _ = map (fn (arg, formal) =>
                         let
-                            val {exp=_, ty=tyarg} = transExp (venv, tenv, arg, loopDepth)
+                            val {exp=_, ty=tyarg} = transExp (venv, tenv, arg, loopDepth, forbidden)
                         in
                             TC.checkSameType pos (tyarg, formal)
                         end) (ListPair.zip(args, formals))
@@ -130,7 +151,7 @@ struct
                     val _ = map (fn (field) =>
                         let
                             val (symbol, exp, pos) = field
-                            val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth)
+                            val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth, forbidden)
                             (*check if the field name can be found in definition*)
                             
                         in
@@ -145,7 +166,7 @@ struct
                         case List.find (fn (symbol, exp, pos) => symbol = name) fields of
                             NONE => TC.undefinedNameErr pos name
                             | SOME (symbol, exp, pos) => let
-                                val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth)
+                                val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth, forbidden)
                             in
                                 TC.checkSameType pos (tyexp, typ)
                             end) recordFields
@@ -160,18 +181,19 @@ struct
                 val ty = case Symbol.look (tenv, typ) of
                     NONE => TC.undefinedTypeErr pos typ
                     | SOME ty => ty
-                val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth)
+                val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth,     forbidden)
             in  
                 case ty of T.ARRAY (ty',_) => (TC.checkSameType pos (ty', tyinit); {exp=(), ty=ty})
                 | _ => (ErrorMsg.error pos ("TypeError: not an array type " ^ Symbol.name typ); raise ErrorMsg.Error)
             end
             
 
-    and transDec (venv : tyvenv, tenv: tytenv, dec : A.dec, loopDepth: int) = 
+    and transDec (venv : tyvenv, tenv: tytenv, dec : A.dec, loopDepth: int, forbidden : (Symbol.symbol list)) = 
             case dec of
-                (*To check a VarDec: 0. TODO: the proposed type exists 1. the type of init should be same as ty if there are ty 2. add Var to venv*)
+                (*if declared variable has same name with forbidden, erase it from forbidden*)
                 A.VarDec{name, escape, typ, init, pos}=> let
-                        val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth)
+
+                        val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth, forbidden)
                         val newtyp = case typ of
                                 NONE => tyinit
                             | SOME t => case Symbol.look (tenv, #1 t) of 
@@ -364,7 +386,7 @@ struct
                     (*recursively check the signature of each function*)
                     val fundecGroup : (Env.enventry Symbol.table) = Symbol.empty
                     val {venv=newvenv, tenv=newtenv, fundecGroup=_} = foldl (fn (fundec, {venv, tenv, fundecGroup}) => 
-                        transFunDec (venv, tenv, fundec, loopDepth, fundecGroup)
+                        transFunDec (venv, tenv, fundec, loopDepth, fundecGroup, forbidden)
                    ) {venv=venv, tenv=tenv, fundecGroup=fundecGroup} fundecs
                     (*recursively check the body of each function*)
                     val _ = print "begin to check body of each function\n"
@@ -373,16 +395,20 @@ struct
                         let 
                         val {name, params, result, body, pos} = fundec
                         (* add all args var into a tmp venv to check body*)
-                        val tmpvenv = foldl (fn (param, venv) => 
+                        val (tmpvenv, forbidden) = foldl (fn (param, (venv, forbidden)) => 
                             let
+                                (*if param name in forbidden, erase it from forbidden*)
                                 val {name, escape, typ, pos} = param
+                                val forbidden = case List.find (fn n => n = name) forbidden of
+                                    NONE => forbidden
+                                    | SOME _ => List.filter (fn n => n <> name) forbidden
                                 val ty = case Symbol.look (tenv, typ) of
                                     NONE => TC.undefinedTypeErr pos typ
                                 | SOME ty => ty
                             in
-                                Symbol.enter (venv, name, Env.VarEntry {ty=ty})
-                            end) newvenv params
-                        val {exp=bodyexp, ty=typ} = transExp (tmpvenv, newtenv, body, 0)
+                                (Symbol.enter (venv, name, Env.VarEntry {ty=ty}), forbidden)
+                            end) (newvenv, forbidden) params
+                        val {exp=bodyexp, ty=typ} = transExp (tmpvenv, newtenv, body, 0, forbidden)
                         (*check if expty consistent with the delared function ty*)
                         in
                         case result of
@@ -399,7 +425,7 @@ struct
                     PrintEnv.printEnv (newvenv, newtenv);
                     {venv=newvenv, tenv=newtenv}
                 end
-    and transVar (venv:tyvenv , tenv:tytenv, var: A.var, loopDepth: int) = let 
+    and transVar (venv:tyvenv , tenv:tytenv, var: A.var, loopDepth: int, forbidden : (Symbol.symbol list)) = let 
             val {exp=_, ty=ty} = case var of
                 A.SimpleVar (n, p) => 
                     (case Symbol.look (venv, n) of
@@ -409,7 +435,7 @@ struct
                             | _ => (ErrorMsg.error p ("TypeError: not a variable " ^ Symbol.name n); raise ErrorMsg.Error))
                 | A.FieldVar (var, n, p) =>
                     let
-                        val {exp=_, ty=ty} = transVar (venv, tenv, var, loopDepth)
+                        val {exp=_, ty=ty} = transVar (venv, tenv, var, loopDepth, forbidden)
                         val genfun = case ty of
                             T.RECORD genfun => genfun
                             | _ => (ErrorMsg.error p ("TypeError: not a record type " ^ T.toString ty); raise ErrorMsg.Error)
@@ -421,8 +447,8 @@ struct
                     end
                 | A.SubscriptVar (var, exp, p) => 
                     let
-                        val {exp=_, ty=ty} = transVar (venv, tenv, var, loopDepth)
-                        val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth)
+                        val {exp=_, ty=ty} = transVar (venv, tenv, var, loopDepth, forbidden)
+                        val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth, forbidden)
                     in
                         TC.checkIsType p (tyexp, T.INT);
                         case ty of 
@@ -432,7 +458,7 @@ struct
         in
             {exp = (), ty = ty}
         end
-    and transFunDec (venv:tyvenv, tenv:tytenv, fundec:A.fundec, loopDepth: int, fundecGroup: Env.enventry Symbol.table) = 
+    and transFunDec (venv:tyvenv, tenv:tytenv, fundec:A.fundec, loopDepth: int, fundecGroup: Env.enventry Symbol.table, forbidden : (Symbol.symbol list)) = 
             (* fundec = {name: symbol, params: field list, result: (symbol * pos) option, body: exp pos: pos}*)
             (* recurse through body of fundec, handle recursive fundec*)
             let
@@ -473,9 +499,10 @@ struct
                 let 
                     val venv = Env.base_venv
                     val tenv = Env.base_tenv 
+                    val forbidden : (Symbol.symbol list) = []
                 in
 
-                    transExp (venv, tenv, exp, 0);
+                    transExp (venv, tenv, exp, 0, forbidden);
                     PrintEnv.printEnv (venv, tenv)
                 end;
                 print "\nSemantic Analysis Succeed\n"
