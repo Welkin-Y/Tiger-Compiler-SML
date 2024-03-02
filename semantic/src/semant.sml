@@ -341,7 +341,10 @@ struct
             | A.FunctionDec fundecs => 
                 let
                     (*recursively check the signature of each function*)
-                    val {venv=newvenv, tenv=newtenv} = foldl (fn (fundec, {venv, tenv}) => transFunDec (venv, tenv, fundec, loopDepth)) {venv=venv, tenv=tenv} fundecs
+                    val fundecGroup : (Env.enventry Symbol.table) = Symbol.empty
+                    val {venv=newvenv, tenv=newtenv, fundecGroup=_} = foldl (fn (fundec, {venv, tenv, fundecGroup}) => 
+                        transFunDec (venv, tenv, fundec, loopDepth, fundecGroup)
+                   ) {venv=venv, tenv=tenv, fundecGroup=fundecGroup} fundecs
                     (*recursively check the body of each function*)
                     val _ = print "begin to check body of each function\n"
 
@@ -408,31 +411,42 @@ struct
         in
             {exp = (), ty = ty}
         end
-    and transFunDec (venv:tyvenv, tenv:tytenv, fundec:A.fundec, loopDepth: int) = 
+    and transFunDec (venv:tyvenv, tenv:tytenv, fundec:A.fundec, loopDepth: int, fundecGroup: Env.enventry Symbol.table) = 
             (* fundec = {name: symbol, params: field list, result: (symbol * pos) option, body: exp pos: pos}*)
             (* recurse through body of fundec, handle recursive fundec*)
             let
                 val {name, params, result, body, pos} = fundec
                 val params_ty = []
-                fun helper (param, params_ty) = 
+                val params_name = []
+                fun helper (param, (params_ty, params_name)) = 
                         let
                             val {name, escape, typ, pos} = param
+                            val _ = case List.find (fn n => n = Symbol.name name) params_name of
+                                NONE => ()
+                                | SOME _ => (ErrorMsg.error pos ("TypeError: reused parameter name " ^ Symbol.name name); raise ErrorMsg.Error)
                             val ty = case Symbol.look (tenv, typ) of
                                     NONE => TC.undefinedTypeErr pos typ
                                 | SOME ty => ty
                         in
-                            ty::params_ty
+                            (ty::params_ty, (Symbol.name name)::params_name)
                         end
-                val newparams_ty = foldr helper params_ty params
+                val (newparams_ty, _) = foldr helper (params_ty, params_name) params
                 val res_ty = case result of NONE => T.UNIT
                     | SOME (sym, _) => 
                         case Symbol.look (tenv, sym) of
                             NONE => TC.undefinedTypeErr pos sym
                         | SOME ty => ty
+                (*check if function name already exist in fundecGroup*)
+                val _ = case Symbol.look (fundecGroup, name) of
+                    NONE => ()
+                    | SOME _ => (ErrorMsg.error pos ("TypeError: reused function name " ^ Symbol.name name ^ "in same group"); raise ErrorMsg.Error)
                 val newVenv = Symbol.enter (venv, name, Env.FunEntry {formals=newparams_ty, result=res_ty}) 
+                val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {formals=newparams_ty, result=res_ty})
+                
             in
+                
                 PrintEnv.printEnv (newVenv, tenv);
-                {venv=newVenv, tenv=tenv}
+                {venv=newVenv, tenv=tenv, fundecGroup=newFundecGroup}
             end
     and transProg (exp: A.exp) = (
                 let 
