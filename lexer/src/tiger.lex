@@ -46,6 +46,10 @@ ints=[0-9]+;
 <STRING>.     => (stringBuilder := !stringBuilder ^ yytext; continue());
 
 <INITIAL>"/*"	 	=> (commentDepth := !commentDepth+1; YYBEGIN COMMENT; continue());
+<INITIAL>"class" => (Tokens.CLASS(yypos, yypos+5));
+<INITIAL>"extends" => (Tokens.EXTENDS(yypos, yypos+7));
+<INITIAL>"method" => (Tokens.METHOD(yypos, yypos+6));
+<INITIAL>"new" => (Tokens.NEW(yypos, yypos+3));
 <INITIAL>"type"	 	=> (Tokens.TYPE(yypos, yypos+4));
 <INITIAL>"var"		=> (Tokens.VAR(yypos,yypos+3));
 <INITIAL>"function"	=> (Tokens.FUNCTION(yypos, yypos+8));
@@ -97,3 +101,4 @@ ErrorMsg.error yypos ("int overflow: " ^ yytext); continue()));
 <COMMENT>"*/"	=> (commentDepth := !commentDepth-1; if !commentDepth = 0 then YYBEGIN INITIAL else (); continue());
 <COMMENT>.	=> (continue());
 \n		=> (lineNum := !lineNum+1; linePos := yypos :: !linePos; continue());
+

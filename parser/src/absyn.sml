@@ -24,10 +24,16 @@ struct
         | BreakExp of pos
         | LetExp of {decs: dec list, body: exp, pos: pos}
         | ArrayExp of {typ: symbol, size: exp, init: exp, pos: pos}
+        | NewExp of {typ: symbol, pos: pos} (* new class object *)
 
         and dec = FunctionDec of fundec list
         | VarDec of vardec
+        | ClassDec of classdec
         | TypeDec of tydec list
+
+        and classfield = Member of vardec
+        | Method of method
+        
 
         and ty = NameTy of symbol * pos
         | RecordTy of field list
@@ -38,7 +44,12 @@ struct
 
         withtype field = {name: symbol, escape: bool ref, 
                         typ: symbol, pos: pos}
-        and   fundec = {name: symbol,
+        and method = {name: symbol,
+                        params: field list,
+                        result: (symbol * pos) option,
+                        body: exp,
+                        pos: pos}
+        and fundec = {name: symbol,
                         params: field list,
                         result: (symbol * pos) option,
                         body: exp,
@@ -49,6 +60,12 @@ struct
                         init: exp,
                         pos: pos}
         and tydec = {name: symbol, ty: ty, pos: pos} 
+        and classdec = {name: symbol,
+                        parent: symbol,
+                        fields: classfield list,
+                        pos: pos}
+        
+        
 
 end
         

@@ -13,7 +13,7 @@ struct
 	  val lexer = LrParser.Stream.streamify (Lex.makeLexer get)
 	  val (absyn, _) = TigerP.parse(30,lexer,parseerror,())
        in TextIO.closeIn file;
-	   FindEscape.findEscape absyn;
+	   (* FindEscape.findEscape absyn; *)
 	   absyn
       end handle LrParser.ParseError => raise ErrorMsg.Error
 

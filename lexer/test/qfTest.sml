@@ -14,3 +14,5 @@ Parse.parse "lexer/resources/identifier_qf.tig";
 (* Test comment *)
 print "\n\n-----Test comment-----\n";
 Parse.parse "lexer/resources/comment_qf.tig";
+print "\n\n-----Test comment-----\n";
+Parse.parse "lexer/resources/vehicle.tig";

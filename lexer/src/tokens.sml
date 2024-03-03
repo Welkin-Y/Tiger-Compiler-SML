@@ -48,4 +48,8 @@ fun STRING(s,i,j) = "STRING("^s^")     " ^ Int.toString(i)
 fun INT(c,i,j) = "INT("^Int.toString(c)^")   " ^ Int.toString(i)
 fun ID(s,i,j) = "ID("^s^")     " ^ Int.toString(i)
 fun EOF(i,j) = "EOF   " ^ Int.toString(i)
+fun CLASS(i,j) = "CLASS   " ^ Int.toString(i)
+fun EXTENDS(i,j) = "EXTENDS   " ^ Int.toString(i)
+fun NEW(i,j) = "NEW   " ^ Int.toString(i)
+fun METHOD(i,j) = "METHOD   " ^ Int.toString(i)
 end

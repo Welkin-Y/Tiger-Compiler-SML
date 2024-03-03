@@ -46,4 +46,8 @@ val STRING: (string) *  linenum * linenum -> token
 val INT: (int) *  linenum * linenum -> token
 val ID: (string) *  linenum * linenum -> token
 val EOF:  linenum * linenum -> token
+val CLASS: linenum * linenum -> token
+val EXTENDS: linenum * linenum -> token
+val NEW: linenum * linenum -> token
+val METHOD: linenum * linenum -> token
 end
