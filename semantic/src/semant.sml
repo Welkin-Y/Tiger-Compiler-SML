@@ -371,10 +371,13 @@ struct
                                 | SOME _ => (
                                     case t of
                                         A.RecordTy _ => newtenv := Symbol.enter (!newtenv, name, T.RECORD (fn () => makeRec tyNu))
-                                        | A.ArrayTy (symbol, _) => (
-                                            tyTable := #1 (Symbol.remove (!tyTable, name));
-                                            newtenv := Symbol.enter (!newtenv, name, T.ARRAY (makeArr tyNu))
-                                        )
+                                        | A.ArrayTy (symbol, _) => 
+                                            let 
+                                                val arrTy = T.ARRAY (makeArr tyNu)
+                                            in
+                                                (tyTable := #1 (Symbol.remove (!tyTable, name));
+                                                newtenv := Symbol.enter (!newtenv, name, arrTy))
+                                            end
                                         | _ => ()
                                 )
                         end) (!tyTable);
