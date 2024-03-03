@@ -102,9 +102,8 @@ exp: NIL                 		      (A.NilExp)
 (*Sequence*)
 | seq                             (A.SeqExp(seq))
 | LPAREN RPAREN                   (A.SeqExp([]))
-(* | NEW ID							            (A.NewExp(Symbol.symbol(ID), IDleft))
-| lvalue DOT ID						        (A.FieldVar(lvalue, Symbol.symbol(ID), lvalueleft))
-| lvalue DOT ID LPAREN args RPAREN	(A.CallExp({func=Symbol.symbol(ID), args=args, pos=IDleft})) *)
+| NEW ID							            (A.NewExp({typ=Symbol.symbol(ID), pos=IDleft}))
+| lvalue DOT ID LPAREN args RPAREN	(A.CallExp({func=Symbol.symbol(ID), args=args, pos=IDleft}))
 				
 reccrtlst:  ID EQ exp             ((Symbol.symbol(ID), exp, IDleft)::nil)
 | reccrtlst COMMA ID EQ exp       ((Symbol.symbol(ID), exp, IDleft)::reccrtlst)
@@ -115,6 +114,7 @@ lvalue: ID                        (A.SimpleVar(Symbol.symbol(ID), IDleft))
 | lvalue DOT ID                   (A.FieldVar(lvalue, Symbol.symbol(ID), lvalueleft))
 | lvalue LBRACK exp RBRACK        (A.SubscriptVar(lvalue, exp, lvalueleft))
 | ID LBRACK exp RBRACK            (A.SubscriptVar(A.SimpleVar(Symbol.symbol(ID), IDleft), exp, IDleft))
+
 
 
 args: exp           				      (exp::nil)

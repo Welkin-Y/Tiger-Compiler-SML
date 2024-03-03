@@ -1,7 +1,7 @@
-let start : = 10
+let var start := 10
 class Vehicle extends Object {
 var position := start
-method move(int x) = (position := position + x)
+method move(x: int) = (position := position + x)
 }
 class Car extends Vehicle {
 var passengers := 0
@@ -11,8 +11,9 @@ then v.move(position - v.position)
 else self.move(10)
 }
 class Truck extends Vehicle {
-method move(int x) =
+method move(x: int) =
 if x <= 55 then position := position + x
+}
 var t := new Truck
 var c := new Car
 var v : Vehicle := c
