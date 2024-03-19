@@ -12,7 +12,11 @@ sig
                  | Nx of Tree.stm
                  | Cx of Temp.label * Temp.label -> Tree.stm
     val procEntryExit : {level: level, body: exp} -> unit
-
+    
+    val unEx: exp -> Tree.exp
+    val unNx: exp -> Tree.stm
+    val unCx: exp -> (Temp.label * Temp.label -> Tree.stm)
+    
     structure Frame : FRAME
     val getResult : unit -> Frame.frag list
 end
