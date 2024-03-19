@@ -41,17 +41,19 @@ fun unEx (Ex e) = e
     Tr.TEMP r) end
 | unEx (Nx s) = Tr.ESEQ(s Tr.CONST 0) 
 
-(* Copilot work *)
 fun unNx (Ex e) = Tr.EXP e
-| unNx (Cx genstm) = genstm(Temp.newlabel(), Temp.newlabel())
+| unNx (Cx genstm) = raise Fail "TODO: unNx(Cx genstm)"
 | unNx (Nx s) = s
 
-(* Copilot work *)
+(* treat the cases of CONST 0 *)
 fun unCx (Ex(Tr.CONST 0)) = (fn (t,f) => Tr.JUMP(Tr.NAME f, [f]))
+(* treat the cases of CONST 1 *)
 | unCx (Ex(Tr.CONST 1)) = (fn (t,f) => Tr.JUMP(Tr.NAME t, [t]))
 | unCx (Ex e) = (fn (t,f) => Tr.CJUMP(Tr.NE, e, Tr.CONST 0, t, f))
-| unCx (Nx s) = (fn (t,f) => s; Tr.JUMP(Tr.NAME t, [t]))
 | unCx (Cx genstm) = genstm
+(* unCx(Nx _) need not be translated *)
+| unCx (Nx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results", fn _ => Tr.EXP(Tr.CONST 0))
+
 
 
 end
