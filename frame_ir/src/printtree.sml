@@ -25,8 +25,6 @@ fun printtree (outstream, s0) =
 
   and exp(T.BINOP(p,a,b),d) = (indent d; say "BINOP("; binop p; sayln ",";
 			       exp(a,d+1); sayln ","; exp(b,d+1); say ")")
-    | exp(T.MEM(e),d) = (indent d; sayln "MEM("; exp(e,d+1); say ")")
-    | exp(T.TEMP t, d) = (indent d; say "TEMP t"; say(Int.toString t))
     | exp(T.ESEQ(s,e),d) = (indent d; sayln "ESEQ("; stm(s,d+1); sayln ",";
 			  exp(e,d+1); say ")")
     | exp(T.NAME lab, d) = (indent d; say "NAME "; say (Symbol.name lab))
@@ -34,6 +32,9 @@ fun printtree (outstream, s0) =
     | exp(T.CALL(e,el),d) = (indent d; sayln "CALL("; exp(e,d+1);
 			   app (fn a => (sayln ","; exp(a,d+2))) el;
 			   say ")")
+
+  and loc(T.TEMP t, d) = (indent d; say "TEMP t"; say(Int.toString t))
+    | loc(T.MEM(e), d) = (indent d; sayln "MEM("; exp(e,d+1); say ")")
 
   and binop T.PLUS = say "PLUS"
     | binop T.MINUS = say "MINUS"
