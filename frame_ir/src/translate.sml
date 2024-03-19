@@ -1,6 +1,32 @@
 structure Translate : TRANSLATE =
 struct
     structure Tr = Tree
+    structure Frame = MipsFrame
+    
+datatype level = ROOT | LEVEL of {parent : level, frame : F.frame}
+type access = level * F.access
+
+
+val outermost = ROOT
+
+fun newLevel (parent, name, formals) = 
+    let val f = F.newFrame(name, formals)
+    in LEVEL{parent = parent, frame = f} end
+
+fun formals (LEVEL{frame, ...}) = F.formals frame
+fun allocLocal (LEVEL{frame, ...}, escape) = F.allocLocal(frame, escape)
+
+datatype exp = Ex of Tr.exp 
+| Nx of Tr.stm 
+| Cx of (Temp.label * Temp.label -> Tr.stm)
+
+fun procEntryExit(level, body) = ()
+
+
+(* fun getResult()  *)
+
+(* Copilot work *)
+
 
 fun unEx (Ex e) = e
 | unEx (Cx genstm) = 

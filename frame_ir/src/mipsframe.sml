@@ -8,7 +8,7 @@ type frame = {name: Temp.label, formals : access list, inFrameSize : int ref}
 
 fun newFrame (arg : {name: Temp.label, formals: bool list}) : frame = 
 let
-  {name, formals} = arg
+  val {name, formals} = arg
   val inFrameSize = ref 0
   fun getFormals (b, acc) = 
   let
