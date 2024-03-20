@@ -1,16 +1,18 @@
 structure Translate : TRANSLATE =
 struct
     structure Tr = Tree
-    structure Frame = MipsFrame
+    structure F = MipsFrame
     
-datatype level = ROOT | LEVEL of {parent : level, frame : F.frame}
+datatype level = ROOT 
+| LEVEL of {parent : level, frame : F.frame, id: unit ref  }
+
 type access = level * F.access
 
 
 val outermost = ROOT
 
-fun newLevel (parent, name, formals) = 
-    let val f = F.newFrame(name, formals)
+fun newLevel (parent, name, formals: bool list) = 
+    let val f = F.newFrame(name, true::formals)
     in LEVEL{parent = parent, frame = f} end
 
 fun formals (LEVEL{frame, ...}) = F.formals frame
@@ -24,8 +26,6 @@ fun procEntryExit(level, body) = ()
 
 
 (* fun getResult()  *)
-
-(* Copilot work *)
 
 
 fun unEx (Ex e) = e
@@ -41,6 +41,7 @@ fun unEx (Ex e) = e
     Tr.TEMP r) end
 | unEx (Nx s) = Tr.ESEQ(s Tr.CONST 0) 
 
+(* Copilot work *)
 fun unNx (Ex e) = Tr.EXP e
 | unNx (Cx genstm) = raise Fail "TODO: unNx(Cx genstm)"
 | unNx (Nx s) = s
@@ -54,6 +55,6 @@ fun unCx (Ex(Tr.CONST 0)) = (fn (t,f) => Tr.JUMP(Tr.NAME f, [f]))
 (* unCx(Nx _) need not be translated *)
 | unCx (Nx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results", fn _ => Tr.EXP(Tr.CONST 0))
 
-
+fun simpleVar (access, level) = 
 
 end
