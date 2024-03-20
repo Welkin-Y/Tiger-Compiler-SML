@@ -1,7 +1,7 @@
 structure Translate : TRANSLATE =
 struct
     structure Tr = Tree
-    structure Frame = MipsFrame
+    structure F = MipsFrame
     
 datatype level = ROOT | LEVEL of {parent : level, frame : F.frame}
 type access = level * F.access
