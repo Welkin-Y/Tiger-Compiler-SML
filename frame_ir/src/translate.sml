@@ -16,7 +16,9 @@ fun newLevel (parent, name, formals: bool list) =
     in LEVEL{parent = parent, frame = f} end
 
 fun formals (LEVEL{frame, ...}) = F.formals frame
-fun allocLocal (LEVEL{frame, ...}, escape) = F.allocLocal(frame, escape)
+| formals(ROOT) = []
+fun allocLocal (LEVEL{frame, ...}) (escape) = F.allocLocal(frame, escape)
+| allocLocal (ROOT) _ = raise ErrorMsg.Error "allocLocal: no frame"
 
 datatype exp = Ex of Tr.exp 
 | Nx of Tr.stm 
