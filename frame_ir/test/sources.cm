@@ -15,18 +15,18 @@ $/ml-yacc-lib.cm
 ../../parser/src/findescape.sml
 ../../parser/test/prabsyn.sml
 ../../semantic/src/types.sml
-../../semantic/src/env.sig
-../../semantic/src/env.sml
 ../../semantic/src/typechecker.sml
 ../../semantic/src/print_env.sml
 ../../semantic/test/semanttest.sml
+../src/env.sig
+../src/env.sml
 ../src/semant.sig
 ../src/semant.sml
 ../src/temp.sig
 ../src/temp.sml
 ../src/frame.sig
-(* ../src/mipsframe.sml *)
+../src/mipsframe.sml
 ../src/translate.sig
-(* ../src/translate.sml *)
+../src/translate.sml
 ../src/tree.sml
 ../src/printtree.sml
