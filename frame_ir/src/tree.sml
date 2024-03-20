@@ -25,6 +25,9 @@ sig
   and relop = EQ | NE | LT | GT | LE | GE 
   | ULT | ULE | UGT | UGE
 
+  val getBinop : A.oper -> binop
+  val getRelop : A.oper -> relop
+
   (* val notRel : relop -> relop *)
   (* val commute: relop -> relop *)
 end
@@ -55,6 +58,18 @@ struct
 
   and relop = EQ | NE | LT | GT | LE | GE 
   | ULT | ULE | UGT | UGE
+
+  fun getBinop A.PlusOp = PLUS
+    | getBinop A.MinusOp = MINUS
+    | getBinop A.TimesOp = MUL
+    | getBinop A.DivideOp = DIV
+  
+  fun getRelop A.EqOp = EQ
+    | getRelop A.NeqOp = NE
+    | getRelop A.LtOp = LT
+    | getRelop A.LeOp = LE
+    | getRelop A.GtOp = GT
+    | getRelop A.GeOp = GE
 
 end
 

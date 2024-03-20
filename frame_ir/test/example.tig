@@ -1,11 +1,1 @@
-let 
-    type d = m
-    type m = n
-    type n = {x:a}
-    type a = array of b
-    type b = array of c
-    type c = array of d
-    
-    
-in
-end
+1+2

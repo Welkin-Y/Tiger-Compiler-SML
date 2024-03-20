@@ -32,10 +32,12 @@ fun procEntryExit(level, body) = ()
 
 
 
-
+fun seq [] = Tr.EXP(Tr.CONST 0)
+  | seq [s] = s
+  | seq (s::lst) = Tr.SEQ(s, seq lst)
 
 fun unEx (Ex e) = e
-| unEx (Cx genstm) = 
+  | unEx (Cx genstm) = 
     let val r = Temp.newtemp()
         val t = Temp.newlabel() and f = Temp.newlabel()
     in Tr.ESEQ(seq[
@@ -44,8 +46,8 @@ fun unEx (Ex e) = e
         Tr.LABEL f, 
         Tr.MOVE(Tr.TEMP r, Tr.CONST 0), 
         Tr.LABEL t],
-        r.TEMP r) end
-| unEx (Nx s) = Tr.ESEQ(s Tr.CONST 0) 
+        Tr.TEMP r) end
+  | unEx (Nx s) = Tr.ESEQ(s Tr.CONST 0) 
 
 (* Copilot work *)
 fun unNx (Ex e) = Tr.EXP e
@@ -83,4 +85,18 @@ in
         T.MOVE(T.TEMP res, elseexp),
         T.LABEL labelend],
         T.TEMP res))
+end
+
+fun transString(lit) = 
+let 
+    val label = Temp.newlabel()
+in
+    (* TODO *)
+    Tr.NAME label
+end
+
+fun transBinop(oper, e1, e2) = Ex(Tr.BINOP(Tr.getBinop oper, unEx e1, unEx e2))
+
+fun transRelop(oper, e1, e2) = unEx(fn (t, f) => Tr.CJUMP(Tr.getRelop oper, unEx e1, unEx e2, t, f))
+
 end
