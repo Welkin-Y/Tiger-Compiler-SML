@@ -12,6 +12,7 @@ sig
                  | Nx of Tree.stm  (* stands for "no result" *)
                  | Cx of Temp.label * Temp.label -> Tree.stm (* stands for "conditional"  *)
     
+    val seq : Tree.stm list -> Tree.stm
     val unEx: exp -> Tree.exp 
     val unNx: exp -> Tree.stm
     val unCx: exp -> (Temp.label * Temp.label -> Tree.stm) 
@@ -23,5 +24,11 @@ sig
 
     val procEntryExit : {level: level, body: exp} -> unit
     structure Frame : FRAME
-    val getResult : unit -> Frame.frag list
+    (* val getResult : unit -> Frame.frag list *)
+
+    val transInt : int -> exp
+    val transIf : exp * exp * exp option -> exp
+    val transString : string -> exp
+    val transBinop : A.oper * exp * exp -> exp
+    val transRelop : A.oper * exp * exp -> exp
 end

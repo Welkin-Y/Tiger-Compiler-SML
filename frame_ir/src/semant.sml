@@ -1,45 +1,41 @@
-
-(* dummy Translate *)
 structure TL = Translate
 structure TC = TypeChecker
-(*TODO: recursive name type e.g. type a = b; type b = int*)
 structure Semant :> SEMANT =
 struct
     type tyvenv = Env.enventry Symbol.table
     type tytenv = T.ty Symbol.table
-    type expty = {exp: Translate.exp, ty: T.ty}
+    type expty = {exp: TL.exp, ty: T.ty}
     
     fun transExp (venv : tyvenv, tenv: tytenv, exp: A.exp, loopDepth: int, forbidden : (Symbol.symbol list), level: TL.level) = 
             case exp of 
-                (*To check an IfExp we need to make sure: 1. test is int 2. then and else have same types*)
-                A.IfExp {test, then', else', pos} => 
-                    let 
-                        val {exp=_, ty=tythen} = transExp (venv, tenv, then', loopDepth, forbidden, level)
-                        val {exp=expelse, ty=tyelse} = case else' of
-                                NONE => {exp=(), ty=T.UNIT}
-                            | SOME e => transExp (venv, tenv, e, loopDepth, forbidden, level)
-
-                        val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth, forbidden, level) 
-                    in
-                        TC.checkIfExp pos (tytest, tythen, tyelse);
-                        {exp=(), ty=tythen}
-                    end
+            (*To check an IfExp we need to make sure: 1. test is int 2. then and else have same types*)
+            A.IfExp {test, then', else', pos} => 
+                let 
+                    val {exp=_, ty=tythen} = transExp (venv, tenv, then', loopDepth, forbidden, level)
+                    val {exp=expelse, ty=tyelse} = case else' of
+                            NONE => {exp=(), ty=T.UNIT}
+                        | SOME e => transExp (venv, tenv, e, loopDepth, forbidden, level)
+                    val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth, forbidden, level) 
+                in
+                    TC.checkIfExp pos (tytest, tythen, tyelse);
+                    {exp=(), ty=tythen}
+                end
             | A.OpExp {left, oper, right, pos} =>
                 let
-                    val {exp=_, ty=tyleft} = transExp (venv, tenv, left, loopDepth, forbidden, level)
-                    val {exp=_, ty=tyright} = transExp (venv, tenv, right, loopDepth, forbidden, level)
+                    val {exp=expleft, ty=tyleft} = transExp (venv, tenv, left, loopDepth, forbidden, level)
+                    val {exp=expright, ty=tyright} = transExp (venv, tenv, right, loopDepth, forbidden, level)
                 in
                     case oper of
-                        A.PlusOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.MinusOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.TimesOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.DivideOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.EqOp => (TC.checkEqOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.NeqOp => (TC.checkEqOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.LtOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.LeOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.GtOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
-                    | A.GeOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=(), ty=T.INT})
+                    A.PlusOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transBinop(oper, expleft, expright), ty=T.INT})
+                    | A.MinusOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transBinop(oper, expleft, expright), ty=T.INT})
+                    | A.TimesOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transBinop(oper, expleft, expright), ty=T.INT})
+                    | A.DivideOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transBinop(oper, expleft, expright), ty=T.INT})
+                    | A.EqOp => (TC.checkEqOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
+                    | A.NeqOp => (TC.checkEqOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
+                    | A.LtOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
+                    | A.LeOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
+                    | A.GtOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
+                    | A.GeOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
                 end
             (* Check Let Exp: 1. gothrough decs 2. go through body*)
             | A.LetExp {decs, body, pos} => 
@@ -60,12 +56,12 @@ struct
                     print ("begin to check body\n");
                     transExp (venv', tenv', body, loopDepth, forbidden', level)
                 end
-            | A.IntExp _ => {exp=(), ty=T.INT}
-            | A.StringExp _ => {exp=(), ty=T.STRING}
+            | A.IntExp intval => {exp=TL.transInt intval, ty=T.INT}
+            | A.StringExp str => {exp=TL.transString str, ty=T.STRING}
             | A.NilExp => {exp=(), ty=T.NIL}
             | A.SeqExp exps => 
                 let
-                    val explist : Translate.exp list = []
+                    val explist : TL.exp list = []
                     fun helper ((exp, _), ty) = let
                                 val {exp=entryExp, ty=entryTy} = transExp (venv, tenv, exp, loopDepth, forbidden, level)
                             in
@@ -510,9 +506,10 @@ struct
             val tenv = Env.base_tenv 
             val forbidden : (Symbol.symbol list) = []
             val level = TL.outermost
+            val {exp=trexp, ty=_} = transExp (venv, tenv, exp, 0, forbidden, level)
         in
-            transExp (venv, tenv, exp, 0, forbidden, level);
-            PrintEnv.printEnv (venv, tenv);
+            Printtree.printTree(TextIO.stdOut, TL.unNx trexp);
+            (* PrintEnv.printEnv (venv, tenv); *)
             print "\nSemantic Analysis Succeed\n"
         end
 end
