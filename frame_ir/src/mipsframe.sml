@@ -2,12 +2,20 @@ structure MipsFrame : FRAME =
 struct
 
   (* MIPS field *)
+  type register = string
+  val RV: Temp.temp = Temp.newtemp()
+  val FP: Temp.temp = Temp.newtemp()
+  val registers: register list = []
+  val tempMap: register Temp.Table.table = Temp.Table.empty
   val wordSize = 4
 
-  datatype access = InFrame of int (* indicates a memory location at offset X from the frame pointer *)
+  datatype access = InFrame of int (* memory location at offset X from the frame pointer *)
   | InReg of Temp.temp
 
   type frame = {name: Temp.label, formals : access list, inFrameSize : int ref}
+
+  datatype frag = PROC of {body: Tree.stm, frame: frame}
+  | STRING of Temp.label * string
 
   fun newFrame (arg : {name: Temp.label, formals: bool list}) : frame = let
         val {name, formals} = arg
@@ -30,19 +38,25 @@ struct
 
   fun formals (frm: frame) : access list = let val {formals, ...} = frm in formals end
 
-  fun allocLocal (frm : frame) (onFrame : bool) : access = case onFrame of
+  fun allocLocal (frm: frame) (onFrame : bool) : access = case onFrame of
         true => (
-            frm.inFrameSize := !frm.inFrameSize + 1; 
-            InFrame(~(!(frm.inFrameSize)) * wordSize)
+            #inFrameSize frm := !(#inFrameSize frm)+ 1; 
+            InFrame(~(!(#inFrameSize frm)) * wordSize)
           )
       | false => InReg(Temp.newtemp()) 
 
+  fun externalCall(s: string, args: Tree.exp list) = raise ErrorMsg.impossible "Not implemented"
+  (* Tree.CALL(Tree.NAME(Tree.Temp.namedlabel s), args) *)
 
-  fun exp (access: access) (addr: Tree.exp) : Tree.exp = case access of
-        InFrame(offset) => Tree.MEM(Tree.BINOP(Tree.PLUS, Tree.TEMP addr, Tree.CONST offset))
+  fun string(label: Tree.label, str: string) = raise ErrorMsg.impossible "Not implemented"
+  (* Tree.DATASTRING(label, str) *)
+
+  fun procEntryExit1 (frm: frame, body: Tree.stm) = raise ErrorMsg.impossible "Not implemented"
+
+  fun exp (access: access) (addr: Tree.exp) : Tree.loc = case access of
+        InFrame(offset) => Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset))
       | InReg(temp) => Tree.TEMP temp
 
-  fun externalCall(s: string, args: Tree.exp list) =
-      Tree.CALL(Tree.NAME(Tree.Temp.namedlabel s), args)
+
 
 end
