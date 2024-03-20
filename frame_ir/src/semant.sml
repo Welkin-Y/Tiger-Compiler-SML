@@ -1,10 +1,12 @@
-structure TL = Translate
-structure TC = TypeChecker
 structure Semant :> SEMANT =
 struct
+    structure TL = Translate
+    structure TC = TypeChecker
+
     type tyvenv = Env.enventry Symbol.table
     type tytenv = T.ty Symbol.table
     type expty = {exp: TL.exp, ty: T.ty}
+    
     
     fun transExp (venv : tyvenv, tenv: tytenv, exp: A.exp, loopDepth: int, forbidden : (Symbol.symbol list), level: TL.level) = 
             case exp of 
@@ -492,8 +494,8 @@ struct
                 val _ = case Symbol.look (fundecGroup, name) of
                     NONE => ()
                     | SOME _ => (ErrorMsg.error pos ("TypeError: reused function name " ^ Symbol.name name ^ "in same group"); raise ErrorMsg.Error)
-                val newLabel = Temp.newLabel()
-                val newLevel = TC.newLevel(level, newLabel, params_escapes)
+                val newLabel = Temp.newlabel()
+                val newLevel = TL.newLevel(level, newLabel, params_escapes)
                 val newVenv = Symbol.enter (venv, name, Env.FunEntry {level=newLevel, label=newLabel, formals=params_ty, result=res_ty}) 
                 val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {level=newLevel, label=newLabel, formals=params_ty, result=res_ty})
             in
@@ -508,7 +510,7 @@ struct
             val level = TL.outermost
             val {exp=trexp, ty=_} = transExp (venv, tenv, exp, 0, forbidden, level)
         in
-            Printtree.printTree(TextIO.stdOut, TL.unNx trexp);
+            Printtree.printtree(TextIO.stdOut, TL.unNx trexp);
             (* PrintEnv.printEnv (venv, tenv); *)
             print "\nSemantic Analysis Succeed\n"
         end

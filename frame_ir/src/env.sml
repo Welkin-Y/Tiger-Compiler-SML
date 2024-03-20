@@ -31,8 +31,8 @@ val base_venv = let
                 foldl (fn ((key, value), tab) => Symbol.enter (tab, key, value)) envmap initlist
                 end
 
-fun enventryToString (VarEntry {ty}) = T.toString ty
-  | enventryToString (FunEntry {formals, result}) = 
+fun enventryToString (VarEntry {ty, ...}) = T.toString ty
+  | enventryToString (FunEntry {formals, result, ...}) = 
     let
       fun tyListToString [] = ""
         | tyListToString [ty] = T.toString ty

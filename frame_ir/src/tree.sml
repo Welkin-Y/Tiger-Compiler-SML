@@ -3,11 +3,11 @@ sig
   type label = Temp.label
   type size
 
-  datatype stm = SEQ of stm * stm
+  datatype stm = SEQ of stm*stm
   | LABEL of label
   | JUMP of exp * label list
   | CJUMP of relop * exp * exp * label * label
-  | MOVE of exp * exp
+  | MOVE of loc * exp
   | EXP of exp
 
   and exp = BINOP of binop * exp * exp
@@ -15,9 +15,11 @@ sig
   | NAME of label
   | CONST of int
   | CALL of exp * exp list
+  | LOC of loc
 
   and loc = MEM of exp
   | TEMP of Temp.temp
+
 
   and binop = PLUS | MINUS | MUL | DIV 
   | AND | OR | LSHIFT | RSHIFT | ARSHIFT | XOR
@@ -37,11 +39,11 @@ struct
   type label=Temp.label
   type size = int
 
-  datatype stm = SEQ of stm * stm
+  datatype stm = SEQ of stm*stm
   | LABEL of label
   | JUMP of exp * label list
   | CJUMP of relop * exp * exp * label * label
-  | MOVE of exp * exp
+  | MOVE of loc * exp
   | EXP of exp
 
   and exp = BINOP of binop * exp * exp
@@ -49,6 +51,7 @@ struct
   | NAME of label
   | CONST of int
   | CALL of exp * exp list
+  | LOC of loc
 
   and loc = TEMP of Temp.temp 
   | MEM of exp 
@@ -63,6 +66,7 @@ struct
     | getBinop A.MinusOp = MINUS
     | getBinop A.TimesOp = MUL
     | getBinop A.DivideOp = DIV
+    | getBinop _ = raise Fail "getBinop not implemented for this operator"
   
   fun getRelop A.EqOp = EQ
     | getRelop A.NeqOp = NE
@@ -70,6 +74,7 @@ struct
     | getRelop A.LeOp = LE
     | getRelop A.GtOp = GT
     | getRelop A.GeOp = GE
+    | getRelop _ = raise Fail "getRelop not implemented for this operator"
 
 end
 
