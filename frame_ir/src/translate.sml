@@ -32,6 +32,7 @@ struct
 
     fun getResult() = raise Fail "TODO: getResult"
 
+    (* helper function for seq of exps *)
     fun seq [] = Tr.EXP(Tr.CONST 0)
         | seq [s] = s
         | seq (s::lst) = Tr.SEQ(s, seq lst)
@@ -54,7 +55,6 @@ struct
         | unNx (Cx genstm) = raise Fail "TODO: unNx(Cx genstm)"
         | unNx (Nx s) = s
 
-    (* treat the cases of CONST 0 *)
     fun unCx _ = raise Fail "TODO: unCx"
     (* fun unCx (Ex(Tr.CONST 0)) = (fn (t,f) => Tr.JUMP(Tr.NAME f, [f]))
         (* treat the cases of CONST 1 *)
