@@ -66,6 +66,15 @@ struct
         | unCx (Nx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
         | unCx (Lx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
 
+
+    fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=use_id, parent=use_prt, frame=use_frm}): Tree.exp =
+            if def_id = use_id then Tr.LOC(Tr.TEMP F.FP)
+            else followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt) 
+        | followStaticLink(ROOT, _) = ErrorMsg.impossible "followStaticLink: no static link"
+        | followStaticLink(_, ROOT) = ErrorMsg.impossible "followStaticLink: no static link"
+    
+
+
     fun transNil () = Ex(Tr.CONST 0)
 
     fun transInt (num : int) = Ex(Tr.CONST num)
@@ -125,10 +134,18 @@ struct
     fun transRelop(oper, e1, e2) = Cx(fn (t, f) => Tr.CJUMP(Tr.getRelop oper, unEx e1, unEx e2, t, f))
 
     fun transAssign(var, exp) = let
-      fun unLx (Lx l) = l
-        | unLx _ = raise Fail "unLx"
-    in Nx(Tr.MOVE(unLx var, unEx exp)) end
-     
+                fun unLx (Lx l) = l
+                    | unLx _ = raise Fail "unLx"
+            in Nx(Tr.MOVE(unLx var, unEx exp)) end
+
+    fun transCall (label, defLevel, callLevel, args) = case defLevel of 
+                ROOT => Ex(F.externalCall(Symbol.name label, map unEx args))
+            | LEVEL{frame, parent, id} => let
+                    val static_link = followStaticLink(defLevel, callLevel)
+                in
+                    Ex(Tr.CALL(Tr.NAME label, static_link::(map unEx args)))
+                end
+
     fun transLet(d, body) = raise Fail "TODO: transLet"
 
 

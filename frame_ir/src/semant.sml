@@ -123,7 +123,7 @@ struct
                     val funcentry = case Symbol.look (venv, func) of
                         NONE => TC.undefinedNameErr pos func
                         | SOME entry => entry
-                    val {level=_, label=_, formals=formals, result=result} = case funcentry of
+                    val {formals=formals, result=result, ...} = case funcentry of
                         Env.FunEntry record => record
                         | _ => (ErrorMsg.error pos ("SyntaxError: not a function " ^ Symbol.name func); raise ErrorMsg.Error)
                     (*check if the number of args align with the number of formals*)

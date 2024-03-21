@@ -39,7 +39,7 @@ sig
     (* val transBreak : unit -> exp
     val transWhile : exp * exp -> exp *)
     val transAssign : exp * exp -> exp
-    (* val transLet :
-    val transCall:  *)
+    (* val transLet : *)
+    val transCall: Temp.label * level * level * exp list -> exp
 
 end
