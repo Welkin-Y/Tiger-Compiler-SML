@@ -101,4 +101,19 @@ struct
 
     fun transRelop(oper, e1, e2) = Cx(fn (t, f) => Tr.CJUMP(Tr.getRelop oper, unEx e1, unEx e2, t, f))
 
+    fun transAssign(var, exp) = Nx(Tr.MOVE(unEx var, unEx exp))
+
+    fun transCall(level, funexp, argexps) = 
+            let 
+                val funexp = unEx funexp
+                val argexps = map unEx argexps
+                val res = Temp.newtemp()
+            in
+                Ex(Tr.CALL(funexp, argexps, level, res))
+            end
+    
+    fun transLet(d, body) = raise Fail "TODO: transLet"
+
+    
+
 end

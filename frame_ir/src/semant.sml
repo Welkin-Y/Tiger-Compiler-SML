@@ -82,11 +82,11 @@ struct
                             NONE => ()
                             | SOME _ => (ErrorMsg.error pos ("TypeError: reassign to for loop variable " ^ Symbol.name (name)); raise ErrorMsg.Error) )
                         | _ => ()
-                    val {exp=_, ty=tyvar} = transVar (venv, tenv, var, loopDepth, forbidden, level)
-                    val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth, forbidden, level)
+                    val {exp=varexp, ty=tyvar} = transVar (venv, tenv, var, loopDepth, forbidden, level)
+                    val {exp=expexp, ty=tyexp} = transExp (venv, tenv, exp, loopDepth, forbidden, level)
                 in
                     TC.checkSameType pos (tyvar, tyexp);
-                    {exp=TL.NOT_IMPLEMENTED, ty=T.UNIT}
+                    {exp=TL.transAssign(varexp, expexp), ty=T.UNIT}
                 end
             | A.WhileExp {test, body, pos} => let
                     val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth, forbidden, level)

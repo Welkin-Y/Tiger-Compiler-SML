@@ -37,9 +37,10 @@ sig
     val transIf : exp * exp * exp -> exp
     val transBinop : A.oper * exp * exp -> exp
     val transRelop : A.oper * exp * exp -> exp
-    (* val transBreak
-    val transWhile  
-    val transAssign
-    val transLet *)
+    (* val transBreak : unit -> exp
+    val transWhile : exp * exp -> exp *)
+    val transAssign : exp * exp -> exp
+    (* val transLet :
+    val transCall:  *)
 
 end
