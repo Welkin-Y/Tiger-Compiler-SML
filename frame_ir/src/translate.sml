@@ -189,6 +189,32 @@ struct
 
     fun transLet(d, body) = raise Fail "TODO: transLet"
 
+    fun transLoop(cond, body) = 
+        let
+            val pretest = unCx(cond)
+            val posttest = unCx(cond)
+            val body = unNx(body)
+            val bodylabel = Temp.newlabel()
+            val endlabel = Temp.newlabel()
+        in
+            Nx(Tr.SEQ(seq[
+                pretest(bodylabel, endlabel),
+                Tr.LABEL bodylabel,
+                unNx body,
+                posttest(bodylabel, endlabel),
+                Tr.LABEL endlabel
+            ]))
+        end
+    
+    fun transWhile(cond, body) = transLoop(cond, body)
 
+    fun transFor(var, lo, hi, body) = 
+        let
+            val assignVar = transAssign(var, lo)
+            val test = transRelop(Tr.LE, var, hi)
+            val newbody = Nx(Tr.SEQ(unNx body, Tr.EXP(Tr.BINOP(Tr.PLUS, unLx var, Tr.CONST 1))))
+        in
+            Nx(Tr.SEQ(unNx assignVar, unNx(transLoop(test, newbody))))
+        end
 
 end
