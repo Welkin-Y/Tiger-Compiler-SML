@@ -8,6 +8,7 @@ struct
   val registers: register list = []
   val tempMap: register Temp.Table.table = Temp.Table.empty
   val wordSize = 4
+  val numArgReg = 4
 
   datatype access = InFrame of int (* memory location at offset X from the frame pointer *)
   | InReg of Temp.temp
@@ -23,7 +24,7 @@ struct
         fun getFormals (b, acc) = 
             let
               fun helper(b, (acc, inFrameNum, inRegNum)) = 
-                  if b andalso inRegNum < 8 then (
+                  if b orelse inRegNum = numArgReg then (
                       inFrameSize := inFrameNum + 1;
                       (InFrame(~inFrameNum * wordSize)::acc, inFrameNum + 1, inRegNum)
                     ) 
