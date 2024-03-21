@@ -75,7 +75,13 @@ struct
     
 
 
+
     fun transNil () = Ex(Tr.CONST 0)
+
+    fun simpleVar (access, level) = raise Fail "TODO: simpleVar"
+    fun fieldVar (var, index) = raise Fail "TODO: fieldVar"
+    fun subscriptVar (var, index) = raise Fail "TODO: subscriptVar"
+
 
     fun transInt (num : int) = Ex(Tr.CONST num)
 

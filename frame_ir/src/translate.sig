@@ -27,6 +27,14 @@ sig
     
     (* var dec *)
     val simpleVar : access * level -> exp
+    val fieldVar : exp * int -> exp
+    val subscriptVar : exp * exp -> exp
+    (* there should be a Translate function to handle array subscripts, 
+    one for record fields, 
+    one for each kind of expression, and so on. *)
+    (* val transArray : exp * exp -> exp
+    val transRecord : exp list -> exp *)
+
 
     (* exp *)
     val transNil : unit -> exp
