@@ -51,9 +51,8 @@ struct
                     Tr.LOC(Tr.TEMP r)) end
         | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 0) 
 
-    (* Copilot work *)
     fun unNx (Ex e) = Tr.EXP e
-        | unNx (Cx genstm) = raise Fail "TODO: unNx(Cx genstm)"
+        | unNx (Cx genstm) = Tr.EXP (unEx (Cx genstm))
         | unNx (Nx s) = s
 
     fun unCx (Ex(Tr.CONST 0)) = (fn (t,f) => Tr.JUMP(Tr.NAME f, [f]))
