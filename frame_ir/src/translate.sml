@@ -30,6 +30,7 @@ struct
     | Lx of Tr.loc
     | NOT_IMPLEMENTED
 
+
     fun procEntryExit({level: level, body: exp}) = raise Fail "TODO: procEntryExit"
 
     fun getResult() = raise Fail "TODO: getResult"
@@ -77,10 +78,35 @@ struct
 
 
     fun transNil () = Ex(Tr.CONST 0)
+    fun simpleVar ((ROOT, _), _) = raise ErrorMsg ~1 "access variable in root level"
+        | simpleVar((_, _), ROOT) = raise ErrorMsg ~1 "access variable in root level"
+        | simpleVar(access, level) = 
+            let
+                val (LEVEL{parent, frame, id_t}, faccess) = access
+                (*find variable through static link*)
+                fun findVar (lv : level, cur_acc) = 
+                    val (LEVEL{parent, frame, id_u}, acc) = cur_acc
+                    if id_u = id_t then Frame.exp(faccess)(acc)
+                    else 
+                    (*follow the static link (first formals)*)
+                    findVar(parent, F.exp(List.hd (F.formals frame))(acc))
+            in
+                Ex(findVar(level, T.TEMP(F.FP)))
+            end
 
-    fun simpleVar (access, level) = raise Fail "TODO: simpleVar"
-    fun fieldVar (var, index) = raise Fail "TODO: fieldVar"
-    fun subscriptVar (var, index) = raise Fail "TODO: subscriptVar"
+    fun fieldVar (var, index) = Ex(Tr.MEM(Tr.BINOP(Tr.PLUS, unEx var, Tr.CONST index)))
+    fun subscriptVar (arr, index) = 
+        let 
+            val indexReg = Temp.newtemp()
+            val baseReg = Temp.newtemp()
+        in 
+            Ex(T.ESEQ(seq[
+                        Tr.MOVE(Tr.TEMP indexReg, unEx index),
+                        Tr.MOVE(Tr.TEMP baseReg, unEx arr),
+                        T.MEM(T.BINOP(T.PLUS, T.MEM(T.TEMP baseReg), T.BINOP(T.MUL, T.TEMP indexReg, T.CONST F.wordSize)))
+            ]))
+        end
+
 
 
     fun transInt (num : int) = Ex(Tr.CONST num)
@@ -123,9 +149,6 @@ struct
                 case elseexp of SOME elseexp => transIfThenElse(cond, thenexp, elseexp)
                 | NONE => transIfThen(cond, thenexp)
             end
-
-
-    fun simpleVar (access, level) = raise Fail "TODO: simpleVar"
 
     fun transString(lit) = 
             let 
