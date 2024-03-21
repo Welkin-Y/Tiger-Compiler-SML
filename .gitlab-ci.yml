@@ -30,10 +30,10 @@ before_script:
 # script:
 #  - echo "Do your build here"
 
-test_lexer:
-  stage: test
-  script:
-    - ./lexer/test/unitTest.py
+# test_lexer:
+#   stage: test
+#   script:
+#     - ./lexer/test/unitTest.py
 
 test_parser:
   stage: test

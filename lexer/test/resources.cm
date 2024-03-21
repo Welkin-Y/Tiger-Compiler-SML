@@ -3,7 +3,7 @@ $/basis.cm
 $/smlnj-lib.cm
 
 driver.sml
-errormsg.sml
+../src/errormsg.sml
 tokens.sig
 tokens.sml
-tiger.lex
+../src/tiger.lex
