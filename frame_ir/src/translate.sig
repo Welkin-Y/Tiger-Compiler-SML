@@ -38,26 +38,17 @@ sig
 
     (* exp *)
     val transLet : exp list * exp -> exp
-
     val transNil : unit -> exp
     val transInt : int -> exp
     val transString : string -> exp
-
     val transIf : exp * exp * exp option -> exp
     val transBinop : A.oper * exp * exp -> exp
     val transRelop : A.oper * exp * exp -> exp
     (* val transBreak : unit -> exp *)
     val transAssign : exp * exp -> exp
-    (* val transLet :
-    val transCall:  *)
     val transLoop : exp * exp -> exp
     val transWhile : exp * exp -> exp
     val transFor : exp * exp * exp * exp -> exp
-    (* val transBreak
-    val transAssign
-    val transLet *)
-
-    (* val transLet : *)
     val transCall: Temp.label * level * level * exp list -> exp
 
 

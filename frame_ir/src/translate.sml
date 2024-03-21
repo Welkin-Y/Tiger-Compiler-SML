@@ -69,61 +69,45 @@ struct
         | unCx (Lx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
 
     fun unLx (Lx l) = l
-                    | unLx _ = raise Fail "unLx"
+        | unLx _ = raise Fail "unLx"
 
     (* MEM(+(CONST kn, MEM(+(CONST kn-1, ... MEM(+(CONST k1, TEMP FP)) ...)))) *)
     fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=use_id, parent=use_prt, frame=use_frm}): Tree.exp =
-            if def_id = use_id then Tr.LOC(Tr.MEM(Tr.BINOP(Tr.PLUS, Tr.CONST 0, Tr.LOC(Tr.TEMP F.FP))))
-            else Tr.LOC(Tr.MEM(Tr.BINOP(Tr.PLUS, Tr.CONST 0, followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt))))
+            if def_id = use_id then Tr.LOC(Tr.TEMP F.FP)
+            else F.exp (List.hd(F.formals use_frm))(followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt))
         | followStaticLink(ROOT, _) = ErrorMsg.impossible "followStaticLink: no static link"
         | followStaticLink(_, ROOT) = ErrorMsg.impossible "followStaticLink: no static link"
     
-
-
-
     fun transNil () = Ex(Tr.CONST 0)
-    fun simpleVar ((ROOT, _), _) = raise ErrorMsg.impossible "simpleVar: access variable in root level"
-        | simpleVar((_, _), ROOT) = raise ErrorMsg.impossible "simpleVar: access root level"
-        | simpleVar (access, lf) =
-            let val (LEVEL{parent, frame, id}, access_g) = access
-            val ref_g = id
-            fun follow (LEVEL({parent, frame, id}) : level, cur_acc : Tr.loc) =
-            let 
-                val cur_ref = id
-                in
-                if ref_g = cur_ref
-                then F.exp(access_g)(Tr.LOC cur_acc)
-                else let val next_link = List.hd (F.formals frame)
-                in follow (parent, F.exp(next_link)(Tr.LOC cur_acc))
-                end
-                end
-            in Ex(Tr.LOC (follow(lf, Tr.TEMP(F.FP))))
-            end
+    
+    fun simpleVar(access, useLevel) =
+            let val (defLevel, defAccess) = access
+            in Ex(F.exp defAccess (followStaticLink(defLevel, useLevel))) end
        
 
     fun fieldVar (var, index) = Ex(Tr.LOC (Tr.MEM(Tr.BINOP(Tr.PLUS, unEx var, Tr.CONST index))))
     fun subscriptVar (arr, index) = 
-        let 
-            val indexReg = Temp.newtemp()
-            val baseReg = Temp.newtemp()
-        in 
-            Ex(Tr.ESEQ(seq[
-                        Tr.MOVE(Tr.TEMP indexReg, unEx index),
-                        Tr.MOVE(Tr.TEMP baseReg, unEx arr)],
+            let 
+                val indexReg = Temp.newtemp()
+                val baseReg = Temp.newtemp()
+            in 
+                Ex(Tr.ESEQ(seq[
+                            Tr.MOVE(Tr.TEMP indexReg, unEx index),
+                            Tr.MOVE(Tr.TEMP baseReg, unEx arr)],
                         Tr.LOC(Tr.MEM(Tr.BINOP(Tr.PLUS, Tr.LOC(Tr.MEM(Tr.LOC(Tr.TEMP baseReg))), Tr.BINOP(Tr.MUL, Tr.LOC(Tr.TEMP indexReg), Tr.CONST F.wordSize))))
-            ))
-        end
+                        ))
+            end
 
 
     fun transLet (decs, body) = 
-        let 
-            val len = List.length decs
-            val decs = map unNx decs
-            val body = unEx body
-        in
-            if len = 0 then Ex(body)
-            else Ex(Tr.ESEQ(seq decs, body))
-        end
+            let 
+                val len = List.length decs
+                val decs = map unNx decs
+                val body = unEx body
+            in
+                if len = 0 then Ex(body)
+                else Ex(Tr.ESEQ(seq decs, body))
+            end
     fun transInt (num : int) = Ex(Tr.CONST num)
 
     fun transIf(cond, thenexp, elseexp) = 
@@ -187,34 +171,32 @@ struct
                     Ex(Tr.CALL(Tr.NAME label, static_link::(map unEx args)))
                 end
 
-    fun transLet(d, body) = raise Fail "TODO: transLet"
-
     fun transLoop(cond, body) = 
-        let
-            val pretest = unCx(cond)
-            val posttest = unCx(cond)
-            val body = unNx(body)
-            val bodylabel = Temp.newlabel()
-            val endlabel = Temp.newlabel()
-        in
-            Nx(seq[
-                pretest(bodylabel, endlabel),
-                Tr.LABEL bodylabel,
-                body,
-                posttest(bodylabel, endlabel),
-                Tr.LABEL endlabel
-            ])
-        end
+            let
+                val pretest = unCx(cond)
+                val posttest = unCx(cond)
+                val body = unNx(body)
+                val bodylabel = Temp.newlabel()
+                val endlabel = Temp.newlabel()
+            in
+                Nx(seq[
+                        pretest(bodylabel, endlabel),
+                        Tr.LABEL bodylabel,
+                        body,
+                        posttest(bodylabel, endlabel),
+                        Tr.LABEL endlabel
+                    ])
+            end
     
     fun transWhile(cond, body) = transLoop(cond, body)
 
     fun transFor(var, lo, hi, body) = 
-        let
-            val assignVar = transAssign(var, lo)
-            val test = transRelop(A.LeOp, var, hi)
-            val newbody = Nx(Tr.SEQ(unNx body, Tr.EXP(Tr.BINOP(Tr.PLUS, Tr.LOC(unLx var), Tr.CONST 1))))
-        in
-            Nx(Tr.SEQ(unNx assignVar, unNx(transLoop(test, newbody))))
-        end
+            let
+                val assignVar = transAssign(var, lo)
+                val test = transRelop(A.LeOp, var, hi)
+                val newbody = Nx(Tr.SEQ(unNx body, Tr.EXP(Tr.BINOP(Tr.PLUS, Tr.LOC(unLx var), Tr.CONST 1))))
+            in
+                Nx(Tr.SEQ(unNx assignVar, unNx(transLoop(test, newbody))))
+            end
 
 end

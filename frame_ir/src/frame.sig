@@ -14,7 +14,7 @@ sig
     val name : frame -> Temp.label (* allocate a local variable in the frame *)
     val allocLocal : frame -> bool -> access 
     val string: Tree.label * string -> string
-    val exp : access -> Tree.exp -> Tree.loc (* access and its stack frame' address *)
+    val exp : access -> Tree.exp -> Tree.exp (* access and its stack frame' address *)
 
     val procEntryExit1 : frame * Tree.stm -> Tree.stm
     (* val procEntryExit2: frame * Assem.instr list -> Assem.instr list

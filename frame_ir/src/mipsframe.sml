@@ -54,9 +54,9 @@ struct
 
   fun procEntryExit1 (frm: frame, body: Tree.stm) = raise ErrorMsg.impossible "Not implemented"
 
-  fun exp (access: access) (addr: Tree.exp) : Tree.loc = case access of
-        InFrame(offset) => Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset))
-      | InReg(temp) => Tree.TEMP temp
+  fun exp (access: access) (addr: Tree.exp) : Tree.exp = case access of
+        InFrame(offset) => Tree.LOC(Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset)))
+      | InReg(temp) => Tree.LOC(Tree.TEMP temp)
 
 
 
