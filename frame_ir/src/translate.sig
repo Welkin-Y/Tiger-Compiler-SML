@@ -29,7 +29,7 @@ sig
     one for record fields, 
     one for each kind of expression, and so on. *)
 
-    (* val transNil : unit -> exp *)
+    val transNil : unit -> exp
     val transInt : int -> exp
     val transIf : exp * exp * exp option -> exp
     val transString : string -> exp

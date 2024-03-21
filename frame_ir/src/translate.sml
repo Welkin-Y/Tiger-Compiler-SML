@@ -66,6 +66,8 @@ struct
 
     fun simpleVar (access, level) = raise Fail "TODO: simpleVar"
 
+    fun transNil () = Ex(Tr.CONST 0)
+
     fun transInt (num : int) = Ex(Tr.CONST num)
 
     fun transIf(cond, thenexp, elseexp) = raise Fail "TODO: transIf"

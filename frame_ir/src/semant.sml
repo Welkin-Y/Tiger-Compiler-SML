@@ -60,7 +60,7 @@ struct
                 end
             | A.IntExp intval => {exp=TL.transInt intval, ty=T.INT}
             | A.StringExp str => {exp=TL.transString str, ty=T.STRING}
-            | A.NilExp => {exp=(), ty=T.NIL}
+            | A.NilExp => {exp=TL.transNil, ty=T.NIL}
             | A.SeqExp exps => 
                 let
                     val explist : TL.exp list = []
