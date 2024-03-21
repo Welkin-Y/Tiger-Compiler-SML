@@ -93,28 +93,28 @@ struct
                     {exp=TL.transAssign(varexp, expexp), ty=T.UNIT}
                 end
             | A.WhileExp {test, body, pos} => let
-                    val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth, forbidden, level)
-                    val {exp=_, ty=tybody} = transExp (venv, tenv, body, loopDepth+1, forbidden, level)
+                    val {exp=exptest, ty=tytest} = transExp (venv, tenv, test, loopDepth, forbidden, level)
+                    val {exp=expbody, ty=tybody} = transExp (venv, tenv, body, loopDepth+1, forbidden, level)
                 in
                     TC.checkIsType pos (tytest, T.INT);
                     TC.checkIsType pos (tybody, T.UNIT);
-                    {exp=TL.NOT_IMPLEMENTED, ty=T.UNIT}
+                    {exp=TL.transWhile(exptest, expbody), ty=T.UNIT}
                 end
             | A.ForExp {var, escape, lo, hi, body, pos} => let
-                    val {exp=_, ty=tylo} = transExp (venv, tenv, lo, loopDepth, forbidden, level)
-                    val {exp=_, ty=tyhi} = transExp (venv, tenv, hi, loopDepth, forbidden, level)
+                    val {exp=explo, ty=tylo} = transExp (venv, tenv, lo, loopDepth, forbidden, level)
+                    val {exp=exphi, ty=tyhi} = transExp (venv, tenv, hi, loopDepth, forbidden, level)
                     (*if the id in forbidden raise error*)
                     val forbidden = case List.find (fn n => n = var) forbidden of
                         NONE => var::forbidden
                         | SOME _ => (ErrorMsg.error pos ("TypeError: reassign to for loop variable name " ^ Symbol.name var); raise ErrorMsg.Error)
                     val newVenv = Symbol.enter (venv, var, Env.VarEntry {access=TL.allocLocal level (!escape), ty=T.INT})
-                    val {exp=_, ty=tybody} = transExp (newVenv, tenv, body, loopDepth+1, forbidden, level)
+                    val {exp=expbody, ty=tybody} = transExp (newVenv, tenv, body, loopDepth+1, forbidden, level)
                 in          
                     PrintEnv.printEnv (newVenv, tenv);
                     TC.checkIsType pos (tylo, T.INT);
                     TC.checkIsType pos (tyhi, T.INT);
                     TC.checkIsType pos (tybody, T.UNIT);
-                    {exp=TL.NOT_IMPLEMENTED, ty=T.UNIT}
+                    {exp=TL.transFor((* TODO *)explo, explo, exphi, expbody), ty=T.UNIT}
                 end
             | A.BreakExp pos => if loopDepth > 0 then {exp=TL.NOT_IMPLEMENTED, ty=T.UNIT}
                 else (ErrorMsg.error pos "SyntaxError: break outside loop"; raise ErrorMsg.Error)
@@ -189,7 +189,6 @@ struct
                 case ty of T.ARRAY (ty',_) => (TC.checkSameType pos (ty', tyinit); {exp=TL.NOT_IMPLEMENTED, ty=ty})
                 | _ => (ErrorMsg.error pos ("TypeError: not an array type " ^ Symbol.name typ); raise ErrorMsg.Error)
             end
-            
 
     and transDec (venv : tyvenv, tenv: tytenv, dec : A.dec, loopDepth: int, forbidden : (Symbol.symbol list), level: TL.level) = 
             case dec of
