@@ -11,6 +11,7 @@ sig
     datatype exp = Ex of Tree.exp (* stands for an "expression" *)
                  | Nx of Tree.stm  (* stands for "no result" *)
                  | Cx of Temp.label * Temp.label -> Tree.stm (* stands for "conditional"  *)
+                 | Lx of Tree.loc (* stands for "location" *)
                  | NOT_IMPLEMENTED
     
     val seq : Tree.stm list -> Tree.stm
@@ -24,17 +25,15 @@ sig
 
 
     
-
+    (* var dec *)
     val simpleVar : access * level -> exp
 
-    (* there should be a Translate function to handle array subscripts, 
-    one for record fields, 
-    one for each kind of expression, and so on. *)
-
+    (* exp *)
     val transNil : unit -> exp
     val transInt : int -> exp
     val transString : string -> exp
-    val transIf : exp * exp * exp -> exp
+
+    val transIf : exp * exp * exp option -> exp
     val transBinop : A.oper * exp * exp -> exp
     val transRelop : A.oper * exp * exp -> exp
     (* val transBreak : unit -> exp

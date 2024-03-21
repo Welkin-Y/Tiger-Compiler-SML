@@ -27,6 +27,7 @@ struct
     datatype exp = Ex of Tr.exp 
     | Nx of Tr.stm 
     | Cx of (Temp.label * Temp.label -> Tr.stm)
+    | Lx of Tr.loc
     | NOT_IMPLEMENTED
 
     fun procEntryExit({level: level, body: exp}) = raise Fail "TODO: procEntryExit"
@@ -35,8 +36,8 @@ struct
 
     (* helper function for seq of exps *)
     fun seq [] = Tr.EXP(Tr.CONST 0)
-      | seq [s] = s
-      | seq (s::ss) = Tr.SEQ(s, seq ss)
+        | seq [s] = s
+        | seq (s::ss) = Tr.SEQ(s, seq ss)
 
     fun unEx (Ex e) = e
         | unEx (Cx genstm) = 
@@ -50,10 +51,12 @@ struct
                         Tr.LABEL t],
                     Tr.LOC(Tr.TEMP r)) end
         | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 0) 
+        | unEx (Lx l) = Tr.LOC l
 
     fun unNx (Ex e) = Tr.EXP e
         | unNx (Cx genstm) = Tr.EXP (unEx (Cx genstm))
         | unNx (Nx s) = s
+        | unNx (Lx l) = Tr.EXP (Tr.LOC l)
 
     fun unCx (Ex(Tr.CONST 0)) = (fn (t,f) => Tr.JUMP(Tr.NAME f, [f]))
         | unCx (Ex(Tr.CONST 1)) = (fn (t,f) => Tr.JUMP(Tr.NAME t, [t]))
@@ -61,6 +64,7 @@ struct
         | unCx (Cx genstm) = genstm
         (* unCx(Nx _) need not be translated *)
         | unCx (Nx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
+        | unCx (Lx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
 
     fun transNil () = Ex(Tr.CONST 0)
 
@@ -68,24 +72,43 @@ struct
 
     fun transIf(cond, thenexp, elseexp) = 
             let 
-                val test = unCx(cond)
-                val thenexp = unEx(thenexp)
-                val elseexp = unEx(elseexp)
-                val res = Temp.newtemp()
-                val labelthen = Temp.newlabel()
-                val labelelse = Temp.newlabel()
-                val labelend = Temp.newlabel()
+                fun transIfThenElse(cond, thenexp, elseexp) = 
+                        let 
+                            val test = unCx(cond)
+                            val thenexp = unEx(thenexp)
+                            val elseexp = unEx(elseexp)
+                            val res = Temp.newtemp()
+                            val labelthen = Temp.newlabel()
+                            val labelelse = Temp.newlabel()
+                            val labelend = Temp.newlabel()
+                        in
+                            Ex(Tr.ESEQ(seq[
+                                        test(labelthen, labelelse),
+                                        Tr.LABEL labelthen,
+                                        Tr.MOVE(Tr.TEMP res, thenexp),
+                                        Tr.JUMP(Tr.NAME labelend, [labelend]),
+                                        Tr.LABEL labelelse,
+                                        Tr.MOVE(Tr.TEMP res, elseexp),
+                                        Tr.LABEL labelend],
+                                    Tr.LOC(Tr.TEMP res)))
+                        end
+
+                fun transIfThen(cond, thenexp) = 
+                        let
+                            val res = Temp.newtemp()
+                            val t = Temp.newlabel()
+                            val done = Temp.newlabel()
+                        in
+                            Nx (seq[unCx cond (t, done),
+                                    Tr.LABEL t,
+                                    unNx thenexp,
+                                    Tr.LABEL done])
+                        end
             in
-                Ex(Tr.ESEQ(seq[
-                            test(labelthen, labelelse),
-                            Tr.LABEL labelthen,
-                            Tr.MOVE(Tr.TEMP res, thenexp),
-                            Tr.JUMP(Tr.NAME labelend, [labelend]),
-                            Tr.LABEL labelelse,
-                            Tr.MOVE(Tr.TEMP res, elseexp),
-                            Tr.LABEL labelend],
-                        Tr.LOC(Tr.TEMP res)))
+                case elseexp of SOME elseexp => transIfThenElse(cond, thenexp, elseexp)
+                | NONE => transIfThen(cond, thenexp)
             end
+
 
     fun simpleVar (access, level) = raise Fail "TODO: simpleVar"
 
@@ -101,19 +124,13 @@ struct
 
     fun transRelop(oper, e1, e2) = Cx(fn (t, f) => Tr.CJUMP(Tr.getRelop oper, unEx e1, unEx e2, t, f))
 
-    fun transAssign(var, exp) = Nx(Tr.MOVE(unEx var, unEx exp))
-
-    fun transCall(level, funexp, argexps) = 
-            let 
-                val funexp = unEx funexp
-                val argexps = map unEx argexps
-                val res = Temp.newtemp()
-            in
-                Ex(Tr.CALL(funexp, argexps, level, res))
-            end
-    
+    fun transAssign(var, exp) = let
+      fun unLx (Lx l) = l
+        | unLx _ = raise Fail "unLx"
+    in Nx(Tr.MOVE(unLx var, unEx exp)) end
+     
     fun transLet(d, body) = raise Fail "TODO: transLet"
 
-    
+
 
 end

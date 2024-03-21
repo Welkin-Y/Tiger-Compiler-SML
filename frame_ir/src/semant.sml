@@ -11,16 +11,20 @@ struct
     fun transExp (venv : tyvenv, tenv: tytenv, exp: A.exp, loopDepth: int, forbidden : (Symbol.symbol list), level: TL.level) = 
             case exp of 
             (*To check an IfExp we need to make sure: 1. test is int 2. then and else have same types*)
-            A.IfExp {test, then', else', pos} => 
-                let 
+            A.IfExp {test, then', else', pos} => let
                     val {exp=expthen, ty=tythen} = transExp (venv, tenv, then', loopDepth, forbidden, level)
-                    val {exp=expelse, ty=tyelse} = case else' of
-                            NONE => {exp=TL.transNil(), ty=T.UNIT}
-                        | SOME e => transExp (venv, tenv, e, loopDepth, forbidden, level)
-                    val {exp=exptest, ty=tytest} = transExp (venv, tenv, test, loopDepth, forbidden, level) 
-                in
-                    TC.checkIfExp pos (tytest, tythen, tyelse);
-                    {exp=TL.transIf(exptest, expthen, expelse), ty=tythen}
+                    val {exp=exptest, ty=tytest} = transExp (venv, tenv, test, loopDepth, forbidden, level)
+                in 
+                    case else' of SOME elseexp => let 
+                            val {exp=expelse, ty=tyelse} = transExp (venv, tenv, elseexp, loopDepth, forbidden, level)
+                        in
+                            TC.checkIfExp pos (tytest, tythen, tyelse);
+                            {exp=TL.transIf(exptest, expthen, SOME(expelse)), ty=tythen}
+                        end
+                    | NONE => let in
+                            TC.checkIsType pos (tytest, T.INT);
+                            {exp=TL.transIf(exptest, expthen, NONE), ty=tythen}
+                        end
                 end
             | A.OpExp {left, oper, right, pos} =>
                 let
