@@ -68,10 +68,10 @@ struct
         | unCx (Nx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
         | unCx (Lx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
 
-
+    (* MEM(+(CONST kn, MEM(+(CONST kn-1, ... MEM(+(CONST k1, TEMP FP)) ...)))) *)
     fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=use_id, parent=use_prt, frame=use_frm}): Tree.exp =
-            if def_id = use_id then Tr.LOC(Tr.TEMP F.FP)
-            else followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt) 
+            if def_id = use_id then Tr.LOC(Tr.MEM(Tr.BINOP(Tr.PLUS, Tr.CONST 0, Tr.LOC(Tr.TEMP F.FP))))
+            else Tr.LOC(Tr.MEM(Tr.BINOP(Tr.PLUS, Tr.CONST 0, followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt))))
         | followStaticLink(ROOT, _) = ErrorMsg.impossible "followStaticLink: no static link"
         | followStaticLink(_, ROOT) = ErrorMsg.impossible "followStaticLink: no static link"
     
