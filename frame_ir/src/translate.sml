@@ -68,6 +68,9 @@ struct
         | unCx (Nx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
         | unCx (Lx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
 
+    fun unLx (Lx l) = l
+                    | unLx _ = raise Fail "unLx"
+
     (* MEM(+(CONST kn, MEM(+(CONST kn-1, ... MEM(+(CONST k1, TEMP FP)) ...)))) *)
     fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=use_id, parent=use_prt, frame=use_frm}): Tree.exp =
             if def_id = use_id then Tr.LOC(Tr.MEM(Tr.BINOP(Tr.PLUS, Tr.CONST 0, Tr.LOC(Tr.TEMP F.FP))))
@@ -174,10 +177,7 @@ struct
 
     fun transRelop(oper, e1, e2) = Cx(fn (t, f) => Tr.CJUMP(Tr.getRelop oper, unEx e1, unEx e2, t, f))
 
-    fun transAssign(var, exp) = let
-                fun unLx (Lx l) = l
-                    | unLx _ = raise Fail "unLx"
-            in Nx(Tr.MOVE(unLx var, unEx exp)) end
+    fun transAssign(var, exp) = Nx(Tr.MOVE(unLx var, unEx exp)) 
 
     fun transCall (label, defLevel, callLevel, args) = case defLevel of 
                 ROOT => Ex(F.externalCall(Symbol.name label, map unEx args))
@@ -197,13 +197,13 @@ struct
             val bodylabel = Temp.newlabel()
             val endlabel = Temp.newlabel()
         in
-            Nx(Tr.SEQ(seq[
+            Nx(seq[
                 pretest(bodylabel, endlabel),
                 Tr.LABEL bodylabel,
-                unNx body,
+                body,
                 posttest(bodylabel, endlabel),
                 Tr.LABEL endlabel
-            ]))
+            ])
         end
     
     fun transWhile(cond, body) = transLoop(cond, body)
@@ -211,8 +211,8 @@ struct
     fun transFor(var, lo, hi, body) = 
         let
             val assignVar = transAssign(var, lo)
-            val test = transRelop(Tr.LE, var, hi)
-            val newbody = Nx(Tr.SEQ(unNx body, Tr.EXP(Tr.BINOP(Tr.PLUS, unLx var, Tr.CONST 1))))
+            val test = transRelop(A.LeOp, var, hi)
+            val newbody = Nx(Tr.SEQ(unNx body, Tr.EXP(Tr.BINOP(Tr.PLUS, Tr.LOC(unLx var), Tr.CONST 1))))
         in
             Nx(Tr.SEQ(unNx assignVar, unNx(transLoop(test, newbody))))
         end
