@@ -37,6 +37,8 @@ sig
 
 
     (* exp *)
+    val transLet : exp list * exp -> exp
+
     val transNil : unit -> exp
     val transInt : int -> exp
     val transString : string -> exp

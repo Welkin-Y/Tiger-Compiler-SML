@@ -31,6 +31,7 @@ struct
     | NOT_IMPLEMENTED
 
 
+
     fun procEntryExit({level: level, body: exp}) = raise Fail "TODO: procEntryExit"
 
     fun getResult() = raise Fail "TODO: getResult"
@@ -78,37 +79,48 @@ struct
 
 
     fun transNil () = Ex(Tr.CONST 0)
-    fun simpleVar ((ROOT, _), _) = raise ErrorMsg ~1 "access variable in root level"
-        | simpleVar((_, _), ROOT) = raise ErrorMsg ~1 "access variable in root level"
-        | simpleVar(access, level) = 
-            let
-                val (LEVEL{parent, frame, id_t}, faccess) = access
-                (*find variable through static link*)
-                fun findVar (lv : level, cur_acc) = 
-                    val (LEVEL{parent, frame, id_u}, acc) = cur_acc
-                    if id_u = id_t then Frame.exp(faccess)(acc)
-                    else 
-                    (*follow the static link (first formals)*)
-                    findVar(parent, F.exp(List.hd (F.formals frame))(acc))
-            in
-                Ex(findVar(level, T.TEMP(F.FP)))
+    fun simpleVar ((ROOT, _), _) = raise ErrorMsg.impossible "simpleVar: access variable in root level"
+        | simpleVar((_, _), ROOT) = raise ErrorMsg.impossible "simpleVar: access root level"
+        | simpleVar (access, lf) =
+            let val (LEVEL{parent, frame, id}, access_g) = access
+            val ref_g = id
+            fun follow (LEVEL({parent, frame, id}) : level, cur_acc : Tr.loc) =
+            let 
+                val cur_ref = id
+                in
+                if ref_g = cur_ref
+                then F.exp(access_g)(Tr.LOC cur_acc)
+                else let val next_link = List.hd (F.formals frame)
+                in follow (parent, F.exp(next_link)(Tr.LOC cur_acc))
+                end
+                end
+            in Ex(Tr.LOC (follow(lf, Tr.TEMP(F.FP))))
             end
+       
 
-    fun fieldVar (var, index) = Ex(Tr.MEM(Tr.BINOP(Tr.PLUS, unEx var, Tr.CONST index)))
+    fun fieldVar (var, index) = Ex(Tr.LOC (Tr.MEM(Tr.BINOP(Tr.PLUS, unEx var, Tr.CONST index))))
     fun subscriptVar (arr, index) = 
         let 
             val indexReg = Temp.newtemp()
             val baseReg = Temp.newtemp()
         in 
-            Ex(T.ESEQ(seq[
+            Ex(Tr.ESEQ(seq[
                         Tr.MOVE(Tr.TEMP indexReg, unEx index),
-                        Tr.MOVE(Tr.TEMP baseReg, unEx arr),
-                        T.MEM(T.BINOP(T.PLUS, T.MEM(T.TEMP baseReg), T.BINOP(T.MUL, T.TEMP indexReg, T.CONST F.wordSize)))
-            ]))
+                        Tr.MOVE(Tr.TEMP baseReg, unEx arr)],
+                        Tr.LOC(Tr.MEM(Tr.BINOP(Tr.PLUS, Tr.LOC(Tr.MEM(Tr.LOC(Tr.TEMP baseReg))), Tr.BINOP(Tr.MUL, Tr.LOC(Tr.TEMP indexReg), Tr.CONST F.wordSize))))
+            ))
         end
 
 
-
+    fun transLet (decs, body) = 
+        let 
+            val len = List.length decs
+            val decs = map unNx decs
+            val body = unEx body
+        in
+            if len = 0 then Ex(body)
+            else Ex(Tr.ESEQ(seq decs, body))
+        end
     fun transInt (num : int) = Ex(Tr.CONST num)
 
     fun transIf(cond, thenexp, elseexp) = 
