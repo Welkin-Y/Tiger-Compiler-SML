@@ -15,7 +15,7 @@ struct
                 let 
                     val {exp=expthen, ty=tythen} = transExp (venv, tenv, then', loopDepth, forbidden, level)
                     val {exp=expelse, ty=tyelse} = case else' of
-                            NONE => {exp=TL.transInt(0), ty=T.UNIT}
+                            NONE => {exp=TL.transNil(), ty=T.UNIT}
                         | SOME e => transExp (venv, tenv, e, loopDepth, forbidden, level)
                     val {exp=exptest, ty=tytest} = transExp (venv, tenv, test, loopDepth, forbidden, level) 
                 in
@@ -60,7 +60,7 @@ struct
                 end
             | A.IntExp intval => {exp=TL.transInt intval, ty=T.INT}
             | A.StringExp (str, _) => {exp=TL.transString str, ty=T.STRING}
-            | A.NilExp => {exp=TL.transInt(0), ty=T.NIL}
+            | A.NilExp => {exp=TL.transNil(), ty=T.NIL}
             | A.SeqExp exps => 
                 let
                     (* TODO *)
@@ -72,7 +72,7 @@ struct
                                 entryTy
                             end
                 in
-                    {exp=TL.transInt(0), ty=foldl helper T.UNIT exps}
+                    {exp=TL.NOT_IMPLEMENTED, ty=foldl helper T.UNIT exps}
                 end
             | A.VarExp var => transVar (venv, tenv, var, loopDepth, forbidden, level)
             | A.AssignExp {var : A.var, exp: A.exp, pos :A.pos} => let
@@ -86,7 +86,7 @@ struct
                     val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth, forbidden, level)
                 in
                     TC.checkSameType pos (tyvar, tyexp);
-                    {exp=TL.transInt(0), ty=T.UNIT}
+                    {exp=TL.NOT_IMPLEMENTED, ty=T.UNIT}
                 end
             | A.WhileExp {test, body, pos} => let
                     val {exp=_, ty=tytest} = transExp (venv, tenv, test, loopDepth, forbidden, level)
@@ -94,7 +94,7 @@ struct
                 in
                     TC.checkIsType pos (tytest, T.INT);
                     TC.checkIsType pos (tybody, T.UNIT);
-                    {exp=TL.transInt(0), ty=T.UNIT}
+                    {exp=TL.NOT_IMPLEMENTED, ty=T.UNIT}
                 end
             | A.ForExp {var, escape, lo, hi, body, pos} => let
                     val {exp=_, ty=tylo} = transExp (venv, tenv, lo, loopDepth, forbidden, level)
@@ -110,9 +110,9 @@ struct
                     TC.checkIsType pos (tylo, T.INT);
                     TC.checkIsType pos (tyhi, T.INT);
                     TC.checkIsType pos (tybody, T.UNIT);
-                    {exp=TL.transInt(0), ty=T.UNIT}
+                    {exp=TL.NOT_IMPLEMENTED, ty=T.UNIT}
                 end
-            | A.BreakExp pos => if loopDepth > 0 then {exp=TL.transInt(0), ty=T.UNIT}
+            | A.BreakExp pos => if loopDepth > 0 then {exp=TL.NOT_IMPLEMENTED, ty=T.UNIT}
                 else (ErrorMsg.error pos "SyntaxError: break outside loop"; raise ErrorMsg.Error)
              (*0. check if func exist 1. check if args align with definition *)
             | A.CallExp {func, args, pos} => let
@@ -132,7 +132,7 @@ struct
                             TC.checkSameType pos (tyarg, formal)
                         end) (ListPair.zip(args, formals))
                 in
-                    {exp=TL.transInt(0), ty=result}
+                    {exp=TL.NOT_IMPLEMENTED, ty=result}
                 end
                 (*0. check if the type of record exist in tenv 1. check if the field name&type aigned with definition*)
             | A.RecordExp {fields, typ, pos} => let
@@ -170,7 +170,7 @@ struct
                                 TC.checkSameType pos (tyexp, typ)
                             end) recordFields
                 in
-                    {exp=TL.transInt(0), ty=ty}
+                    {exp=TL.NOT_IMPLEMENTED, ty=ty}
                 end
             
             
@@ -182,7 +182,7 @@ struct
                     | SOME ty => ty
                 val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth, forbidden, level)
             in  
-                case ty of T.ARRAY (ty',_) => (TC.checkSameType pos (ty', tyinit); {exp=TL.transInt(0), ty=ty})
+                case ty of T.ARRAY (ty',_) => (TC.checkSameType pos (ty', tyinit); {exp=TL.NOT_IMPLEMENTED, ty=ty})
                 | _ => (ErrorMsg.error pos ("TypeError: not an array type " ^ Symbol.name typ); raise ErrorMsg.Error)
             end
             
@@ -441,7 +441,7 @@ struct
                     (case Symbol.look (venv, n) of
                         NONE => TC.undefinedNameErr p n
                         | SOME entry => case entry of
-                            Env.VarEntry {access=access, ty=ty} => {exp=TL.transInt(0), ty=ty}
+                            Env.VarEntry {access=access, ty=ty} => {exp=TL.NOT_IMPLEMENTED, ty=ty}
                             | _ => (ErrorMsg.error p ("TypeError: not a variable " ^ Symbol.name n); raise ErrorMsg.Error))
                 | A.FieldVar (var, n, p) =>
                     let
@@ -453,7 +453,7 @@ struct
                     in
                         case List.find (fn (name, _) => name = n) fields of
                             NONE => TC.undefinedNameErr p n
-                            | SOME (_, ty) => {exp=TL.transInt(0), ty=ty}
+                            | SOME (_, ty) => {exp=TL.NOT_IMPLEMENTED, ty=ty}
                     end
                 | A.SubscriptVar (var, exp, p) => 
                     let
@@ -462,11 +462,11 @@ struct
                     in
                         TC.checkIsType p (tyexp, T.INT);
                         case ty of 
-                            T.ARRAY (ty', _) => {exp=TL.transInt(0), ty=ty'}
+                            T.ARRAY (ty', _) => {exp=TL.NOT_IMPLEMENTED, ty=ty'}
                             | _ => (ErrorMsg.error p ("TypeError: not an array type " ^ T.toString ty); raise ErrorMsg.Error)
                     end
         in
-            {exp=TL.transInt(0), ty=ty}
+            {exp=TL.NOT_IMPLEMENTED, ty=ty}
         end
     and transFunDec (venv:tyvenv, tenv:tytenv, fundec:A.fundec, loopDepth: int, fundecGroup: Env.enventry Symbol.table, forbidden : (Symbol.symbol list), level: TL.level) = 
             (* fundec = {name: symbol, params: field list, result: (symbol * pos) option, body: exp pos: pos}*)

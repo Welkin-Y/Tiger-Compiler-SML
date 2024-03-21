@@ -27,6 +27,7 @@ struct
     datatype exp = Ex of Tr.exp 
     | Nx of Tr.stm 
     | Cx of (Temp.label * Temp.label -> Tr.stm)
+    | NOT_IMPLEMENTED
 
     fun procEntryExit({level: level, body: exp}) = raise Fail "TODO: procEntryExit"
 

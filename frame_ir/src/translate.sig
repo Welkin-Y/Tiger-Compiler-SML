@@ -11,6 +11,7 @@ sig
     datatype exp = Ex of Tree.exp (* stands for an "expression" *)
                  | Nx of Tree.stm  (* stands for "no result" *)
                  | Cx of Temp.label * Temp.label -> Tree.stm (* stands for "conditional"  *)
+                 | NOT_IMPLEMENTED
     
     val seq : Tree.stm list -> Tree.stm
     val unEx: exp -> Tree.exp 
