@@ -16,19 +16,28 @@ sig
     val unNx: exp -> Tree.stm
     val unCx: exp -> (Temp.label * Temp.label -> Tree.stm) 
 
-     (* Now Semant can pass the access of x (ob- tained 
-    from Translate.allocLocal) and the level of the function 
-    in which x is used and get back a Translate. exp. *)
-    val simpleVar : access * level -> exp
-
     val procEntryExit : {level: level, body: exp} -> unit
     structure Frame : FRAME
     (* val getResult : unit -> Frame.frag list *)
 
+
+    
+
+    val simpleVar : access * level -> exp
+
+    (* there should be a Translate function to handle array subscripts, 
+    one for record fields, 
+    one for each kind of expression, and so on. *)
+
+    (* val transNil : unit -> exp *)
     val transInt : int -> exp
     val transIf : exp * exp * exp option -> exp
     val transString : string -> exp
     val transBinop : A.oper * exp * exp -> exp
     val transRelop : A.oper * exp * exp -> exp
+    (* val transBreak
+    val transWhile  
+    val transAssign
+    val transLet *)
 
 end
