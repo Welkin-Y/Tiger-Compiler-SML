@@ -34,8 +34,8 @@ struct
 
     (* helper function for seq of exps *)
     fun seq [] = Tr.EXP(Tr.CONST 0)
-        | seq [s] = s
-        | seq (s::lst) = Tr.SEQ(s, seq lst)
+      | seq [s] = s
+      | seq (s::ss) = Tr.SEQ(s, seq ss)
 
     fun unEx (Ex e) = e
         | unEx (Cx genstm) = 
@@ -55,23 +55,19 @@ struct
         | unNx (Cx genstm) = raise Fail "TODO: unNx(Cx genstm)"
         | unNx (Nx s) = s
 
-    fun unCx _ = raise Fail "TODO: unCx"
-    (* fun unCx (Ex(Tr.CONST 0)) = (fn (t,f) => Tr.JUMP(Tr.NAME f, [f]))
-        (* treat the cases of CONST 1 *)
+    fun unCx (Ex(Tr.CONST 0)) = (fn (t,f) => Tr.JUMP(Tr.NAME f, [f]))
         | unCx (Ex(Tr.CONST 1)) = (fn (t,f) => Tr.JUMP(Tr.NAME t, [t]))
         | unCx (Ex e) = (fn (t,f) => Tr.CJUMP(Tr.NE, e, Tr.CONST 0, t, f))
         | unCx (Cx genstm) = genstm
         (* unCx(Nx _) need not be translated *)
-        | unCx (Nx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results", fn _ => Tr.EXP(Tr.CONST 0)) *)
-
-    fun simpleVar (access, level) = raise Fail "TODO: simpleVar"
+        | unCx (Nx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
 
     fun transNil () = Ex(Tr.CONST 0)
 
     fun transInt (num : int) = Ex(Tr.CONST num)
 
-    fun transIf(cond, thenexp, elseexp) = raise Fail "TODO: transIf"
-            (* let 
+    fun transIf(cond, thenexp, elseexp) = 
+            let 
                 val test = unCx(cond)
                 val thenexp = unEx(thenexp)
                 val elseexp = unEx(elseexp)
@@ -79,7 +75,6 @@ struct
                 val labelthen = Temp.newlabel()
                 val labelelse = Temp.newlabel()
                 val labelend = Temp.newlabel()
-
             in
                 Ex(Tr.ESEQ(seq[
                             test(labelthen, labelelse),
@@ -90,21 +85,20 @@ struct
                             Tr.MOVE(Tr.TEMP res, elseexp),
                             Tr.LABEL labelend],
                         Tr.LOC(Tr.TEMP res)))
-            end *)
+            end
 
+    fun simpleVar (access, level) = raise Fail "TODO: simpleVar"
 
-
-    fun transString(lit: string) = raise Fail "TODO: transString"
-            (* let 
+    fun transString(lit) = 
+            let 
                 val label = Temp.newlabel()
             in
                 (* TODO *)
-                Tr.NAME label
-            end *)
+                Ex(Tr.NAME label)
+            end
 
     fun transBinop(oper, e1, e2) = Ex(Tr.BINOP(Tr.getBinop oper, unEx e1, unEx e2))
 
-    fun transRelop(oper, e1, e2) = raise Fail "TODO: transRelop"
-    (* unEx(fn (t, f) => Tr.CJUMP(Tr.getRelop oper, unEx e1, unEx e2, t, f)) *)
+    fun transRelop(oper, e1, e2) = Cx(fn (t, f) => Tr.CJUMP(Tr.getRelop oper, unEx e1, unEx e2, t, f))
 
 end

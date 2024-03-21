@@ -3,7 +3,7 @@ sig
   type label = Temp.label
   type size
 
-  datatype stm = SEQ of stm*stm
+  datatype stm = SEQ of stm * stm
   | LABEL of label
   | JUMP of exp * label list
   | CJUMP of relop * exp * exp * label * label
@@ -39,7 +39,7 @@ struct
   type label=Temp.label
   type size = int
 
-  datatype stm = SEQ of stm*stm
+  datatype stm = SEQ of stm * stm
   | LABEL of label
   | JUMP of exp * label list
   | CJUMP of relop * exp * exp * label * label
