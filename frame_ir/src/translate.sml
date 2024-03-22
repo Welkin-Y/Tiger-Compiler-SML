@@ -4,6 +4,7 @@ struct
     structure Tr = Tree
     structure Frame = MipsFrame
     structure F = Frame
+    structure L = Logger
     
     datatype level = ROOT 
     | LEVEL of {parent : level, frame : F.frame, id: unit ref}
@@ -66,6 +67,7 @@ struct
         | unNx (Cx genstm) = Tr.EXP (unEx (Cx genstm))
         | unNx (Nx s) = s
         | unNx (Lx l) = Tr.EXP (Tr.READ l)
+        | unNx _ = raise ErrorMsg.impossible "unNx with NOT_IMPLEMENTED"
 
     fun unCx (Ex(Tr.CONST 0)) = (fn (t,f) => Tr.JUMP(Tr.NAME f, [f]))
         | unCx (Ex(Tr.CONST 1)) = (fn (t,f) => Tr.JUMP(Tr.NAME t, [t]))
@@ -74,10 +76,11 @@ struct
         (* unCx(Nx _) need not be translated *)
         | unCx (Nx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
         | unCx (Lx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
+        | unCx _ = raise ErrorMsg.impossible "unCx with NOT_IMPLEMENTED"
 
     fun unLx (Lx l) = l
         | unLx (Ex e) = Tr.MEM e
-        | unLx _ = raise Fail "unLx"
+        | unLx _ = raise ErrorMsg.impossible "unLx with NOT_IMPLEMENTED"
 
     fun procEntryExit({level: level, body: exp}) = 
         case level of
@@ -91,18 +94,22 @@ struct
             end
 
     (* MEM(+(CONST kn, MEM(+(CONST kn-1, ... MEM(+(CONST k1, TEMP FP)) ...)))) *)
-    fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=use_id, parent=use_prt, frame=use_frm}): Tree.exp =
+    fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=use_id, parent=use_prt, frame=use_frm}): Tree.exp = 
             if def_id = use_id then rdTmp F.FP
             else F.exp (List.hd(F.formals use_frm))(followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt))
-        | followStaticLink(ROOT, _) = ErrorMsg.impossible "followStaticLink: no static link"
-        | followStaticLink(_, ROOT) = ErrorMsg.impossible "followStaticLink: no static link"
+        | followStaticLink(ROOT, _) = let 
+            val errmsg = "followStaticLink: define level is ROOT" 
+            in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end
+        | followStaticLink(_, ROOT) = let
+            val errmsg = "followStaticLink: use level is ROOT" 
+            in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end
     
     fun transNil () = Ex(Tr.CONST 0)
     
     fun simpleVar(access, useLevel) =
             
             let val (defLevel, defAccess) = access
-            val _ = Logger.log Logger.DEBUG "Translate.simpleVar";
+            val _ = L.log L.DEBUG "Translate.simpleVar";
             in Ex(F.exp defAccess (followStaticLink(defLevel, useLevel))) end
        
 

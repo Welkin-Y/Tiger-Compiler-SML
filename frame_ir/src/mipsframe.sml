@@ -46,7 +46,10 @@ struct
           )
       | false => InReg(Temp.newtemp()) 
 
-  fun externalCall(s: string, args: Tree.exp list) = Tree.CALL(Tree.NAME(Temp.namedlabel s), args)
+  fun externalCall(s: string, args: Tree.exp list) = (
+    Logger.log Logger.DEBUG ("external call: " ^ s); 
+    Tree.CALL(Tree.NAME(Temp.namedlabel s), args)
+  )
   (* Tree.CALL(Tree.NAME(Tree.Temp.namedlabel s), args) p165*)
 
   fun string(label: Tree.label, str: string) = raise ErrorMsg.impossible "Not implemented"
