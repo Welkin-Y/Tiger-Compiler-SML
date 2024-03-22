@@ -133,7 +133,7 @@ struct
                         SOME(Env.FunEntry record) => record
                         | _ => (ErrorMsg.error pos ("NameError: function not find" ^ Symbol.name func); raise ErrorMsg.Error)
                     (*check if the number of args align with the number of formals*)
-                    val (_::formals) = formals
+                    val () = L.log L.DEBUG ("length of formals: " ^ Int.toString (length formals))
                     val _ = if (length args) = (length formals) then ()
                         else (ErrorMsg.error pos ("TypeError: " ^ Symbol.name func ^ " () takes " ^ Int.toString (length formals) ^ " positional argument(s) but called with" ^ Int.toString (length args) ^ " argument(s)"); raise ErrorMsg.Error)
                     val expargs = foldr (fn ((arg, formal), expargs) =>
