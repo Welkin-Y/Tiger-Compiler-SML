@@ -17,27 +17,19 @@ struct
 
     fun newLevel ({parent: level, name: Temp.label, formals: bool list}) = let 
                 val () = L.log L.DEBUG "create new level"
-                val arg : {name: Temp.label, formals: bool list} = {name = name, formals = true::formals}
-                val f = F.newFrame(arg)
-            in LEVEL{parent = parent, frame = f, id = ref () } end
+            in LEVEL{parent = parent, frame = F.newFrame({name = name, formals = true::formals}), id = ref () } end
 
     fun formals(ROOT) = []
         | formals(LEVEL{frame, parent, id}) = map (fn acc => (LEVEL{frame=frame, parent=parent, id=id}, acc)) (F.formals frame) 
 
     fun allocLocal (LEVEL{frame, parent, id}) (escape) = (LEVEL{frame=frame, parent=parent, id=id}, F.allocLocal frame escape) (*TODO *)
-        | allocLocal (ROOT) _ = raise ErrorMsg.impossible "allocLocal: no frame"
+        | allocLocal (ROOT) _ = raise ErrorMsg.impossible "allocLocal: no frame, cannot alloc at ROOT level"
 
     datatype exp = Ex of Tr.exp 
     | Nx of Tr.stm 
     | Cx of (Temp.label * Temp.label -> Tr.stm)
     | Lx of Tr.loc
-    | NOT_IMPLEMENTED
-
-
-
-
-
-
+    | NOT_IMPLEMENTED (* Placeholder for not implemented translations *)
 
     (* helper function for seq of exps *)
     fun seq [] = Tr.EXP(Tr.CONST 0)
