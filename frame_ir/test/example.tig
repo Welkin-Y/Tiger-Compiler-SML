@@ -1,6 +1,5 @@
 let
-	type a = array of int
-	var b := a[3] of 1
+	function add(a: int, b: int): int = a + b
 in 
 	
 end

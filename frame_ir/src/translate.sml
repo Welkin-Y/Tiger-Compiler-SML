@@ -297,11 +297,14 @@ struct
             (* dummy version *)
             val prologue = Tr.SEQ(Tr.JUMP(Tr.NAME endlabel, [endlabel]), Tr.LABEL funlabel)
             val body = unEx body
-            val epilogue = Tr.SEQ(Tr.MOVE(F.RV, body), Tr.LABEL endlabel)
+            val epilogue = Tr.SEQ(Tr.MOVE(Tr.TEMP F.RV, body), Tr.LABEL endlabel)
         in
             Nx(Tr.SEQ(prologue, epilogue))
         end
-        
+
+    fun transFunDecs (expfuncs) = 
+        Nx(seq(map unNx expfuncs))
+    
 
     fun getResult() = !fragments
 

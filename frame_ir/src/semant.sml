@@ -427,7 +427,7 @@ struct
                     (*recursively check the body of each function*)
                     val _ = L.log L.DEBUG "begin to check body of each function"
 
-                    val _ = map (fn (fundec :Absyn.fundec) => (
+                    val expfuncs = foldr (fn (fundec :Absyn.fundec, expfuncs) => (
                         let 
                         val {name, params, result, body, pos} = fundec
                         val funentry = case Symbol.look (newvenv, name) of
@@ -456,7 +456,7 @@ struct
                         (*check if expty consistent with the delared function ty*)
                         val () = L.log L.DEBUG ("func body typ: " ^ T.toString typ)
                         in
-                        case result of
+                        (case result of
                         NONE => TC.checkIsType pos (typ, T.UNIT)
                         | SOME (sym, _) => let 
                             val symty = case Symbol.look (newtenv, sym) of
@@ -464,11 +464,12 @@ struct
                                 | SOME ty => ty
                             in
                                 TC.checkSameType pos (typ, symty)
-                            end
-                        end)) fundecs
+                            end);
+                        TL.transFunDec(funlevel, bodyexp)::expfuncs
+                        end)) [] fundecs
                 in
                     PrintEnv.printEnv (newvenv, newtenv);
-                    {venv=newvenv, tenv=newtenv, exp=NONE}
+                    {venv=newvenv, tenv=newtenv, exp=SOME(TL.transFunDecs(expfuncs))}
                 end
     and transVar (venv:tyvenv , tenv:tytenv, var: A.var, loopDepth: int, forbidden : (Symbol.symbol list), level: TL.level) = let 
             val {exp=exp', ty=ty} = case var of
@@ -532,11 +533,11 @@ struct
                     NONE => ()
                     | SOME _ => (ErrorMsg.error pos ("TypeError: reused function name " ^ Symbol.name name ^ "in same group"); raise ErrorMsg.Error)
                 val newLabel = Temp.newlabel()
-                (* val newLevel = TL.newLevel({parent=level, name=newLabel, formals=params_escapes})
+                val newLevel = TL.newLevel({parent=level, name=newLabel, formals=params_escapes})
                 val newVenv = Symbol.enter (venv, name, Env.FunEntry {level=newLevel, label=newLabel, formals=params_ty, result=res_ty}) 
-                val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {level=newLevel, label=newLabel, formals=params_ty, result=res_ty}) *)
-                val newVenv = Symbol.enter (venv, name, Env.FunEntry {level=level, label=newLabel, formals=params_ty, result=res_ty}) 
-                val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {level=level, label=newLabel, formals=params_ty, result=res_ty})
+                val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {level=newLevel, label=newLabel, formals=params_ty, result=res_ty})
+                (* val newVenv = Symbol.enter (venv, name, Env.FunEntry {level=level, label=newLabel, formals=params_ty, result=res_ty}) 
+                val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {level=level, label=newLabel, formals=params_ty, result=res_ty}) *)
                 (* TODO: why newLevel cause error? *)
             in
                 PrintEnv.printEnv (newVenv, tenv);
