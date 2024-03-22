@@ -50,7 +50,7 @@ sig
     val transWhile : exp * exp -> exp
     val transFor : exp * exp * exp * exp -> exp
     val transCall: Temp.label * level * level * exp list -> exp
-
+    val transSeq : exp list -> exp
 
 
 end

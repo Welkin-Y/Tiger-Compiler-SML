@@ -198,5 +198,10 @@ struct
             in
                 Nx(Tr.SEQ(unNx assignVar, unNx(transLoop(test, newbody))))
             end
+    
+    fun transSeq [] = Ex(Tr.CONST 0)
+        | transSeq [e] = Ex(unEx e)
+        | transSeq (e::lst) = Ex(ESEQ(seq(rev lst), unEx e)) 
+        
 
 end
