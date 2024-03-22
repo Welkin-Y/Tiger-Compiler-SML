@@ -6,6 +6,8 @@ fun dropNewline str =
 
 val inp = TextIO.inputLine TextIO.stdIn;
 val direct = dropNewline (Option.valOf inp);
+
+Logger.setLogLevel Logger.DEBUG;
 Logger.log Logger.WARNING ("Parse: " ^ direct);
 val absyn = ParserSemant.parse TextIO.stdOut direct;
 Semant.transProg (absyn); 

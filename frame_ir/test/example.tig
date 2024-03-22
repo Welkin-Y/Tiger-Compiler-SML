@@ -1,1 +1,4 @@
-let var a: int :=5 in a end
+let
+in 
+	for i:=0 to 100 do ()
+end

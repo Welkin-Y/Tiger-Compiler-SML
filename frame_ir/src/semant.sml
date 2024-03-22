@@ -66,9 +66,10 @@ struct
                             SOME exp => {venv=venv, tenv=tenv, forbidden=forbidden, explist=explist@[exp]}
                             | NONE => {venv=venv, tenv=tenv, forbidden=forbidden, explist=explist}
                     end) {venv=venv, tenv=tenv, forbidden=forbidden, explist=[]} decs
+                    val {exp=expbody, ty=tybody} = transExp (venv', tenv', body, loopDepth, forbidden', level)
                 in
                     print ("begin to check body\n");
-                    transExp (venv', tenv', body, loopDepth, forbidden', level)
+                    {exp=TL.transLet(explist', expbody), ty=tybody}
                 end
             | A.IntExp intval => (L.log L.INFO ("Start to trans int: " ^ Int.toString(intval)); {exp=TL.transInt intval, ty=T.INT})
             | A.StringExp (str, _) => (L.log L.INFO ("Start to trans String: " ^ str); {exp=TL.transString str, ty=T.STRING})
@@ -129,7 +130,9 @@ struct
                         | SOME _ => (ErrorMsg.error pos ("TypeError: reassign to for loop variable name " ^ Symbol.name var); raise ErrorMsg.Error)
                     val access = TL.allocLocal level (!escape)
                     val newVenv = Symbol.enter (venv, var, Env.VarEntry {access=access, ty=T.INT})
+                    val () = L.log L.DEBUG "begin to check body"
                     val {exp=expbody, ty=tybody} = transExp (newVenv, tenv, body, loopDepth+1, forbidden, level)
+                    val () = L.log L.DEBUG "body done"
                 in          
                     PrintEnv.printEnv (newVenv, tenv);
                     TC.checkIsType pos (tylo, T.INT);
