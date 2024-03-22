@@ -230,6 +230,18 @@ struct
     fun transSeq [] = Ex(Tr.CONST 0)
         | transSeq [e] = Ex(unEx e)
         | transSeq (e::lst) = Ex(Tr.ESEQ(seq(map unNx (rev lst)), unEx e)) 
+
+    fun transRecord(explist) =
+        let
+            val len = length explist
+            val res = rdTmp(Temp.newtemp())
+            val (expseq, _) = foldr (fn (exp, (expseq, index)) => 
+                (transAssign(fieldVar(res, (length - index - 1) * F.wordSize), exp)::expseq, index + 1)
+            ) ([], 0) explist
+            val malloc = Tr.MOVE(Tr.TEMP res, F.externalCall("malloc", [Tr.CONST (len * F.wordSize)]))
+        in
+            Ex(Tr.ESEQ(Tr.SEQ(malloc, seq expseq),res))
+        end
         
 
     fun getResult() = !fragments

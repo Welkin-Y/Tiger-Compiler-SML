@@ -168,17 +168,17 @@ struct
                                     TC.checkSameType pos (tyexp, ty)
                         end) fields
                     (* check if all recordFields can be find in field*)
-                    val _ = map (fn (name, typ) =>
-                        
+                    val expfields = foldr (fn ((name, typ), expfields) =>
                         case List.find (fn (symbol, exp, pos) => symbol = name) fields of
                             NONE => TC.undefinedNameErr pos name
                             | SOME (symbol, exp, pos) => let
-                                val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth, forbidden, level)
+                                val {exp=expfield, ty=tyexp} = transExp (venv, tenv, exp, loopDepth, forbidden, level)
                             in
-                                TC.checkSameType pos (tyexp, typ)
-                            end) recordFields
+                                TC.checkSameType pos (tyexp, typ);
+                                expfield::expfields
+                            end) [] recordFields
                 in
-                    {exp=TL.NOT_IMPLEMENTED, ty=ty}
+                    {exp=TL.transRecord(expfields), ty=ty}
                 end
             
             
