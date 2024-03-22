@@ -271,7 +271,17 @@ struct
             ) ([], 0) explist
             val malloc = Tr.MOVE(Tr.TEMP res, F.externalCall("malloc", [Tr.CONST (len * F.wordSize)]))
         in
-            Ex(Tr.ESEQ(Tr.SEQ(malloc, seq (map unNx expseq)),rdTmp res))
+            Ex(Tr.ESEQ(Tr.SEQ(malloc, seq (map unNx expseq)), rdTmp res))
+        end
+    
+    fun transArray(size, init) = 
+        let
+            val size = unEx size
+            val init = unEx init
+            val res = Temp.newtemp()
+            val initArr = Tr.MOVE(Tr.TEMP res, F.externalCall("initArray", [size, init]))
+        in
+            Ex(Tr.ESEQ(initArr, rdTmp res))
         end
         
 
