@@ -62,13 +62,13 @@ struct
                     rdTmp r) end
         | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 0) 
         | unEx (Lx l) = Tr.READ l
-        | unEx _ = raise ErrorMsg.impossible "unEx with NOT_IMPLEMENTED"
+        | unEx NOT_IMPLEMENTED = raise ErrorMsg.impossible "unEx with NOT_IMPLEMENTED"
 
     fun unNx (Ex e) = Tr.EXP e
         | unNx (Cx genstm) = Tr.EXP (unEx (Cx genstm))
         | unNx (Nx s) = s
         | unNx (Lx l) = Tr.EXP (Tr.READ l)
-        | unNx _ = raise ErrorMsg.impossible "unNx with NOT_IMPLEMENTED"
+        | unNx NOT_IMPLEMENTED = raise ErrorMsg.impossible "unNx with NOT_IMPLEMENTED"
 
     fun unCx (Ex(Tr.CONST 0)) = (fn (t,f) => Tr.JUMP(Tr.NAME f, [f]))
         | unCx (Ex(Tr.CONST 1)) = (fn (t,f) => Tr.JUMP(Tr.NAME t, [t]))
@@ -77,11 +77,12 @@ struct
         (* unCx(Nx _) need not be translated *)
         | unCx (Nx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
         | unCx (Lx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
-        | unCx _ = raise ErrorMsg.impossible "unCx with NOT_IMPLEMENTED"
+        | unCx NOT_IMPLEMENTED = raise ErrorMsg.impossible "unCx with NOT_IMPLEMENTED"
 
     fun unLx (Lx l) = l
         | unLx (Ex e) = Tr.MEM e
-        | unLx _ = raise ErrorMsg.impossible "unLx with NOT_IMPLEMENTED"
+        | unLx NOT_IMPLEMENTED = raise ErrorMsg.impossible "unLx with NOT_IMPLEMENTED"
+        | unLx _ = raise ErrorMsg.impossible "unLx not supported type"
 
     fun procEntryExit({level: level, body: exp}) = 
         case level of
