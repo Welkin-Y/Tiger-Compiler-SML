@@ -10,6 +10,7 @@ struct
 
     type access = level * F.access
     type frag = F.frag
+    val fragments : frag list ref = ref []
 
     val outermost = ROOT
 
@@ -176,13 +177,17 @@ struct
             let 
                 val label = Temp.newlabel()
             in
-                (* TODO *)
+                (* insert string into frags *)
+                (* potential optimization: reuse the inserted string*)
+                fragments := F.STRING(label, lit)::(!fragments);
                 Ex(Tr.NAME label)
             end
 
     fun transBinop(oper, e1, e2) = Ex(Tr.BINOP(Tr.getBinop oper, unEx e1, unEx e2))
 
     fun transRelop(oper, e1, e2) = Cx(fn (t, f) => Tr.CJUMP(Tr.getRelop oper, unEx e1, unEx e2, t, f))
+
+    fun transBreak(label) = Nx(Tr.JUMP(Tr.NAME label, [label]))
 
     fun transAssign(var, exp) = Nx(Tr.MOVE(unLx var, unEx exp)) 
 
@@ -226,5 +231,7 @@ struct
         | transSeq [e] = Ex(unEx e)
         | transSeq (e::lst) = Ex(Tr.ESEQ(seq(map unNx (rev lst)), unEx e)) 
         
+
+    fun getResult() = !fragments
 
 end

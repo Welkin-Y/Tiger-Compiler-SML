@@ -21,7 +21,7 @@ sig
 
     val procEntryExit : {level: level, body: exp} -> unit
     structure Frame : FRAME
-    (* val getResult : unit -> Frame.frag list *)
+    val getResult : unit -> Frame.frag list
 
 
     
@@ -44,13 +44,12 @@ sig
     val transIf : exp * exp * exp option -> exp
     val transBinop : A.oper * exp * exp -> exp
     val transRelop : A.oper * exp * exp -> exp
-    (* val transBreak : unit -> exp *)
+    val transBreak :  Temp.label -> exp
     val transAssign : exp * exp -> exp
     val transLoop : exp * exp -> exp
     val transWhile : exp * exp -> exp
     val transFor : exp * exp * exp * exp -> exp
     val transCall: Temp.label * level * level * exp list -> exp
     val transSeq : exp list -> exp
-
 
 end

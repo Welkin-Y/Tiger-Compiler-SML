@@ -46,13 +46,13 @@ struct
           )
       | false => InReg(Temp.newtemp()) 
 
-  fun externalCall(s: string, args: Tree.exp list) = raise ErrorMsg.impossible "Not implemented"
-  (* Tree.CALL(Tree.NAME(Tree.Temp.namedlabel s), args) *)
+  fun externalCall(s: string, args: Tree.exp list) = Tree.CALL(Tree.NAME(Temp.namedlabel s), args)
+  (* Tree.CALL(Tree.NAME(Tree.Temp.namedlabel s), args) p165*)
 
   fun string(label: Tree.label, str: string) = raise ErrorMsg.impossible "Not implemented"
   (* Tree.DATASTRING(label, str) *)
 
-  fun procEntryExit1 (frm: frame, body: Tree.stm) = raise ErrorMsg.impossible "Not implemented"
+  fun procEntryExit1 (frm: frame, body: Tree.stm) = body
 
   fun exp (access: access) (addr: Tree.exp) : Tree.exp = case access of
         InFrame(offset) => Tree.READ(Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset)))
