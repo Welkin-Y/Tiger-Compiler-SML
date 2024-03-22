@@ -40,7 +40,8 @@ struct
     fun seq [] = Tr.EXP(Tr.CONST 0)
         | seq [s] = s
         | seq (s::ss) = Tr.SEQ(s, seq ss)
-
+    fun rdTmp x = Tr.LOC(Tr.TEMP x)
+    fun rdMem x = Tr.LOC(Tr.MEM x)
     fun unEx (Ex e) = e
         | unEx (Cx genstm) = 
             let val r = Temp.newtemp()
@@ -51,7 +52,7 @@ struct
                         Tr.LABEL f, 
                         Tr.MOVE(Tr.TEMP r, Tr.CONST 0), 
                         Tr.LABEL t],
-                    Tr.LOC(Tr.TEMP r)) end
+                     rdTmp r) end
         | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 0) 
         | unEx (Lx l) = Tr.LOC l
 

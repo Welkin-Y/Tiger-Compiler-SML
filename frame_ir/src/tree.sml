@@ -15,7 +15,7 @@ sig
   | NAME of label
   | CONST of int
   | CALL of exp * exp list
-  | LOC of loc
+  | READ of loc
 
   and loc = MEM of exp
   | TEMP of Temp.temp
