@@ -51,7 +51,7 @@ struct
             | A.LetExp {decs, body, pos} => 
                 let
                     val () = L.log L.INFO ("Start to trans LetExp")
-                    val {venv=venv', tenv=tenv', forbidden=forbidden'} = foldl (fn (dec, {venv, tenv, forbidden}) => 
+                    val {venv=venv', tenv=tenv', forbidden=forbidden', explist=explist'} = foldl (fn (dec, {venv, tenv, forbidden, explist}) => 
                     let
                         val forbidden = case dec of 
                         A.VarDec {name, escape, typ, init, pos} => (
@@ -59,10 +59,12 @@ struct
                             NONE => forbidden
                             | SOME _ => List.filter (fn n => n <> name) forbidden)
                         | _ => forbidden
-                        val {venv=venv, tenv=tenv} = transDec (venv, tenv, dec, loopDepth, forbidden, level)
+                        val {venv=venv, tenv=tenv, exp=exp} = transDec (venv, tenv, dec, loopDepth, forbidden, level)
                     in
-                        {venv=venv, tenv=tenv, forbidden=forbidden}
-                    end) {venv=venv, tenv=tenv, forbidden=forbidden} decs
+                        case exp of 
+                            SOME exp => {venv=venv, tenv=tenv, forbidden=forbidden, explist=explist@[exp]}
+                            | NONE => {venv=venv, tenv=tenv, forbidden=forbidden, explist=explist}
+                    end) {venv=venv, tenv=tenv, forbidden=forbidden, explist=[]} decs
                 in
                     print ("begin to check body\n");
                     transExp (venv', tenv', body, loopDepth, forbidden', level)
@@ -205,8 +207,7 @@ struct
                 (*if declared variable has same name with forbidden, erase it from forbidden*)
                 A.VarDec{name, escape, typ, init, pos}=> let
                         val () = L.log L.INFO ("transVarDec: " ^ Symbol.name name ^ ", escape: "^ Bool.toString (!escape) ^ ", typ: " ^ (case typ of NONE => "NONE" | SOME t => Symbol.name (#1 t)));
-                        
-                        val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth, forbidden, level)
+                        val {exp=exp', ty=tyinit} = transExp (venv, tenv, init, loopDepth, forbidden, level)
                         val newtyp = case typ of
                                 NONE => tyinit
                             | SOME t => case Symbol.look (tenv, #1 t) of 
@@ -218,7 +219,7 @@ struct
                                 val newVenv =  Symbol.enter(venv, name, Env.VarEntry {access=TL.allocLocal level (!escape), ty=newtyp})
                                 val _ = PrintEnv.printEnv (newVenv,tenv)
                             in
-                                {venv = newVenv, tenv = tenv}
+                                {venv = newVenv, tenv = tenv, exp=SOME(exp')}
                             end
                         else case newtyp of
                             T.NIL => (ErrorMsg.error pos ("SyntaxError: using nil to initialize variable without type"); raise ErrorMsg.Error)
@@ -396,7 +397,7 @@ struct
                                 )
                         end) (!tyTable);
                     PrintEnv.printEnv (!newvenv, !newtenv);
-                    {venv=(!newvenv), tenv=(!newtenv)}
+                    {venv=(!newvenv), tenv=(!newtenv), exp=NONE}
                 end
             | A.FunctionDec fundecs => 
                 let
@@ -448,7 +449,7 @@ struct
                         end)) fundecs
                 in
                     PrintEnv.printEnv (newvenv, newtenv);
-                    {venv=newvenv, tenv=newtenv}
+                    {venv=newvenv, tenv=newtenv, exp=NONE}
                 end
     and transVar (venv:tyvenv , tenv:tytenv, var: A.var, loopDepth: int, forbidden : (Symbol.symbol list), level: TL.level) = let 
             val {exp=_, ty=ty} = case var of

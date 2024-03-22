@@ -33,9 +33,9 @@ struct
 
 
 
-    fun procEntryExit({level: level, body: exp}) = raise Fail "TODO: procEntryExit"
 
-    fun getResult() = raise Fail "TODO: getResult"
+
+
 
     (* helper function for seq of exps *)
     fun seq [] = Tr.EXP(Tr.CONST 0)
@@ -75,6 +75,17 @@ struct
 
     fun unLx (Lx l) = l
         | unLx _ = raise Fail "unLx"
+
+    fun procEntryExit({level: level, body: exp}) = 
+        case level of
+            ROOT => ErrorMsg.impossible "procEntryExit: no frame"
+            | LEVEL{frame, parent, id} => 
+            let
+                val body' = unEx(body)
+                val funcProc = F.PROC{body=Tr.EXP(body'), frame=frame}
+            in
+                fragments := (!fragments)@[funcProc]
+            end
 
     (* MEM(+(CONST kn, MEM(+(CONST kn-1, ... MEM(+(CONST k1, TEMP FP)) ...)))) *)
     fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=use_id, parent=use_prt, frame=use_frm}): Tree.exp =
@@ -187,7 +198,8 @@ struct
 
     fun transRelop(oper, e1, e2) = Cx(fn (t, f) => Tr.CJUMP(Tr.getRelop oper, unEx e1, unEx e2, t, f))
 
-    fun transBreak(label) = Nx(Tr.JUMP(Tr.NAME label, [label]))
+    fun transBreak(SOME(label)) = Nx(Tr.JUMP(Tr.NAME label, [label]))
+    | transBreak(NONE) = Nx(Tr.EXP(Tr.CONST 0)) (*placeholder break label. even if there are no break in exp, we still need to pass a label*)
 
     fun transAssign(var, exp) = Nx(Tr.MOVE(unLx var, unEx exp)) 
 
