@@ -2,6 +2,7 @@ structure Env : ENV =
 struct
 type access = unit
     (* to be implemented *)
+structure T = Types
 
 datatype enventry = VarEntry of {access: Translate.access, ty: T.ty}
                     | FunEntry of {level: Translate.level, label: Temp.label, formals: T.ty list, result: T.ty}

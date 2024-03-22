@@ -1,10 +1,11 @@
-structure T = Types
+
 
 structure TypeChecker =
 struct 
-        fun opToString oper =
-                        case oper of
-                                A.PlusOp => "+"
+        (* Types alias *)
+        structure T = Types
+
+        fun opToString oper = case oper of A.PlusOp => "+"
                         | A.MinusOp => "-"
                         | A.TimesOp => "*"
                         | A.DivideOp => "/"
@@ -15,7 +16,19 @@ struct
                         | A.GtOp => ">"
                         | A.GeOp => ">="
 
+        (* Errors *)
+        fun undefinedNameErr pos name =
+                        (ErrorMsg.error pos ("NameError: name " ^ Symbol.name name ^ " is not defined"); raise ErrorMsg.Error)
 
+        fun undefinedTypeErr pos name =
+                        (ErrorMsg.error pos ("TypeError: type " ^ Symbol.name name ^ " is not defined"); raise ErrorMsg.Error)
+
+        fun reusedNameErr pos name =
+                        (ErrorMsg.error pos ("NameError: name " ^ Symbol.name name ^ " is already defined in the group"); raise ErrorMsg.Error)
+
+
+
+        (* Checkers *)
         fun checkIsType pos (ty, expected) = 
                         if T.equals(ty, expected) 
                         then ()
@@ -30,8 +43,8 @@ struct
         fun checkIfExp pos (tytest, tythen, tyelse) = 
                         if T.equals(tytest, T.INT)  
                         then (if T.equals(tythen, tyelse) 
-                                then ()
-                                else (ErrorMsg.error pos ("TypeError: Expect same type for then and else, but got " ^ T.toString tythen ^ " and " ^ T.toString tyelse); raise ErrorMsg.Error))
+                                        then ()
+                                        else (ErrorMsg.error pos ("TypeError: Expect same type for then and else, but got " ^ T.toString tythen ^ " and " ^ T.toString tyelse); raise ErrorMsg.Error))
                         else (ErrorMsg.error pos ("TypeError: Expect int for if condition, but got " ^ T.toString tytest ); raise ErrorMsg.Error)
 
         fun checkEqOp oper pos (tyleft, tyright) =
@@ -55,14 +68,20 @@ struct
                                 in
                                         (ErrorMsg.error pos msg; raise ErrorMsg.Error)
                                 end
+        
+        (*check if there are duplicated field names in the same record type*)
+        fun checkRecordName {name, ty, pos} =  
+                        case ty of A.RecordTy fields => let
+                                                fun helper ({name, escape, typ, pos}, fieldNames) = 
+                                                                if List.exists (fn n => n = Symbol.name name) fieldNames then
+                                                                        (ErrorMsg.error pos ("TypeError: reused field name " ^ Symbol.name name); raise ErrorMsg.Error)
+                                                                else  Symbol.name name::fieldNames
+                                        in  
+                                                foldr helper [] fields 
+                                        end
+                        | _ => [] 
 
-        fun undefinedNameErr pos name =
-                        (ErrorMsg.error pos ("NameError: name " ^ Symbol.name name ^ " is not defined"); raise ErrorMsg.Error)
-
-        fun undefinedTypeErr pos name =
-                        (ErrorMsg.error pos ("TypeError: type " ^ Symbol.name name ^ " is not defined"); raise ErrorMsg.Error)
-
-        fun reusedNameErr pos name =
-                        (ErrorMsg.error pos ("NameError: name " ^ Symbol.name name ^ " is already defined in the group"); raise ErrorMsg.Error)
-
+        fun checkReuse ({name, ty, pos}, table) = case Symbol.look (table, name) of NONE => Symbol.enter (table, name, ())
+                        | SOME _ => (reusedNameErr pos name; table)
+                
 end
