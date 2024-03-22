@@ -2,6 +2,7 @@ structure Semant :> SEMANT =
 struct
     structure TL = Translate
     structure TC = TypeChecker
+    structure L = Logger
 
     type tyvenv = Env.enventry Symbol.table
     type tytenv = T.ty Symbol.table
@@ -18,6 +19,7 @@ struct
                     case else' of SOME elseexp => let 
                             val {exp=expelse, ty=tyelse} = transExp (venv, tenv, elseexp, loopDepth, forbidden, level)
                         in
+                            
                             TC.checkIfExp pos (tytest, tythen, tyelse);
                             {exp=TL.transIf(exptest, expthen, SOME(expelse)), ty=tythen}
                         end
@@ -192,7 +194,8 @@ struct
             case dec of
                 (*if declared variable has same name with forbidden, erase it from forbidden*)
                 A.VarDec{name, escape, typ, init, pos}=> let
-
+                        val () = L.log L.INFO ("transDec: " ^ Symbol.name name ^ ", escape: "^ Bool.toString (!escape) ^ ", typ: " ^ (case typ of NONE => "NONE" | SOME t => Symbol.name (#1 t)));
+                        
                         val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth, forbidden, level)
                         val newtyp = case typ of
                                 NONE => tyinit
