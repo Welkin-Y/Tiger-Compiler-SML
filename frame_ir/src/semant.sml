@@ -13,6 +13,7 @@ struct
             case exp of 
             (*To check an IfExp we need to make sure: 1. test is int 2. then and else have same types*)
             A.IfExp {test, then', else', pos} => let
+                    val () = L.log L.INFO ("Start to trans IfExp")
                     val {exp=expthen, ty=tythen} = transExp (venv, tenv, then', loopDepth, forbidden, level)
                     val {exp=exptest, ty=tytest} = transExp (venv, tenv, test, loopDepth, forbidden, level)
                 in 
@@ -30,6 +31,7 @@ struct
                 end
             | A.OpExp {left, oper, right, pos} =>
                 let
+                    val () = L.log L.INFO ("Start to trans OpExp")
                     val {exp=expleft, ty=tyleft} = transExp (venv, tenv, left, loopDepth, forbidden, level)
                     val {exp=expright, ty=tyright} = transExp (venv, tenv, right, loopDepth, forbidden, level)
                 in
@@ -48,6 +50,7 @@ struct
             (* Check Let Exp: 1. gothrough decs 2. go through body*)
             | A.LetExp {decs, body, pos} => 
                 let
+                    val () = L.log L.INFO ("Start to trans LetExp")
                     val {venv=venv', tenv=tenv', forbidden=forbidden'} = foldl (fn (dec, {venv, tenv, forbidden}) => 
                     let
                         val forbidden = case dec of 
@@ -64,11 +67,12 @@ struct
                     print ("begin to check body\n");
                     transExp (venv', tenv', body, loopDepth, forbidden', level)
                 end
-            | A.IntExp intval => {exp=TL.transInt intval, ty=T.INT}
-            | A.StringExp (str, _) => {exp=TL.transString str, ty=T.STRING}
-            | A.NilExp => {exp=TL.transNil(), ty=T.NIL}
+            | A.IntExp intval => (L.log L.INFO ("Start to trans int: " ^ Int.toString(intval)); {exp=TL.transInt intval, ty=T.INT})
+            | A.StringExp (str, _) => (L.log L.INFO ("Start to trans String: " ^ str); {exp=TL.transString str, ty=T.STRING})
+            | A.NilExp => (L.log L.INFO ("Start to trans nil"); {exp=TL.transNil(), ty=T.NIL})
             | A.SeqExp exps => 
                 let
+                    val () = L.log L.INFO "Start to trans SeqExp"
                     val (explist, lastTy) = foldl (fn ((exp, _), (explist, ty)) => let
                         val {exp=entryExp, ty=entryTy} = transExp (venv, tenv, exp, loopDepth, forbidden, level)
                     in
