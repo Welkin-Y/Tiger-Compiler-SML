@@ -45,6 +45,7 @@ struct
     (* helper function for read exp from loc *)
     fun rdTmp x = Tr.READ(Tr.TEMP x)
     fun rdMem x = Tr.READ(Tr.MEM x)
+    (* credit to: Dr. Drew Hilton *)
 
     fun unEx (Ex e) = e
         | unEx (Cx genstm) = 
@@ -59,6 +60,7 @@ struct
                     rdTmp r) end
         | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 0) 
         | unEx (Lx l) = Tr.READ l
+        | unEx _ = raise ErrorMsg.impossible "unEx with NOT_IMPLEMENTED"
 
     fun unNx (Ex e) = Tr.EXP e
         | unNx (Cx genstm) = Tr.EXP (unEx (Cx genstm))
@@ -97,7 +99,9 @@ struct
     fun transNil () = Ex(Tr.CONST 0)
     
     fun simpleVar(access, useLevel) =
+            
             let val (defLevel, defAccess) = access
+            val _ = Logger.log Logger.DEBUG "Translate.simpleVar";
             in Ex(F.exp defAccess (followStaticLink(defLevel, useLevel))) end
        
 
@@ -131,6 +135,13 @@ struct
                                 )
                         )
                         ))
+            end
+    fun transVarDec (access, init) = 
+            let 
+                val (level, acc) = access
+                val init = unEx init
+            in
+                Nx(Tr.MOVE(Tr.MEM(F.exp (acc) (rdTmp F.FP)), init))
             end
 
 

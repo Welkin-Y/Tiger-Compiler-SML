@@ -59,6 +59,7 @@ struct
                             NONE => forbidden
                             | SOME _ => List.filter (fn n => n <> name) forbidden)
                         | _ => forbidden
+                        val _ = L.log L.DEBUG "begin to check dec\n"
                         val {venv=venv, tenv=tenv, exp=exp} = transDec (venv, tenv, dec, loopDepth, forbidden, level)
                     in
                         case exp of 
@@ -81,10 +82,20 @@ struct
                         (entryExp::explist, entryTy)
                     end) ([], T.UNIT) exps
                     fun helper (f,t) = t (* TODO *)
+                    val _= L.log L.DEBUG "SeqExp start"
+                    val ans = {exp=TL.transSeq(explist), ty=foldl helper T.UNIT exps}
                 in
-                    {exp=TL.transSeq(explist), ty=foldl helper T.UNIT exps}
+
+                    
+                    L.log L.DEBUG "SeqExp done";
+                    ans
                 end
-            | A.VarExp var => transVar (venv, tenv, var, loopDepth, forbidden, level)
+            | A.VarExp var => let 
+                    val ans = transVar (venv, tenv, var, loopDepth, forbidden, level)
+                    val _ = L.log L.DEBUG "VarExp Done"
+                in
+                    ans
+                end
             | A.AssignExp {var : A.var, exp: A.exp, pos :A.pos} => let
                     (*if var name in forbidden, raise error*)
                     val () = L.log L.INFO "Start to trans AssignExp"
@@ -216,10 +227,12 @@ struct
                     in
                         if T.equals(newtyp, tyinit) then 
                             let 
-                                val newVenv =  Symbol.enter(venv, name, Env.VarEntry {access=TL.allocLocal level (!escape), ty=newtyp})
+                                val acc = TL.allocLocal level (!escape)
+                                val newVenv =  Symbol.enter(venv, name, Env.VarEntry {access=acc, ty=newtyp})
                                 val _ = PrintEnv.printEnv (newVenv,tenv)
                             in
-                                {venv = newVenv, tenv = tenv, exp=SOME(exp')}
+
+                                {venv = newVenv, tenv = tenv, exp=SOME(TL.transVarDec(acc, exp'))}
                             end
                         else case newtyp of
                             T.NIL => (ErrorMsg.error pos ("SyntaxError: using nil to initialize variable without type"); raise ErrorMsg.Error)
@@ -452,12 +465,12 @@ struct
                     {venv=newvenv, tenv=newtenv, exp=NONE}
                 end
     and transVar (venv:tyvenv , tenv:tytenv, var: A.var, loopDepth: int, forbidden : (Symbol.symbol list), level: TL.level) = let 
-            val {exp=_, ty=ty} = case var of
+            val {exp=exp', ty=ty} = case var of
                 A.SimpleVar (n, p) => 
                     (case Symbol.look (venv, n) of
                         NONE => TC.undefinedNameErr p n
                         | SOME entry => case entry of
-                            Env.VarEntry {access=access, ty=ty} => {exp=TL.simpleVar(access, level), ty=ty}
+                            Env.VarEntry {access=access, ty=ty} => (L.log L.DEBUG "start trans simple var"; {exp=TL.simpleVar(access, level), ty=ty})
                             | _ => (ErrorMsg.error p ("TypeError: not a variable " ^ Symbol.name n); raise ErrorMsg.Error))
                 | A.FieldVar (var, n, p) =>
                     let
@@ -482,7 +495,7 @@ struct
                             | _ => (ErrorMsg.error p ("TypeError: not an array type " ^ T.toString ty); raise ErrorMsg.Error)
                     end
         in
-            {exp=TL.NOT_IMPLEMENTED, ty=ty}
+            {exp=exp', ty=ty}
         end
     and transFunDec (venv:tyvenv, tenv:tytenv, fundec:A.fundec, loopDepth: int, fundecGroup: Env.enventry Symbol.table, forbidden : (Symbol.symbol list), level: TL.level) = 
             (* fundec = {name: symbol, params: field list, result: (symbol * pos) option, body: exp pos: pos}*)
@@ -526,8 +539,8 @@ struct
             val venv = Env.base_venv
             val tenv = Env.base_tenv 
             val forbidden : (Symbol.symbol list) = []
-            val level = TL.outermost
-            val {exp=trexp, ty=_} = transExp (venv, tenv, exp, 0, forbidden, level)
+            val startLevel = TL.newLevel({parent = TL.outermost, name = Temp.newlabel(), formals = []})
+            val {exp=trexp, ty=_} = transExp (venv, tenv, exp, 0, forbidden, startLevel)
         in
             Printtree.printtree(TextIO.stdOut, TL.unNx trexp);
             (* PrintEnv.printEnv (venv, tenv); *)
