@@ -78,7 +78,7 @@ struct
 
     fun procEntryExit({level: level, body: exp}) = 
         case level of
-            ROOT => ErrorMsg.impossible "procEntryExit: no frame"
+            ROOT => ErrorMsg.impossible "procEntryExit: no frame, cannot exit at ROOT level"
             | LEVEL{frame, parent, id} => 
             let
                 val body' = unEx(body)
