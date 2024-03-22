@@ -234,13 +234,13 @@ struct
     fun transRecord(explist) =
         let
             val len = length explist
-            val res = rdTmp(Temp.newtemp())
+            val res = Temp.newtemp()
             val (expseq, _) = foldr (fn (exp, (expseq, index)) => 
-                (transAssign(fieldVar(res, (length - index - 1) * F.wordSize), exp)::expseq, index + 1)
+                (transAssign(fieldVar(Ex (rdTmp res), (len - index - 1) * F.wordSize), exp)::expseq, index + 1)
             ) ([], 0) explist
             val malloc = Tr.MOVE(Tr.TEMP res, F.externalCall("malloc", [Tr.CONST (len * F.wordSize)]))
         in
-            Ex(Tr.ESEQ(Tr.SEQ(malloc, seq expseq),res))
+            Ex(Tr.ESEQ(Tr.SEQ(malloc, seq (map unNx expseq)),rdTmp res))
         end
         
 
