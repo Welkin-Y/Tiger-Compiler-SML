@@ -212,10 +212,14 @@ struct
                 val ty = case Symbol.look (tenv, typ) of
                     NONE => TC.undefinedTypeErr pos typ
                     | SOME ty => ty
-                val {exp=_, ty=tyinit} = transExp (venv, tenv, init, loopDepth, forbidden, level)
+                val {exp=expsize, ty=tysize} = transExp (venv, tenv, size, loopDepth, forbidden, level)
+                val {exp=expinit, ty=tyinit} = transExp (venv, tenv, init, loopDepth, forbidden, level)
             in  
-                case ty of T.ARRAY (ty',_) => (TC.checkSameType pos (ty', tyinit); {exp=TL.NOT_IMPLEMENTED, ty=ty})
-                | _ => (ErrorMsg.error pos ("TypeError: not an array type " ^ Symbol.name typ); raise ErrorMsg.Error)
+                TC.checkIsType pos (tysize, T.INT);
+                (case ty of T.ARRAY (ty',_) => TC.checkSameType pos (ty', tyinit)
+                | _ => (ErrorMsg.error pos ("TypeError: not an array type " ^ Symbol.name typ); raise ErrorMsg.Error));
+                
+                 {exp=TL.transArray(expsize, expinit), ty=ty}
             end
 
     and transDec (venv : tyvenv, tenv: tytenv, dec : A.dec, loopDepth: int, forbidden : (Symbol.symbol list), level: TL.level) = 
