@@ -288,6 +288,19 @@ struct
         in
             Ex(Tr.ESEQ(initArr, rdTmp res))
         end
+    
+    fun transFunDec (level, body) = 
+        let
+            val {frame, ...} = case level of LEVEL level => level | ROOT => raise ErrorMsg.impossible "transFunDec: no frame"
+            val funlabel = F.name frame
+            val endlabel = Temp.newlabel()
+            (* dummy version *)
+            val prologue = Tr.SEQ(Tr.JUMP(Tr.NAME endlabel, [endlabel]), Tr.LABEL funlabel)
+            val body = unEx body
+            val epilogue = Tr.SEQ(Tr.MOVE(F.RV, body), Tr.LABEL endlabel)
+        in
+            Nx(Tr.SEQ(prologue, epilogue))
+        end
         
 
     fun getResult() = !fragments
