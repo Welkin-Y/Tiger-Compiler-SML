@@ -51,7 +51,7 @@ struct
   | NAME of label
   | CONST of int
   | CALL of exp * exp list
-  | LOC of loc
+  | READ of loc
 
   and loc = TEMP of Temp.temp 
   | MEM of exp 

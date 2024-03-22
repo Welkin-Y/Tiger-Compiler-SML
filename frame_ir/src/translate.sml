@@ -40,8 +40,11 @@ struct
     fun seq [] = Tr.EXP(Tr.CONST 0)
         | seq [s] = s
         | seq (s::ss) = Tr.SEQ(s, seq ss)
-    fun rdTmp x = Tr.LOC(Tr.TEMP x)
-    fun rdMem x = Tr.LOC(Tr.MEM x)
+
+    (* helper function for read exp from loc *)
+    fun rdTmp x = Tr.READ(Tr.TEMP x)
+    fun rdMem x = Tr.READ(Tr.MEM x)
+
     fun unEx (Ex e) = e
         | unEx (Cx genstm) = 
             let val r = Temp.newtemp()
@@ -52,14 +55,14 @@ struct
                         Tr.LABEL f, 
                         Tr.MOVE(Tr.TEMP r, Tr.CONST 0), 
                         Tr.LABEL t],
-                     rdTmp r) end
+                    rdTmp r) end
         | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 0) 
-        | unEx (Lx l) = Tr.LOC l
+        | unEx (Lx l) = Tr.READ l
 
     fun unNx (Ex e) = Tr.EXP e
         | unNx (Cx genstm) = Tr.EXP (unEx (Cx genstm))
         | unNx (Nx s) = s
-        | unNx (Lx l) = Tr.EXP (Tr.LOC l)
+        | unNx (Lx l) = Tr.EXP (Tr.READ l)
 
     fun unCx (Ex(Tr.CONST 0)) = (fn (t,f) => Tr.JUMP(Tr.NAME f, [f]))
         | unCx (Ex(Tr.CONST 1)) = (fn (t,f) => Tr.JUMP(Tr.NAME t, [t]))
@@ -74,7 +77,7 @@ struct
 
     (* MEM(+(CONST kn, MEM(+(CONST kn-1, ... MEM(+(CONST k1, TEMP FP)) ...)))) *)
     fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=use_id, parent=use_prt, frame=use_frm}): Tree.exp =
-            if def_id = use_id then Tr.LOC(Tr.TEMP F.FP)
+            if def_id = use_id then rdTmp F.FP
             else F.exp (List.hd(F.formals use_frm))(followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt))
         | followStaticLink(ROOT, _) = ErrorMsg.impossible "followStaticLink: no static link"
         | followStaticLink(_, ROOT) = ErrorMsg.impossible "followStaticLink: no static link"
@@ -86,7 +89,15 @@ struct
             in Ex(F.exp defAccess (followStaticLink(defLevel, useLevel))) end
        
 
-    fun fieldVar (var, index) = Ex(Tr.LOC (Tr.MEM(Tr.BINOP(Tr.PLUS, unEx var, Tr.CONST index))))
+    fun fieldVar (var, index) = 
+            Ex(rdMem
+                (Tr.BINOP(
+                        Tr.PLUS, 
+                        unEx var, 
+                        Tr.CONST index)
+                )  
+            )
+            
     fun subscriptVar (arr, index) = 
             let 
                 val indexReg = Temp.newtemp()
@@ -95,7 +106,18 @@ struct
                 Ex(Tr.ESEQ(seq[
                             Tr.MOVE(Tr.TEMP indexReg, unEx index),
                             Tr.MOVE(Tr.TEMP baseReg, unEx arr)],
-                        Tr.LOC(Tr.MEM(Tr.BINOP(Tr.PLUS, Tr.LOC(Tr.MEM(Tr.LOC(Tr.TEMP baseReg))), Tr.BINOP(Tr.MUL, Tr.LOC(Tr.TEMP indexReg), Tr.CONST F.wordSize))))
+                        rdMem (
+                            Tr.BINOP(
+                                Tr.PLUS, 
+                                rdMem(
+                                    rdTmp baseReg
+                                ), 
+                                Tr.BINOP(
+                                    Tr.MUL, 
+                                    rdTmp indexReg, 
+                                    Tr.CONST F.wordSize)
+                                )
+                        )
                         ))
             end
 
@@ -131,7 +153,7 @@ struct
                                         Tr.LABEL labelelse,
                                         Tr.MOVE(Tr.TEMP res, elseexp),
                                         Tr.LABEL labelend],
-                                    Tr.LOC(Tr.TEMP res)))
+                                    rdTmp res))
                         end
 
                 fun transIfThen(cond, thenexp) = 
@@ -195,9 +217,14 @@ struct
             let
                 val assignVar = transAssign(var, lo)
                 val test = transRelop(A.LeOp, var, hi)
-                val newbody = Nx(Tr.SEQ(unNx body, Tr.EXP(Tr.BINOP(Tr.PLUS, Tr.LOC(unLx var), Tr.CONST 1))))
+                val newbody = Nx(Tr.SEQ(unNx body, Tr.EXP(Tr.BINOP(Tr.PLUS, Tr.READ(unLx var), Tr.CONST 1))))
             in
                 Nx(Tr.SEQ(unNx assignVar, unNx(transLoop(test, newbody))))
             end
+    
+    fun transSeq [] = Ex(Tr.CONST 0)
+        | transSeq [e] = Ex(unEx e)
+        | transSeq (e::lst) = Ex(Tr.ESEQ(seq(map unNx (rev lst)), unEx e)) 
+        
 
 end
