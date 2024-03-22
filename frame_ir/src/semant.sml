@@ -442,7 +442,7 @@ struct
                     (case Symbol.look (venv, n) of
                         NONE => TC.undefinedNameErr p n
                         | SOME entry => case entry of
-                            Env.VarEntry {access=access, ty=ty} => {exp=TL.NOT_IMPLEMENTED, ty=ty}
+                            Env.VarEntry {access=access, ty=ty} => {exp=TL.simpleVar(access, level), ty=ty}
                             | _ => (ErrorMsg.error p ("TypeError: not a variable " ^ Symbol.name n); raise ErrorMsg.Error))
                 | A.FieldVar (var, n, p) =>
                     let
