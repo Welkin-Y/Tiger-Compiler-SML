@@ -22,7 +22,7 @@ struct
                             {exp=TL.transIf(exptest, expthen, SOME(expelse)), ty=tythen}
                         end
                     | NONE => let in
-                            TC.checkIsType pos (tytest, T.INT);
+                            TC.checkIsType pos (tytest, T.UNIT);
                             {exp=TL.transIf(exptest, expthen, NONE), ty=tythen}
                         end
                 end
