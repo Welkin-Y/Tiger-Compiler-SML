@@ -30,3 +30,5 @@ $/ml-yacc-lib.cm
 ../src/translate.sml
 ../src/tree.sml
 ../src/printtree.sml
+../../logger/src/logger.sig
+../../logger/src/logger.sml
