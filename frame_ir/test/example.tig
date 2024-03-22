@@ -1,4 +1,6 @@
 let
+	type a = array of int
+	var b := a[3] of 1
 in 
-	for i:=0 to 100 do ()
+	
 end
