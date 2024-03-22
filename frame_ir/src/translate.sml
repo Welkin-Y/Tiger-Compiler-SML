@@ -15,8 +15,9 @@ struct
 
     val outermost = ROOT
 
-    fun newLevel ({parent: level, name: Temp.label, formals: bool list}) = 
-            let val arg : {name: Temp.label, formals: bool list} = {name = name, formals = true::formals}
+    fun newLevel ({parent: level, name: Temp.label, formals: bool list}) = let 
+                val () = L.log L.DEBUG "create new level"
+                val arg : {name: Temp.label, formals: bool list} = {name = name, formals = true::formals}
                 val f = F.newFrame(arg)
             in LEVEL{parent = parent, frame = f, id = ref () } end
 
@@ -96,7 +97,10 @@ struct
     (* MEM(+(CONST kn, MEM(+(CONST kn-1, ... MEM(+(CONST k1, TEMP FP)) ...)))) *)
     fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=use_id, parent=use_prt, frame=use_frm}): Tree.exp = 
             if def_id = use_id then rdTmp F.FP
-            else F.exp (List.hd(F.formals use_frm))(followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt))
+            else (
+                L.log L.DEBUG "Follow use level";
+                F.exp (List.hd(F.formals use_frm))(followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt))
+            )
         | followStaticLink(ROOT, _) = let 
             val errmsg = "followStaticLink: define level is ROOT" 
             in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end

@@ -60,7 +60,7 @@ struct
                             NONE => forbidden
                             | SOME _ => List.filter (fn n => n <> name) forbidden)
                         | _ => forbidden
-                        val _ = L.log L.DEBUG "begin to check dec\n"
+                        val _ = L.log L.DEBUG "begin to check dec"
                         val {venv=venv, tenv=tenv, exp=exp} = transDec (venv, tenv, dec, loopDepth, forbidden, level)
                     in
                         case exp of 
@@ -69,7 +69,7 @@ struct
                     end) {venv=venv, tenv=tenv, forbidden=forbidden, explist=[]} decs
                     val {exp=expbody, ty=tybody} = transExp (venv', tenv', body, loopDepth, forbidden', level)
                 in
-                    print ("begin to check body\n");
+                    L.log L.DEBUG "begin to check body";
                     {exp=TL.transLet(explist', expbody), ty=tybody}
                 end
             | A.IntExp intval => (L.log L.INFO ("Start to trans int: " ^ Int.toString(intval)); {exp=TL.transInt intval, ty=T.INT})
@@ -78,19 +78,15 @@ struct
             | A.SeqExp exps => 
                 let
                     val () = L.log L.INFO "Start to trans SeqExp"
-                    val (explist, lastTy) = foldl (fn ((exp, _), (explist, ty)) => let
+                    fun help ((exp, _), (explist, ty)) = let
                         val {exp=entryExp, ty=entryTy} = transExp (venv, tenv, exp, loopDepth, forbidden, level)
-                    in
-                        (entryExp::explist, entryTy)
-                    end) ([], T.UNIT) exps
-                    fun helper (f,t) = t (* TODO *)
-                    val _= L.log L.DEBUG "SeqExp start"
-                    val ans = {exp=TL.transSeq(explist), ty=foldl helper T.UNIT exps}
+                        in
+                            (entryExp::explist, entryTy)
+                        end
+                    val (explist, lastTy) = foldl help ([], T.UNIT) exps
                 in
-
-                    
                     L.log L.DEBUG "SeqExp done";
-                    ans
+                    {exp=TL.transSeq(explist), ty=lastTy}
                 end
             | A.VarExp var => let 
                     val ans = transVar (venv, tenv, var, loopDepth, forbidden, level)
@@ -429,7 +425,7 @@ struct
                         transFunDec (venv, tenv, fundec, loopDepth, fundecGroup, forbidden, level)
                    ) {venv=venv, tenv=tenv, fundecGroup=fundecGroup} fundecs
                     (*recursively check the body of each function*)
-                    val _ = print "begin to check body of each function\n"
+                    val _ = L.log L.DEBUG "begin to check body of each function"
 
                     val _ = map (fn (fundec :Absyn.fundec) => (
                         let 
@@ -437,14 +433,14 @@ struct
                         val funentry = case Symbol.look (newvenv, name) of
                             NONE => TC.undefinedNameErr pos name
                             | SOME entry => entry
-                        (* get the level of function *)
+                        (* get the def level of function *)
                         val {level=funlevel, ...} = case funentry of
                             Env.FunEntry record => record
                             | _ => (ErrorMsg.error pos ("TypeError: not a function " ^ Symbol.name name); raise ErrorMsg.Error)
                         (* add all args var into a tmp venv to check body*)
                         val (tmpvenv, forbidden) = foldl (fn (param, (venv, forbidden)) => 
                             let
-                                (*if param name in forbidden, erase it from forbidden*)
+                                (*Can we refactor? if param name in forbidden, erase it from forbidden*)
                                 val {name, escape, typ, pos} = param
                                 val forbidden = case List.find (fn n => n = name) forbidden of
                                     NONE => forbidden
@@ -458,6 +454,7 @@ struct
                             end) (newvenv, forbidden) params
                         val {exp=bodyexp, ty=typ} = transExp (tmpvenv, newtenv, body, 0, forbidden, funlevel)
                         (*check if expty consistent with the delared function ty*)
+                        val () = L.log L.DEBUG ("func body typ: " ^ T.toString typ)
                         in
                         case result of
                         NONE => TC.checkIsType pos (typ, T.UNIT)
@@ -535,9 +532,12 @@ struct
                     NONE => ()
                     | SOME _ => (ErrorMsg.error pos ("TypeError: reused function name " ^ Symbol.name name ^ "in same group"); raise ErrorMsg.Error)
                 val newLabel = Temp.newlabel()
-                val newLevel = TL.newLevel({parent=level, name=newLabel, formals=params_escapes})
+                (* val newLevel = TL.newLevel({parent=level, name=newLabel, formals=params_escapes})
                 val newVenv = Symbol.enter (venv, name, Env.FunEntry {level=newLevel, label=newLabel, formals=params_ty, result=res_ty}) 
-                val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {level=newLevel, label=newLabel, formals=params_ty, result=res_ty})
+                val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {level=newLevel, label=newLabel, formals=params_ty, result=res_ty}) *)
+                val newVenv = Symbol.enter (venv, name, Env.FunEntry {level=level, label=newLabel, formals=params_ty, result=res_ty}) 
+                val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {level=level, label=newLabel, formals=params_ty, result=res_ty})
+                (* TODO: why newLevel cause error? *)
             in
                 PrintEnv.printEnv (newVenv, tenv);
                 {venv=newVenv, tenv=tenv, fundecGroup=newFundecGroup}
@@ -548,7 +548,7 @@ struct
             val venv = Env.base_venv
             val tenv = Env.base_tenv 
             val forbidden : (Symbol.symbol list) = []
-            val startLevel = TL.newLevel({parent = TL.outermost, name = Temp.newlabel(), formals = []})
+            val startLevel = TL.newLevel({parent = TL.outermost, name = Temp.namedlabel "main", formals = []})
             val {exp=trexp, ty=_} = transExp (venv, tenv, exp, 0, forbidden, startLevel)
         in
             Printtree.printtree(TextIO.stdOut, TL.unNx trexp);
