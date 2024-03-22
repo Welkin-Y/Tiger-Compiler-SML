@@ -18,6 +18,7 @@ sig
     val unEx: exp -> Tree.exp 
     val unNx: exp -> Tree.stm
     val unCx: exp -> (Temp.label * Temp.label -> Tree.stm) 
+    val unLx: exp -> Tree.loc
 
     val procEntryExit : {level: level, body: exp} -> unit
     structure Frame : FRAME

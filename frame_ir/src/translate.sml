@@ -76,6 +76,7 @@ struct
         | unCx (Lx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
 
     fun unLx (Lx l) = l
+        | unLx (Ex e) = Tr.MEM e
         | unLx _ = raise Fail "unLx"
 
     fun procEntryExit({level: level, body: exp}) = 
