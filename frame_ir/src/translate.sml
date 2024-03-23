@@ -227,7 +227,7 @@ struct
                     Ex(Tr.CALL(Tr.NAME label, static_link::(map unEx args)))
                 end
 
-    fun transLoop(cond, body) = 
+    fun transLoop(cond, body, breakLabel) = 
             let
                 val pretest = unCx(cond)
                 val posttest = unCx(cond)
@@ -240,19 +240,20 @@ struct
                         Tr.LABEL bodylabel,
                         body,
                         posttest(bodylabel, endlabel),
-                        Tr.LABEL endlabel
-                    ])
+                        Tr.LABEL endlabel,
+                        Tr.LABEL breakLabel]
+                    )
             end
     
-    fun transWhile(cond, body) = transLoop(cond, body)
+    fun transWhile(cond, body, breakLabel) = transLoop(cond, body, breakLabel)
 
-    fun transFor(var, lo, hi, body) = 
+    fun transFor(var, lo, hi, body, breakLabel) = 
             let
                 val assignVar = transAssign(var, lo)
                 val test = transRelop(A.LeOp, var, hi)
                 val newbody = Nx(Tr.SEQ(unNx body, Tr.EXP(Tr.BINOP(Tr.PLUS, Tr.READ(unLx var), Tr.CONST 1))))
             in
-                Nx(Tr.SEQ(unNx assignVar, unNx(transLoop(test, newbody))))
+                Nx(Tr.SEQ(unNx assignVar, unNx(transLoop(test, newbody, breakLabel))))
             end
     
     fun transSeq [] = Ex(Tr.CONST 0)

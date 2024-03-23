@@ -50,9 +50,9 @@ sig
     val transRelop : A.oper * exp * exp -> exp
     val transBreak :  Temp.label option -> exp
     val transAssign : exp * exp -> exp
-    val transLoop : exp * exp -> exp
-    val transWhile : exp * exp -> exp
-    val transFor : exp * exp * exp * exp -> exp
+    val transLoop : exp * exp * Temp.label -> exp
+    val transWhile : exp * exp * Temp.label-> exp
+    val transFor : exp * exp * exp * exp * Temp.label-> exp
     val transCall: Temp.label * level * level * exp list -> exp
     val transSeq : exp list -> exp
     val transRecord : exp list -> exp
