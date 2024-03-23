@@ -490,6 +490,7 @@ struct
             in
                 Printtree.printtree(TextIO.stdOut, TL.unNx trexp);
                 (* PrintEnv.printEnv (venv, tenv); *)
-                print "\nSemantic Analysis Succeed\n"
+                print "\nSemantic Analysis Succeed\n";
+                TL.getResult()
             end
 end

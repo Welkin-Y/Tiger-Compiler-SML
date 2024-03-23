@@ -19,6 +19,7 @@ sig
 
   and loc = MEM of exp
   | TEMP of Temp.temp
+  | LSEQ of stm * loc
 
 
   and binop = PLUS | MINUS | MUL | DIV 
@@ -30,7 +31,7 @@ sig
   val getBinop : A.oper -> binop
   val getRelop : A.oper -> relop
 
-  (* val notRel : relop -> relop *)
+  val notRel : relop -> relop
   (* val commute: relop -> relop *)
 end
 
@@ -55,6 +56,7 @@ struct
 
   and loc = TEMP of Temp.temp 
   | MEM of exp 
+  | LSEQ of stm * loc
   
   and binop = PLUS | MINUS | MUL | DIV 
   | AND | OR | LSHIFT | RSHIFT | ARSHIFT | XOR
@@ -75,6 +77,8 @@ struct
     | getRelop A.GtOp = GT
     | getRelop A.GeOp = GE
     | getRelop _ = raise Fail "getRelop not implemented for this operator"
+
+  fun notRel (x) = x
 
 end
 

@@ -70,7 +70,7 @@ struct
   val mk_edge = diddle_edge (op ::)
   val rm_edge = diddle_edge delete
 
-  structure Table = IntMapTable(type key = node
+  structure Table = RedBlackMapTable(type key = node
       fun getInt(g,n) = n)
 
 
