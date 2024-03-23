@@ -3,10 +3,10 @@ sig
     type tyvenv
     type tytenv
     type expty
-    val transVar: tyvenv * tytenv * Absyn.var * int * (Symbol.symbol list)-> expty
-    val transExp: tyvenv * tytenv * Absyn.exp * int * (Symbol.symbol list)-> expty
-    val transDec: tyvenv * tytenv * Absyn.dec * int * (Symbol.symbol list)-> {venv: tyvenv , tenv: tytenv}
-    val transProg: Absyn.exp -> unit
+    val transVar: tyvenv * tytenv * Absyn.var * int *  Translate.level * Temp.label option -> expty
+    val transExp: tyvenv * tytenv * Absyn.exp * int *  Translate.level * Temp.label option -> expty
+    val transDec: tyvenv * tytenv * Absyn.dec * int *  Translate.level * Temp.label option -> {venv: tyvenv , tenv: tytenv, exp: Translate.exp option}
+    val transProg: Absyn.exp -> MipsFrame.frag list
 end
 
 (* type expty = {exp: Translate.exp, ty: Types.ty} *)

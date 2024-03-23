@@ -21,5 +21,15 @@ $/ml-yacc-lib.cm
 ../src/env.sml
 ../src/typechecker.sml
 ../src/print_env.sml
+../../ir/src/translate.sig
+../../ir/src/translate.sml
+../../ir/src/frame.sig
+../../ir/src/mipsframe.sml
+../../ir/src/temp.sig
+../../ir/src/temp.sml
+../../ir/src/tree.sml
+../../ir/src/printtree.sml
+../../logger/src/logger.sig
+../../logger/src/logger.sml
 semanttest.sml
 

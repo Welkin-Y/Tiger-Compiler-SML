@@ -57,7 +57,7 @@ test_semantic_book_resources:
 test_ir_book_resources:
   stage: test
   script:
-      - cd ./frame_ir/test/
+      - cd ./ir/test/
       - ./pipeline_test.py ../../examples/
 
     #deploy1:
