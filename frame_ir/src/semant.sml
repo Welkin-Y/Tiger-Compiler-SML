@@ -370,46 +370,37 @@ struct
             | A.FunctionDec fundecs => (*recursively check the signature of each function*)
                 let 
                     val fundecGroup : (Env.enventry Symbol.table) = Symbol.empty
-                    val {venv=newvenv, tenv=newtenv, fundecGroup=_} = foldl (fn (fundec, {venv, tenv, fundecGroup}) => 
+                    val {venv=newvenv, tenv=newtenv, ...} = foldl (fn (fundec, {venv, tenv, fundecGroup}) => 
                                 transFunDec (venv, tenv, fundec, loopDepth, fundecGroup, level)
                         ) {venv=venv, tenv=tenv, fundecGroup=fundecGroup} fundecs
                     (*recursively check the body of each function*)
                     val _ = L.log L.DEBUG "begin to check body of each function"
+                    fun paramTmpVenv (params, newvenv, funlevel) = 
+                            let fun helper (param, venv) = 
+                                        let
+                                            val {name, escape, typ, pos} = param
+                                            val ty = case Symbol.look (tenv, typ) of SOME ty => ty
+                                                | NONE => TC.undefinedTypeErr pos typ     
+                                        in
+                                            (* TODO: how to add args into function's level's frame? *)
+                                            (Symbol.enter (venv, name, Env.VarEntry {access=TL.allocLocal funlevel (!escape), ty=ty}))
+                                        end         
+                            in foldl helper newvenv params end
 
                     val expfuncs = foldr (fn (fundec :Absyn.fundec, expfuncs) => (
                                     let 
                                         val {name, params, result, body, pos} = fundec
-                                        val funentry = case Symbol.look (newvenv, name) of
+                                        (* get the def level of function *)
+                                        val Env.FunEntry{level=funlevel, ...} = case Symbol.look (newvenv, name) of
                                                 NONE => TC.undefinedNameErr pos name
                                             | SOME entry => entry
-                                        (* get the def level of function *)
-                                        val {level=funlevel, ...} = case funentry of
-                                                Env.FunEntry record => record
-                                            | _ => (ErrorMsg.error pos ("TypeError: not a function " ^ Symbol.name name); raise ErrorMsg.Error)
                                         (* add all args var into a tmp venv to check body*)
-                                        val tmpvenv = foldl (fn (param, venv) => 
-                                                    let
-                                                        val {name, escape, typ, pos} = param
-                                                        val ty = case Symbol.look (tenv, typ) of
-                                                                NONE => TC.undefinedTypeErr pos typ
-                                                            | SOME ty => ty
-                                                    in
-                                                        (* TODO: how to add args into function's level's frame? *)
-                                                        (Symbol.enter (venv, name, Env.VarEntry {access=TL.allocLocal funlevel (!escape), ty=ty}))
-                                                    end) newvenv params
+                                        val tmpvenv = paramTmpVenv (params, newvenv, funlevel)
                                         val {exp=bodyexp, ty=typ} = transExp (tmpvenv, newtenv, body, 0, funlevel)
                                         (*check if expty consistent with the delared function ty*)
                                         val () = L.log L.DEBUG ("func body typ: " ^ T.toString typ)
                                     in
-                                        (case result of
-                                                NONE => TC.checkIsType pos (typ, T.UNIT)
-                                            | SOME (sym, _) => let 
-                                                    val symty = case Symbol.look (newtenv, sym) of
-                                                            NONE => TC.undefinedTypeErr pos sym
-                                                        | SOME ty => ty
-                                                in
-                                                    TC.checkSameType pos (typ, symty)
-                                                end);
+                                        TC.checkFunc(newtenv, result, typ, pos);
                                         TL.transFunDec(funlevel, bodyexp)::expfuncs
                                     end)) [] fundecs
                 in
@@ -479,10 +470,10 @@ struct
                     | SOME _ => (ErrorMsg.error pos ("TypeError: reused function name " ^ Symbol.name name ^ "in same group"); raise ErrorMsg.Error)
                 val newLabel = Temp.newlabel()
                 val newLevel = TL.newLevel({parent=level, name=newLabel, formals=params_escapes})
-                val newVenv = Symbol.enter (venv, name, Env.FunEntry {level=newLevel, label=newLabel, formals=params_ty, result=res_ty}) 
-                val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {level=newLevel, label=newLabel, formals=params_ty, result=res_ty})
-                (* val newVenv = Symbol.enter (venv, name, Env.FunEntry {level=level, label=newLabel, formals=params_ty, result=res_ty}) 
-                val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {level=level, label=newLabel, formals=params_ty, result=res_ty}) *)
+                (* val newVenv = Symbol.enter (venv, name, Env.FunEntry {level=newLevel, label=newLabel, formals=params_ty, result=res_ty}) 
+                val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {level=newLevel, label=newLabel, formals=params_ty, result=res_ty}) *)
+                val newVenv = Symbol.enter (venv, name, Env.FunEntry {level=level, label=newLabel, formals=params_ty, result=res_ty}) 
+                val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {level=level, label=newLabel, formals=params_ty, result=res_ty})
                 (* TODO: why newLevel cause error? *)
             in
                 PrintEnv.printEnv (newVenv, tenv);
@@ -490,7 +481,7 @@ struct
             end
     and transProg (exp: A.exp) = 
             let 
-                val () = L.log L.INFO "Start to trans program"
+                val () = L.log L.INFO "Start to translate program"
                 val venv = Env.base_venv
                 val tenv = Env.base_tenv 
                 val startLevel = TL.newLevel({parent = TL.outermost, name = Temp.namedlabel "main", formals = []})

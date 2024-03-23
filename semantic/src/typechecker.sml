@@ -83,5 +83,14 @@ struct
 
         fun checkReuse ({name, ty, pos}, table) = case Symbol.look (table, name) of NONE => Symbol.enter (table, name, ())
                         | SOME _ => (reusedNameErr pos name; table)
+
+        fun checkFunc (newtenv, result, typ, pos) = case result of NONE => checkIsType pos (typ, T.UNIT)
+                        | SOME (sym, _) => 
+                                let 
+                                        val symty = case Symbol.look (newtenv, sym) of SOME ty => ty
+                                                | NONE => undefinedTypeErr pos sym
+                                in
+                                        checkSameType pos (typ, symty)
+                                end
                 
 end
