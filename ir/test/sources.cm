@@ -17,11 +17,10 @@ $/ml-yacc-lib.cm
 ../../semantic/src/types.sml
 ../../semantic/src/typechecker.sml
 ../../semantic/src/print_env.sml
-../../semantic/test/semanttest.sml
-../src/env.sig
-../src/env.sml
-../src/semant.sig
-../src/semant.sml
+../../semantic/src/env.sig
+../../semantic/src/env.sml
+../../semantic/src/semant.sig
+../../semantic/src/semant.sml
 ../src/temp.sig
 ../src/temp.sml
 ../src/frame.sig
@@ -32,3 +31,4 @@ $/ml-yacc-lib.cm
 ../src/printtree.sml
 ../../logger/src/logger.sig
 ../../logger/src/logger.sml
+../../insel/src/assem.sml

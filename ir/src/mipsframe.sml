@@ -52,12 +52,12 @@ struct
     ]
 
   val tempMap: register Temp.Table.table = 
-  let 
-    fun helper ((regtmp, regname), table) = Temp.Table.enter(table, regtmp, regname)
-    val regList = ListPair.zip(specialregs @ argregs @ callersaves @ calleesaves, registers)
-  in
-    foldl helper Temp.Table.empty regList
-  end
+    let 
+      fun helper ((regtmp, regname), table) = Temp.Table.enter(table, regtmp, regname)
+      val regList = ListPair.zip(specialregs @ argregs @ callersaves @ calleesaves, registers)
+    in
+      foldl helper Temp.Table.empty regList
+    end
   
   val wordSize = 4
   val numArgReg = List.length(argregs)
@@ -108,6 +108,18 @@ struct
   (* Tree.DATASTRING(label, str) *)
 
   fun procEntryExit1 (frm: frame, body: Tree.stm) = body
+
+  fun procEntryExit2(frame, body) = body @
+      [Assem.OPER{
+          assem="",
+          src =[ZERO, RA, SP] @ calleesaves,
+          dst=[], jump=SOME[]
+        }]
+
+  fun procEntryExit3({name, formals, inFrameSize}:frame, body) =
+      {prolog = "PROCEDURE " ^ Symbol.name name ^ "\n", 
+        body = body, 
+        epilog = "END " ^ Symbol.name name ^ "\n"}
 
   fun exp (access: access) (addr: Tree.exp) : Tree.exp = case access of
         InFrame(offset) => Tree.READ(Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset)))
