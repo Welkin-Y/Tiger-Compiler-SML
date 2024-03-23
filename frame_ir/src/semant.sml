@@ -417,24 +417,21 @@ struct
                                     | _ => (ErrorMsg.error p ("TypeError: not a variable " ^ Symbol.name n); raise ErrorMsg.Error))
                     | A.FieldVar (var, n, p) =>
                         let
-                            val {exp=_, ty=ty} = transVar (venv, tenv, var, loopDepth, level)
-                            val genfun = case ty of
-                                    T.RECORD genfun => genfun
+                            val {exp=varExp, ty=ty} = transVar (venv, tenv, var, loopDepth, level)
+                            val (fields, _, _) = case ty of T.RECORD genfun => genfun ()
                                 | _ => (ErrorMsg.error p ("TypeError: not a record type " ^ T.toString ty); raise ErrorMsg.Error)
-                            val (fields, _, _) = genfun ()
                         in
-                            case List.find (fn (name, _) => name = n) fields of
-                                NONE => TC.undefinedNameErr p n
-                            | SOME (_, ty) => {exp=TL.NOT_IMPLEMENTED, ty=ty}
+                            case List.findi (fn (i,(name, _)) => name = n) fields of NONE => TC.undefinedNameErr p n 
+                            | SOME (idx, (_, ty)) => {exp=TL.fieldVar(varExp, idx), ty=ty}
                         end
                     | A.SubscriptVar (var, exp, p) => 
                         let
-                            val {exp=_, ty=ty} = transVar (venv, tenv, var, loopDepth, level)
-                            val {exp=_, ty=tyexp} = transExp (venv, tenv, exp, loopDepth, level)
+                            val {exp=arrExp, ty=ty} = transVar (venv, tenv, var, loopDepth, level)
+                            val {exp=idxExp, ty=tyexp} = transExp (venv, tenv, exp, loopDepth, level)
                         in
                             TC.checkIsType p (tyexp, T.INT);
                             case ty of 
-                                T.ARRAY (ty', _) => {exp=TL.NOT_IMPLEMENTED, ty=ty'}
+                                T.ARRAY (ty', _) => {exp=TL.subscriptVar(arrExp,idxExp), ty=ty'}
                             | _ => (ErrorMsg.error p ("TypeError: not an array type " ^ T.toString ty); raise ErrorMsg.Error)
                         end
             in
