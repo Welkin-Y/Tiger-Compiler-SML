@@ -490,9 +490,9 @@ struct
                 val startLevel = TL.newLevel({parent = TL.outermost, name = Temp.namedlabel "main", formals = []})
                 val {exp=trexp, ty=_} = transExp (venv, tenv, exp, 0,  startLevel, NONE)
             in
-                Printtree.printtree(TextIO.stdOut, TL.unNx trexp);
+                (* Printtree.printtree(TextIO.stdOut, TL.unNx trexp);
                 (* PrintEnv.printEnv (venv, tenv); *)
-                print "\nSemantic Analysis Succeed\n";
+                print "\nSemantic Analysis Succeed\n"; *)
                 TL.getResult()
             end
 end

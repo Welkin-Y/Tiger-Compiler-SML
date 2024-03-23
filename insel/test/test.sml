@@ -1,2 +1,6 @@
 CM.make "sources.cm";
-Main.compile "example.tig";
+let 
+    val _ = Logger.setLogLevel Logger.DEBUG
+in
+    Main.compile "example.tig"
+end;
