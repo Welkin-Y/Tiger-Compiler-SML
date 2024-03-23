@@ -123,23 +123,61 @@ struct
             let 
                 val indexReg = Temp.newtemp()
                 val baseReg = Temp.newtemp()
+                val errorLabel = Temp.newlabel()
+                val succeeLabel = Temp.newlabel()
+                val nextCheckLabel = Temp.newlabel()
             in 
-                Ex(Tr.ESEQ(seq[
+                
+                Ex(Tr.ESEQ(
+                        seq[
                             Tr.MOVE(Tr.TEMP indexReg, unEx index),
-                            Tr.MOVE(Tr.TEMP baseReg, unEx arr)],
-                        rdMem (
-                            Tr.BINOP(
-                                Tr.PLUS, 
-                                rdMem(
-                                    rdTmp baseReg
-                                ), 
+                            Tr.MOVE(Tr.TEMP baseReg, unEx arr),
+                            (*check bound*)
+                            Tr.CJUMP(Tr.GT, Tr.CONST 0, 
+                                Tr.READ(Tr.MEM(
+                                        Tr.BINOP(
+                                            Tr.MINUS,
+                                            rdMem(
+                                                rdTmp baseReg
+                                            ),
+                                            Tr.CONST F.wordSize
+                                            )
+                                    )),
+                                errorLabel,
+                                nextCheckLabel
+                                ),
+                            Tr.LABEL nextCheckLabel,
+                            Tr.CJUMP(Tr.LT, rdTmp indexReg, 
+                                Tr.READ(Tr.MEM(
+                                        Tr.BINOP(
+                                            Tr.MINUS,
+                                            rdMem(
+                                                rdTmp baseReg
+                                            ),
+                                            Tr.CONST F.wordSize
+                                            )
+                                    )),
+                                errorLabel,
+                                succeeLabel
+                                ),
+                        
+                            Tr.LABEL errorLabel,
+                            Tr.EXP(F.externalCall("exit", [Tr.CONST 1])),
+                            Tr.LABEL succeeLabel
+                            (*indexing the array *)
+                            
+                        ], rdMem (
                                 Tr.BINOP(
-                                    Tr.MUL, 
-                                    rdTmp indexReg, 
-                                    Tr.CONST F.wordSize)
-                                )
-                        )
-                        ))
+                                    Tr.PLUS, 
+                                    rdMem(
+                                        rdTmp baseReg
+                                    ), 
+                                    Tr.BINOP(
+                                        Tr.MUL, 
+                                        rdTmp indexReg, 
+                                        Tr.CONST F.wordSize)
+                                    )
+                            )))
             end
     fun transVarDec (access, init) = 
             let 
@@ -215,7 +253,7 @@ struct
     fun transRelop(oper, e1, e2) = Cx(fn (t, f) => Tr.CJUMP(Tr.getRelop oper, unEx e1, unEx e2, t, f))
 
     fun transBreak(SOME(label)) = Nx(Tr.JUMP(Tr.NAME label, [label]))
-    | transBreak(NONE) = Nx(Tr.EXP(Tr.CONST 0)) (*placeholder break label. even if there are no break in exp, we still need to pass a label*)
+        | transBreak(NONE) = Nx(Tr.EXP(Tr.CONST 0)) (*placeholder break label. even if there are no break in exp, we still need to pass a label*)
 
     fun transAssign(var, exp) = Nx(Tr.MOVE(unLx var, unEx exp)) 
 
@@ -242,7 +280,7 @@ struct
                         posttest(bodylabel, endlabel),
                         Tr.LABEL endlabel,
                         Tr.LABEL breakLabel]
-                    )
+                )
             end
     
     fun transWhile(cond, body, breakLabel) = transLoop(cond, body, breakLabel)
@@ -261,42 +299,42 @@ struct
         | transSeq (e::lst) = Ex(Tr.ESEQ(seq(map unNx (rev lst)), unEx e)) 
 
     fun transRecord(explist) =
-        let
-            val len = length explist
-            val res = Temp.newtemp()
-            val (expseq, _) = foldr (fn (exp, (expseq, index)) => 
-                (transAssign(fieldVar(Ex (rdTmp res), (len - index - 1) * F.wordSize), exp)::expseq, index + 1)
-            ) ([], 0) explist
-            val malloc = Tr.MOVE(Tr.TEMP res, F.externalCall("malloc", [Tr.CONST (len * F.wordSize)]))
-        in
-            Ex(Tr.ESEQ(Tr.SEQ(malloc, seq (map unNx expseq)), rdTmp res))
-        end
+            let
+                val len = length explist
+                val res = Temp.newtemp()
+                val (expseq, _) = foldr (fn (exp, (expseq, index)) => 
+                            (transAssign(fieldVar(Ex (rdTmp res), (len - index - 1) * F.wordSize), exp)::expseq, index + 1)
+                    ) ([], 0) explist
+                val malloc = Tr.MOVE(Tr.TEMP res, F.externalCall("malloc", [Tr.CONST (len * F.wordSize)]))
+            in
+                Ex(Tr.ESEQ(Tr.SEQ(malloc, seq (map unNx expseq)), rdTmp res))
+            end
     
     fun transArray(size, init) = 
-        let
-            val size = unEx size
-            val init = unEx init
-            val res = Temp.newtemp()
-            val initArr = Tr.MOVE(Tr.TEMP res, F.externalCall("initArray", [size, init]))
-        in
-            Ex(Tr.ESEQ(initArr, rdTmp res))
-        end
+            let
+                val size = unEx size
+                val init = unEx init
+                val res = Temp.newtemp()
+                val initArr = Tr.MOVE(Tr.TEMP res, F.externalCall("initArray", [size, init]))
+            in
+                Ex(Tr.ESEQ(seq[initArr, Tr.MOVE(Tr.MEM(Tr.BINOP(Tr.MINUS, rdTmp res, Tr.CONST F.wordSize)), size)], rdTmp res))
+            end
     
     fun transFunDec (level, body) = 
-        let
-            val {frame, ...} = case level of LEVEL level => level | ROOT => raise ErrorMsg.impossible "transFunDec: no frame"
-            val funlabel = F.name frame
-            val endlabel = Temp.newlabel()
-            (* dummy version *)
-            val prologue = Tr.SEQ(Tr.JUMP(Tr.NAME endlabel, [endlabel]), Tr.LABEL funlabel)
-            val body = unEx body
-            val epilogue = Tr.SEQ(Tr.MOVE(Tr.TEMP F.RV, body), Tr.LABEL endlabel)
-        in
-            Nx(Tr.SEQ(prologue, epilogue))
-        end
+            let
+                val {frame, ...} = case level of LEVEL level => level | ROOT => raise ErrorMsg.impossible "transFunDec: no frame"
+                val funlabel = F.name frame
+                val endlabel = Temp.newlabel()
+                (* dummy version *)
+                val prologue = Tr.SEQ(Tr.JUMP(Tr.NAME endlabel, [endlabel]), Tr.LABEL funlabel)
+                val body = unEx body
+                val epilogue = Tr.SEQ(Tr.MOVE(Tr.TEMP F.RV, body), Tr.LABEL endlabel)
+            in
+                Nx(Tr.SEQ(prologue, epilogue))
+            end
 
     fun transFunDecs (expfuncs) = 
-        Nx(seq(map unNx expfuncs))
+            Nx(seq(map unNx expfuncs))
     
 
     fun getResult() = !fragments
