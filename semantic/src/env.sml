@@ -2,7 +2,7 @@ structure Env : ENV =
 struct
 type access = unit
     (* to be implemented *)
-
+structure T = Types
 datatype enventry = VarEntry of {ty: T.ty}
                     | FunEntry of {formals: T.ty list, result: T.ty}
 val base_tenv = let 

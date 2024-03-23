@@ -1,10 +1,11 @@
-
 (* dummy Translate *)
 structure Translate = struct type exp = unit end
-structure TC = TypeChecker
+
 (*TODO: recursive name type e.g. type a = b; type b = int*)
 structure Semant :> SEMANT =
 struct
+    structure TC = TypeChecker
+    structure T = Types
     type tyvenv = Env.enventry Symbol.table
     type tytenv = T.ty Symbol.table
     type expty = {exp: Translate.exp, ty: T.ty}

@@ -11,6 +11,7 @@ Distributor ID: Ubuntu
 Description:    Ubuntu 22.04.3 LTS  
 Release:        22.04  
 Codename:       jammy  
+SML version:    Standard ML of New Jersey (64-bit) v110.99.5
 ```
 
 ## Dependencies
@@ -31,23 +32,29 @@ Our codebase is organized as follows:
 ```
 553-compiler/
 ├── examples
-│   ├── negative
-│   └── positive
+│   ├── negative
+│   └── positive
+├── frame_ir
+│   ├── src
+│   └── test
 ├── lexer
-│   ├── resources
-│   ├── src
-│   └── test
+│   ├── resources
+│   ├── src
+│   └── test
+├── logger
+│   ├── src
+│   └── test
 ├── parser
-│   ├── resources
-│   │   ├── tmp
-│   │   └── truth
-│   ├── src
-│   └── test
+│   ├── resources
+│   │   ├── tmp
+│   │   └── truth
+│   ├── src
+│   └── test
 └── semantic
     ├── resources
-    │   ├── negative
-    │   ├── positive
-    │   └── tmp
+    │   ├── negative
+    │   ├── positive
+    │   └── tmp
     ├── src
     └── test
 ```
@@ -127,3 +134,13 @@ We implemented our semantic analysis body in `src/semant.sml` and tested it with
 
 We implemented our findescape function in `parser/src/findescape.sml` to analyze the variable escaping over the absract syntax tree.
 
+
+## IR Translation
+**note**: We uses **1 late days** for this phase. Also we noticed that we forgot to mention the bonus of the Semantic Analysis in the previous phase. The implemnted bonus list can be found in the next section. Request for regrading is appreciated.
+
+We implemented our semantic analysis body in `src/translate.sml` and tested it with the self-defined and provided test cases. 
+
+The find escape function in the parser phase is used to analyze the variable escaping over the absract syntax tree.
+## Implemented Bonus
+- **Semantic Analysis**: We implemented drew's version of Record. We use the functional record to achive the recursive definition
+- **IR Translation**: We implemented the drew's version of the Tree data structures according to the lecture to differentiate loc from exp. Increase the robustness of the code and make it easier to understand.
