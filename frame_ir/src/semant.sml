@@ -394,9 +394,11 @@ struct
                                     let 
                                         val {name, params, result, body, pos} = fundec
                                         (* get the def level of function *)
-                                        val Env.FunEntry{level=funlevel, ...} = case Symbol.look (newvenv, name) of
+                                        val funentry = case Symbol.look (newvenv, name) of
                                                 NONE => TC.undefinedNameErr pos name
                                             | SOME entry => entry
+                                        val {level=funlevel, ...} = case funentry of Env.FunEntry record => record
+                                        | _ => (ErrorMsg.error pos ("TypeError: not a function " ^ Symbol.name name); raise ErrorMsg.Error)
                                         (* add all args var into a tmp venv to check body*)
                                         val tmpvenv = paramTmpVenv (params, newvenv, funlevel)
                                         val {exp=bodyexp, ty=typ} = transExp (tmpvenv, newtenv, body, 0, funlevel, breakLabel)
