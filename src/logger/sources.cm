@@ -3,5 +3,5 @@ Group is
 $/basis.cm
 $/smlnj-lib.cm
 
-../src/logger.sig
-../src/logger.sml
+logger.sig
+logger.sml

@@ -12,7 +12,7 @@ struct
 			| A.FieldVar(var, _, _) => traverseVar(env, d, var)
 			| A.SubscriptVar(var, exp, _) => (traverseExp(env, d, exp);traverseVar(env, d, var))
 
-	and traverseExp(env:escEnv, d:depth, s:A.exp): unit = 
+	and traverseExp(env: escEnv, d: depth, s: A.exp): unit = 
 			case s of A.VarExp(var) => traverseVar(env, d, var)
 			| A.NilExp => ()
 			| A.IntExp(_) => ()
@@ -43,7 +43,7 @@ struct
 			| A.ArrayExp({typ, size, init, pos}) => (traverseExp(env, d, size); traverseExp(env, d, init))
 
 		(* Whenever a variable or formal-parameter declaration is found at static function-nesting depth d then the bool ref r is assigned false ; the binding a -> (d, r) is entered into the env. *)
-	and traverseDecs(env:escEnv, d:depth, s: Absyn.dec list): escEnv =
+	and traverseDecs(env: escEnv, d: depth, s: Absyn.dec list): escEnv =
 			case s of nil => env
 				(* var: {name: symbol, escape: bool ref, typ: (symbol * pos) option, init: exp, pos: pos} *)
 			| A.VarDec(var)::l => (
