@@ -16,28 +16,29 @@ struct
         fun emit x= ilist := x :: !ilist
         and result(gen) = let val t = Temp.newtemp() in gen t; t end
         and munchStm(T.SEQ(a,b)) = (munchStm a; munchStm b)
-        (* store exp to loc *)
+          (* store exp to loc *)
           | munchStm(T.MOVE(T.MEM(T.BINOP(T.PLUS, e1, T.CONST i)), e2)) = 
-            emit(A.OPER{assem="sw 's1,  " ^ Int.toString(i) ^ "('s0)\n",
+            emit(A.OPER{assem="sw\t" ^ "'s1,\t" ^ Int.toString(i) ^ "('s0)\n",
                 src=[munchExp e1, munchExp e2], 
                 dst=[],jump=NONE})
           | munchStm(T.MOVE(T.MEM(T.BINOP(T.PLUS, T.CONST i, e1)),e2)) =
-            emit(A.OPER{assem="sw 's1,  " ^ Int.toString(i) ^ "('s0)\n",
+            emit(A.OPER{assem="sw\t" ^ "'s1,\t" ^ Int.toString(i) ^ "('s0)\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[],jump=NONE})
           | munchStm(T.MOVE(T.MEM(e1), T.READ(T.MEM(e2)))) =
-            emit(A.OPER{assem="lw t0, 0('s1)\n" ^ "sw t0, 0('s0)\n",
+            emit(A.OPER{assem="lw\t" ^ "t0,\t" ^ "0('s1)\n" ^ 
+                "sw\t" ^  "t0,\t" ^ "0('s0)\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[],jump=NONE})
           | munchStm(T.MOVE(T.MEM(T.CONST i), e2)) =
-            emit(A.OPER{assem="li t0  " ^ Int.toString(i) ^"\n" ^ "sw 's1,  0(t0)\n",
+            emit(A.OPER{assem="sw\t" ^ "'s1,\t" ^ Int.toString(i) ^ "(r0)\n",
                 src=[munchExp e2], dst=[],jump=NONE})
           | munchStm(T.MOVE(T.MEM(e1), e2)) =
-            emit(A.OPER{assem="sw 's1,  0('s0)\n",
+            emit(A.OPER{assem="sw\t" ^ "'s1,\t" ^ "0('s0)\n",
                 src=[munchExp e1, munchExp e2],
                 dst= [] ,jump=NONE})
           | munchStm(T.MOVE(T.TEMP i, e2) ) =
-            emit(A.OPER{assem="li 'd0,  's0\n",
+            emit(A.OPER{assem="li\t" ^ "'d0,\t" ^ "'s0\n",
                 src=[munchExp e2],
                 dst=[i],jump=NONE})
           | munchStm(T.LABEL lab) =
@@ -86,28 +87,28 @@ struct
             emit(A.OPER{assem="IF 's0 >= 's1 JUMP 'j0\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
-          | munchStm(T.EXP(T.READ(loc))) = munchLoc loc
           | munchStm (T.EXP e) = (munchExp e; ())
           | munchStm s = (
-            print "FATAL: Cannot convert:\n ";
-            Printtree.printtree(TextIO.stdOut, s);raise Fail "MipsGen: munchStm"
-          )
+              print "FATAL: Cannot convert:\n ";
+              Printtree.printtree(TextIO.stdOut, s);raise Fail "MipsGen: munchStm"
+            )
 
-        and munchExp(T.READ(T.MEM(T.BINOP(T.PLUS, e1, T.CONST i)))) =
+        and  munchExp(T.READ(T.TEMP t)) = t
+          | munchExp(T.READ(T.MEM(T.BINOP(T.PLUS, e1, T.CONST i)))) =
             result(fn r => emit(A.OPER
-                  {assem="LOAD 'd0 <- M['s0+" ^ Int.toString(i) ^ "]\n",
+                  {assem="lw\t" ^  "'d0,\t" ^ Int.toString(i) ^ "('s0)\n",
                     src =[munchExp e1], dst=[r], jump=NONE}))
           | munchExp(T.READ(T.MEM(T.BINOP(T.PLUS,T.CONST i,e1)))) =
             result(fn r => emit(A.OPER
-                  {assem="LOAD 'd0 <- M['s0+" ^ Int.toString(i) ^ "]\n",
+                  {assem="lw\t" ^  "'d0,\t" ^ Int.toString(i) ^ "('s0)\n",
                     src=[munchExp e1], dst=[r], jump=NONE}))
           | munchExp(T.READ(T.MEM(T.CONST i))) =
             result(fn r => emit(A.OPER
-                  {assem="LOAD 'd0 <- M[r0+" ^ Int.toString(i) ^ "]\n",
+                  {assem="lw\t" ^  "'d0,\t" ^Int.toString(i) ^ "(r0)\n",
                     src=[], dst=[r], jump=NONE}))
           | munchExp(T.READ(T.MEM(e1))) =
             result(fn r => emit(A.OPER
-                  {assem="LOAD 'd0 <- M['s0+0]\n",
+                  {assem="lw\t" ^  "'d0,\t" ^ "0('s0)\n",
                     src=[munchExp e1], dst=[r], jump=NONE}))
           | munchExp(T.BINOP(T.PLUS,e1,T.CONST i)) =
             result(fn r => emit(A.OPER
@@ -172,40 +173,21 @@ struct
                     src=[munchExp e1, munchExp e2], dst=[r],
                     jump=NONE}))
           
-          | munchExp(T.READ(T.TEMP t)) = t
-          | munchExp(T.CALL(e,args)) = 
+          
+          | munchExp(T.CALL(e,args)) = (* TODO: save load staffs here *)
             result(fn r => emit(A.OPER
-                  {assem="CALL 's0\n",
+                  {assem="jal\t" ^ "'s0\n",
                     src=munchExp e::munchArgs(0,args),
                     dst=calldefs,
                     jump=NONE}))
+          (* load addr *)
           | munchExp(T.NAME lab) = result(fn r => emit(A.OPER
-                  {assem="LOAD 'd0 <- " ^ (Symbol.name lab) ^ "\n",
+                  {assem="la\t" ^ "'d0\t" ^ (Symbol.name lab) ^ "\n",
                     src=[], dst=[r], jump=NONE}))
           | munchExp e = (
-            print "FATAL: Cannot convert:\n ";
-            Printtree.printtree(TextIO.stdOut, T.EXP e);raise Fail "MipsGen: munchExp"
-          )
-
-        and munchLoc(T.TEMP t) = emit(A.OPER
-                  {assem="SAVE 'd0 <- 's0\n",
-                    src=[t], dst=[], jump=NONE})
-          | munchLoc(T.MEM(T.BINOP(T.PLUS, e1, T.CONST i))) =
-            emit(A.OPER
-                  {assem="SAVE 'd0 <- M['s0+" ^ Int.toString(i) ^ "]\n",
-                    src=[munchExp e1], dst=[], jump=NONE})
-          | munchLoc(T.MEM(T.BINOP(T.PLUS, T.CONST i, e1))) =
-            emit(A.OPER
-                  {assem="SAVE 'd0 <- M['s0+" ^ Int.toString(i) ^ "]\n",
-                    src=[munchExp e1], dst=[], jump=NONE})
-          | munchLoc(T.MEM(T.CONST i)) =
-            emit(A.OPER
-                  {assem="SAVE 'd0 <- M[r0+" ^ Int.toString(i) ^ "]\n",
-                    src=[], dst=[], jump=NONE})
-          | munchLoc(T.MEM(e1)) =
-            emit(A.OPER
-                  {assem="SAVE 'd0 <- M['s0+0]\n",
-                    src=[munchExp e1], dst=[], jump=NONE})
+              print "FATAL: Cannot convert:\n ";
+              Printtree.printtree(TextIO.stdOut, T.EXP e);raise Fail "MipsGen: munchExp"
+            )
 
         and munchArgs(i,[]) = []
           | munchArgs(i,e::es) = munchExp(e)::munchArgs(i+1,es)
