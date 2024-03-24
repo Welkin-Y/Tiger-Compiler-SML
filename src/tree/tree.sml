@@ -19,7 +19,6 @@ sig
 
   and loc = MEM of exp
   | TEMP of Temp.temp
-  | LSEQ of stm * loc
 
 
   and binop = PLUS | MINUS | MUL | DIV 
@@ -56,7 +55,6 @@ struct
 
   and loc = TEMP of Temp.temp 
   | MEM of exp 
-  | LSEQ of stm * loc
   
   and binop = PLUS | MINUS | MUL | DIV 
   | AND | OR | LSHIFT | RSHIFT | ARSHIFT | XOR

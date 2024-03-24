@@ -85,8 +85,8 @@ struct
                         reorder_stm([b],fn[b]=>T.MOVE(T.TEMP t,b))
                     | do_stm(T.MOVE(T.MEM e,b)) = 
                         reorder_stm([e,b],fn[e,b]=>T.MOVE(T.MEM e,b))
-                    | do_stm(T.MOVE(T.LSEQ(s,l),b)) = 
-                        do_stm(T.SEQ(s,T.MOVE(l,b)))
+                    (* | do_stm(T.MOVE(T.ESEQ(s,l),b)) = 
+                        do_stm(T.SEQ(s,T.MOVE(l,b))) *)
                     | do_stm(T.EXP(T.CALL(e,el))) = 
                         reorder_stm(e::el,fn e::el => T.EXP(T.CALL(e,el)))
                     | do_stm(T.EXP e) = 

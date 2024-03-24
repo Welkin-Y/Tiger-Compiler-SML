@@ -35,8 +35,6 @@ fun printtree (outstream, s0) =
 
   and loc(T.TEMP t, d) = (indent d; say "TEMP t"; say(Int.toString t))
     | loc(T.MEM(e), d) = (indent d; sayln "MEM("; exp(e,d+1); say ")")
-    | loc(T.LSEQ(s,l), d) = (indent d; sayln "LSEQ("; stm(s,d+1); sayln ",";
-        loc(l,d+1); say ")")
 
   and binop T.PLUS = say "PLUS"
     | binop T.MINUS = say "MINUS"
