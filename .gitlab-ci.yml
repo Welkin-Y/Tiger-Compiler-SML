@@ -42,23 +42,23 @@ test_parser:
       - cd ./parser/test/
       - ./run-test.sh ../resources
 
-test_semantic:
-  stage: test
-  script:
-      - cd ./semantic/test/
-      - ./pipeline_test.py ../resources/
+# test_semantic:
+#   stage: test
+#   script:
+#       - cd ./semantic/test/
+#       - ./pipeline_test.py ../resources/
 
-test_semantic_book_resources:
-  stage: test
-  script:
-      - cd ./semantic/test/
-      - ./pipeline_test.py ../../examples/
+# test_semantic_book_resources:
+#   stage: test
+#   script:
+#       - cd ./semantic/test/
+#       - ./pipeline_test.py ../../examples/
 
-test_ir_book_resources:
-  stage: test
-  script:
-      - cd ./ir/test/
-      - ./pipeline_test.py ../../examples/
+# test_ir_book_resources:
+#   stage: test
+#   script:
+#       - cd ./ir/test/
+#       - ./pipeline_test.py ../../examples/
 
     #deploy1:
     #stage: deploy

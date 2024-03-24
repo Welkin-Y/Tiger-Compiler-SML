@@ -1,9 +1,7 @@
 (* Called by Semant, Generate Tree represent IR*)
-structure Translate : TRANSLATE =
+functor Translate (F: FRAME) : TRANSLATE =
 struct
     structure Tr = Tree
-    structure Frame = MipsFrame
-    structure F = Frame
     structure L = Logger
     
     datatype level = ROOT 

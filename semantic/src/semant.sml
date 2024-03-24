@@ -1,14 +1,18 @@
-structure Semant :> SEMANT =
+functor Semant (Translate : TRANSLATE) : SEMANT =
 struct
-    
+    (* alias *)
     structure TL = Translate
     structure TC = TypeChecker
     structure L = Logger
     structure T = Types
+    structure Env = Env(Translate)
+    structure PrintEnv = PrintEnv(Env)
 
     type tyvenv = Env.enventry Symbol.table
     type tytenv = T.ty Symbol.table
     type expty = {exp: TL.exp, ty: T.ty}
+    type frag = TL.frag
+    
     
     
     fun transExp (venv : tyvenv, tenv: tytenv, exp: A.exp, loopDepth: int, level: TL.level, breakLabel: Temp.label option) = 

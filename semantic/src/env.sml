@@ -1,11 +1,12 @@
-structure Env : ENV = 
+functor Env (Translate: TRANSLATE): ENV = 
 struct
-type access = unit
+type access = Translate.access
+type level = Translate.level
     (* to be implemented *)
 structure T = Types
 
-datatype enventry = VarEntry of {access: Translate.access, ty: T.ty}
-                    | FunEntry of {level: Translate.level, label: Temp.label, formals: T.ty list, result: T.ty}
+datatype enventry = VarEntry of {access: access, ty: T.ty}
+                    | FunEntry of {level: level, label: Temp.label, formals: T.ty list, result: T.ty}
 val base_tenv = let 
                 val envmap : (T.ty Symbol.table) = Symbol.empty
                 val initlist = [(Symbol.symbol "int", Types.INT), 

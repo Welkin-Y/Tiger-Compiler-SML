@@ -1,4 +1,4 @@
-structure PrintEnv = 
+functor PrintEnv(Env: ENV) = 
 struct
     fun printEnv (venv, tenv) = let
         fun printVenv venv = Symbol.appi (fn (symbol, ventry) => print (Symbol.name symbol ^ ": " ^ Env.enventryToString ventry ^ "\n")) venv

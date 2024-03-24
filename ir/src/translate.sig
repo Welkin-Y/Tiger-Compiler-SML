@@ -2,6 +2,9 @@ signature TRANSLATE =
 sig
     type level
     type access (* not the same as Frame.access *)
+    type frag
+
+
     val outermost : level
     val newLevel : {parent: level, name: Temp.label,
             formals: bool list} -> level
@@ -21,8 +24,7 @@ sig
     val unLx: exp -> Tree.loc
 
     val procEntryExit : {level: level, body: exp} -> unit
-    structure Frame : FRAME
-    val getResult : unit -> Frame.frag list
+    val getResult : unit -> frag list
 
 
     
