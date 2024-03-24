@@ -19,7 +19,7 @@ structure Main = struct
         val stms = Canon.linearize body
         (* val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms *)
         val stms' = Canon.traceSchedule(Canon.basicBlocks stms)
-        val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms'
+        (* val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms' *)
         val instrs =  List.concat(map (Mips.codegen frame) stms') 
         val format0 = Assem.format(Temp.makestring)
       in  app (fn i => TextIO.output(out,format0 i)) instrs

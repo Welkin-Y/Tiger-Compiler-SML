@@ -31,7 +31,7 @@ fun printtree (outstream, s0) =
     | exp(T.CALL(e,el),d) = (indent d; sayln "CALL("; exp(e,d+1);
 			   app (fn a => (sayln ","; exp(a,d+2))) el;
 			   say ")")
-    | exp(T.READ(l),d) = (loc(l,d))
+    | exp(T.READ(l),d) = (indent d; say "READ("; loc(l,0); say ")")
 
   and loc(T.TEMP t, d) = (indent d; say "TEMP t"; say(Int.toString t))
     | loc(T.MEM(e), d) = (indent d; sayln "MEM("; exp(e,d+1); say ")")
