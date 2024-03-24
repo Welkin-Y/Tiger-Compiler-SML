@@ -9,7 +9,8 @@ $/ml-yacc-lib.cm
 ../../src/parser/errormsg.sml
 ../../src/parser/tiger.grm
 ../../src/parser/parse.sml
-../../src/parser/absyn.sml
+../../src/absyn/absyn.sml
+../../src/absyn/prabsyn.sml
 ../../src/parser/symbol.sml
 ../../src/table/table.sig
 ../../src/table/table.sml
@@ -28,7 +29,7 @@ $/ml-yacc-lib.cm
 ../../src/ir/temp.sig
 ../../src/ir/temp.sml
 ../../src/ir/frame.sig
-../../src/insel/canon.sml
+../../src/ir/canon.sml
 ../../src/insel/codegen.sig
 ../../src/insel/graph.sig
 ../../src/insel/graph.sml

@@ -9,7 +9,8 @@ lexer/tiger.lex
 parser/errormsg.sml
 parser/tiger.grm
 parser/parse.sml
-parser/absyn.sml
+abysn/absyn.sml
+abysn/prabsyn.sml
 parser/symbol.sml
 table/table.sig
 table/table.sml
@@ -28,7 +29,7 @@ ir/translate.sml
 ir/temp.sig
 ir/temp.sml
 ir/frame.sig
-insel/canon.sml
+ir/canon.sml
 insel/codegen.sig
 insel/graph.sig
 insel/graph.sml

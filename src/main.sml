@@ -17,7 +17,9 @@ structure Main = struct
       (* val _ = app (fn s => Printtree.printtree(out,s)) stms *)
       let
         val stms = Canon.linearize body
+        (* val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms *)
         val stms' = Canon.traceSchedule(Canon.basicBlocks stms)
+        val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms'
         val instrs =  List.concat(map (Mips.codegen frame) stms') 
         val format0 = Assem.format(Temp.makestring)
       in  app (fn i => TextIO.output(out,format0 i)) instrs
@@ -36,6 +38,7 @@ structure Main = struct
         val _ = L.log L.WARNING ("Start to compile" ^ filename)
         val absyn = Parse.parse filename
         val frags:Tr.frag list = (FindEscape.findEscape absyn; S.transProg absyn)
+        (* val _ = PrintAbsyn.print(TextIO.stdOut,absyn) *)
       in 
         withOpenFile (filename ^ ".s") (fn out => (app (emitproc out) frags))
       end
