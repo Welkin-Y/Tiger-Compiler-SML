@@ -9,6 +9,7 @@ sig
   val look  : 'a table * symbol -> 'a option
   val appi : ((symbol * 'a) -> unit) -> 'a table -> unit
   val remove : 'a table * symbol -> 'a table * 'a
+  val foldri : (symbol * 'a * 'b -> 'b) -> 'b -> 'a table -> 'b
 end
 
 structure Symbol :> SYMBOL =
@@ -44,4 +45,5 @@ struct
   val look = Table.look
   val appi = Table.appi
   val remove = Table.remove
+  val foldri = Table.foldri
 end

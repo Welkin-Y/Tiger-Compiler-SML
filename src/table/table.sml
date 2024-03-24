@@ -10,4 +10,5 @@ struct
   fun look(t, k) = RedBlackMap.find(t, k)
   fun appi f t = RedBlackMap.appi f t
   fun remove(t, k) = RedBlackMap.remove(t, k)
+  fun foldri f b t = RedBlackMap.foldri f b t
 end
