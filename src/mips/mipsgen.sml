@@ -265,7 +265,7 @@ struct
         and munchArgs(i, args) =
             let
               fun handleArg(arg, idx: int) =
-                  if idx < 4 then (* move first four arguments to $a0-$a3. *)
+                  if idx < List.length(F.argregs) then (* move first four arguments to $a0-$a3. *)
                     let
                       val dstReg = case Temp.Table.look(F.tempMap, List.nth(F.argregs, idx)) of SOME reg => reg 
                         | NONE => raise Fail "arg reg not found"
