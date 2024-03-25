@@ -4,6 +4,7 @@ sig
     val registers: register list
 
     val FP: Temp.temp
+    val SP: Temp.temp
 
     val specialregs: Temp.temp list
     val argregs: Temp.temp list

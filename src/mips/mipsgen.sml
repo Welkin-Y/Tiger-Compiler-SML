@@ -261,9 +261,28 @@ struct
           the instruction, so that liveness analysis (Chapter 10) 
           can see that their values need to be kept up to the point 
           of call. *)
-          (* TODO *)
-        and munchArgs(i,[]) = []
-          | munchArgs(i,e::es) = munchExp(e)::munchArgs(i+1,es)
+          (* TODO need check *)
+        and munchArgs(i, args) =
+            let
+              fun handleArg(arg, idx: int) =
+                  if idx < 4 then (* move first four arguments to $a0-$a3. *)
+                    let
+                      val dstReg = List.nth(F.argregs, idx)
+                      val srcExp = munchExp arg
+                    in
+                      emit(A.OPER{assem = "\tmove\t" ^"`d0, `s0\n", src = [srcExp], dst = [dstReg], jump = NONE})
+                    end
+                  else (* push others onto the stack. *)
+                    let
+                      val srcExp = munchExp arg
+                      val offset = (idx - 4) * F.wordSize 
+                    in
+                      emit(A.OPER{assem = "\tsw\t" ^ "`s0, " ^ Int.toString(offset) ^ "(`s1)\n", src = [srcExp, F.SP], dst = [], jump = NONE})
+                    end
+            in
+              ListPair.map handleArg (args,List.tabulate(List.length(args), fn x => x));
+              F.argregs
+            end
       in 
         munchStm irTree;
         rev(!ilist)
