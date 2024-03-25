@@ -225,7 +225,7 @@ struct
           in
             if T.equals(newtyp, tyinit) then 
               let 
-                val access = TL.allocLocal level (not (!escape))
+                val access = TL.allocLocal level (!escape)
                 val newVenv = Symbol.enter(venv, name, Env.VarEntry {access=access, ty=newtyp})
                 val _ = PrintEnv.printEnv (newVenv,tenv)
               in

@@ -1,7 +1,5 @@
 let
-    function add(a:int, b:int):int = a+b
-    var a : int := 0
+    var a := 1
 in
-    if a = add(114514, 1919810) then "114" else "514"
+    a + 777
 end
-

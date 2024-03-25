@@ -128,6 +128,11 @@ struct
         InFrame(offset) => Tree.READ(Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset)))
       | InReg(temp) => Tree.READ(Tree.TEMP temp)
 
+  fun loc (access: access) (addr : Tree.exp) : Tree.loc = case access of
+        InFrame(offset) => Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset))
+      | InReg(temp) => Tree.TEMP temp
+
+
 
 
 end

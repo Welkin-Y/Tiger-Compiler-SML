@@ -181,8 +181,9 @@ struct
             let 
                 val (level, acc) = access
                 val init = unEx init
+
             in
-                Nx(Tr.MOVE(Tr.MEM(F.exp (acc) (rdTmp F.FP)), init))
+                Nx(Tr.MOVE(F.loc (acc) (rdTmp F.FP), init))
             end
 
 
