@@ -5,13 +5,3 @@ in
     if a = add(114514, 1919810) then "114" else "514"
 end
 
-<<<<<<< HEAD
-/* if 1 = 1 then 114 else 514 */
-=======
-let 
-    function add(a:int, b:int):int = a+b
-    var a : int := 0
-in
-    if a = add(114514, 1919810) then "114" else "514"
-end
->>>>>>> 270a029 (update onFrame to NOT ESCAPE)
