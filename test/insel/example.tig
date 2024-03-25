@@ -1,6 +1,6 @@
 let
-    function add(a:int, b:int, c:int, d:int, e: int):int = a+b+c+d+e
-    function main():int = add(1,2,3,4,5)
+    function add(a:int, b:int):int = a+b
+    var a : int := 0
 in
-    main()
+    a = add(114514, 1919810)   
 end

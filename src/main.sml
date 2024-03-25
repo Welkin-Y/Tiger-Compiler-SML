@@ -17,10 +17,12 @@ structure Main = struct
       (* val _ = app (fn s => Printtree.printtree(out,s)) stms *)
       let
         val stms = Canon.linearize body
-        (* val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms *)
+        (* val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms
+        val (stmslist, _) = Canon.basicBlocks stms
+        val _ = app (fn x => (app (fn s => Printtree.printtree(TextIO.stdOut,s)) x; print "\n")) stmslist *)
         val stms' = Canon.traceSchedule(Canon.basicBlocks stms)
-        (* val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms' *)
-        val instrs =  List.concat(map (Mips.codegen frame) stms') 
+        val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms'
+        val instrs = List.concat(map (Mips.codegen frame) stms) 
         val format0 = Assem.format(Temp.makestring)
       in  app (fn i => TextIO.output(out,format0 i)) instrs
       end
