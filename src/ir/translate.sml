@@ -326,9 +326,9 @@ struct
                 (* dummy version *)
                 val prologue = Tr.SEQ(Tr.JUMP(Tr.NAME endlabel, [endlabel]), Tr.LABEL funlabel)
                 val body = unEx body
-                val epilogue = map (fn reg => Tr.SEQ(Tr.MOVE(Tr.TEMP reg, body), Tr.LABEL endlabel)) F.retregs
+                val epilogue = Tr.SEQ(seq(map (fn reg => Tr.MOVE(Tr.TEMP reg, body)) F.retregs), Tr.LABEL endlabel)
             in
-                Nx(Tr.SEQ(prologue, seq(epilogue)))
+                Nx(Tr.SEQ(prologue, epilogue))
             end
 
     fun transFunDecs (expfuncs) = 
