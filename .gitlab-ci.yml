@@ -9,14 +9,13 @@
 # See https://docs.gitlab.com/ee/ci/yaml/index.html for all available options
 
 # you can delete this line if you're not using Docker
-# image: python:latest
+image: python:latest
 
-# before_script:
-#   - apt-get update -qy
-#   - apt-get install -y smlnj
-#   - apt-get install -y ml-ulex
-#   - apt-get install -y ml-yacc
-#   - apt-get install -y ml-yacc
+before_script:
+  - apt-get update -qy
+  - apt-get install -y smlnj
+  - apt-get install -y ml-ulex
+  - apt-get install -y ml-yacc
   #- echo "Before script section"
   #- echo "For example you might run an update here or install a build dependency"
   #- echo "Or perhaps you might print out some debugging details"
@@ -59,6 +58,12 @@
 #   script:
 #       - cd ./ir/test/
 #       - ./pipeline_test.py ../../examples/
+
+test_insel_book_resources:
+  stage: test
+  script:
+      - cd ./test/insel/
+      - ./pipeline_test.py ../../examples/
 
     #deploy1:
     #stage: deploy
