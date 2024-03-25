@@ -10,7 +10,7 @@ struct
   fun codegen (frame: MipsFrame.frame) (irTree: T.stm): Assem.instr list = 
       (* Following is book example, we need to write our own based on MIPS grm *)
       let 
-        val calldefs = F.retregs @ F.callersaves
+        val calldefs = F.calldefs
         val ilist = ref (nil: A.instr list)
 
         fun emit x= ilist := x :: !ilist
@@ -63,7 +63,7 @@ struct
             emit(A.OPER{assem="\t" ^ "bgeu\t" ^ "'s0, 's1, t\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
-                    (* store exp to loc *)
+          (* store exp to loc *)
           (* save to mem *)
           | munchStm(T.MOVE(T.MEM(T.BINOP(T.PLUS, e1, T.CONST i)), e2)) = 
             emit(A.OPER{assem="\t" ^ "sw\t" ^ "'s1, " ^ Int.toString(i) ^ "('s0)\n",
@@ -143,7 +143,7 @@ struct
           | munchExp(T.BINOP(T.DIV, e1, e2)) =
             result(fn r => emit(A.OPER
                   {assem="\t" ^ "div\t" ^ "'s0, " ^ "'s1\n" ^ 
-                  "\t" ^ "mflo\t" ^ "'d0\n",
+                    "\t" ^ "mflo\t" ^ "'d0\n",
                     src=[munchExp e1, munchExp e2], dst=[r],
                     jump=NONE}))
           | munchExp(T.BINOP(T.AND, e1, T.CONST i)) =
@@ -223,13 +223,13 @@ struct
                     jump=NONE}))
           
           (* func call *)
-          | munchExp(T.CALL(T.NAME l, args)) = (* TODO: save load staffs here *)
+          | munchExp(T.CALL(T.NAME l, args)) = 
             result(fn r => emit(A.OPER
                   {assem="\t" ^ "jal\t" ^ (Symbol.name l) ^ "\n",
                     src=munchArgs(0, args), 
                     dst=calldefs,
                     jump=NONE}))
-          | munchExp(T.CALL(e, args)) = (* TODO: save load staffs here *)
+          | munchExp(T.CALL(e, args)) = 
             result(fn r => emit(A.OPER
                   {assem="\t" ^ "jalr\t" ^ "'s0\n",
                     src=munchExp e::munchArgs(0, args),
@@ -249,6 +249,19 @@ struct
               Printtree.printtree(TextIO.stdOut, T.EXP e);raise Fail "MipsGen: munchExp"
             )
 
+          (* munchArgs generates code to move all the arguments to
+          their correct positions, in outgoing parameter registers 
+          and/or in memory. The integer parameter to munchArgs is / 
+          for the ith argument; munchArgs will recur with / + 1 for 
+          the next argument, and so on.
+          What munchArgs returns is a list of all the temporaries 
+          that are to be passed to the machine's CALL instruction. 
+          Even though these temps are never written explicitly in 
+          assembly language, they should be listed as "sources" of
+          the instruction, so that liveness analysis (Chapter 10) 
+          can see that their values need to be kept up to the point 
+          of call. *)
+          (* TODO *)
         and munchArgs(i,[]) = []
           | munchArgs(i,e::es) = munchExp(e)::munchArgs(i+1,es)
       in 
