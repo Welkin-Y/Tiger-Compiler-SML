@@ -22,44 +22,44 @@ struct
             emit(A.OPER{assem="\t" ^ "j\t" ^ (Symbol.name lab) ^ "\n",
                 src=[], dst=[], jump=SOME(labs)})
           | munchStm(T.CJUMP(T.EQ, e1, e2, t, f)) =
-            emit(A.OPER{assem="IF 's0 == 's1 JUMP 'j0\n",
+            emit(A.OPER{assem="\t" ^ "beq\t" ^ "'s0, 's1, t\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.NE, e1, e2, t, f)) =
-            emit(A.OPER{assem="IF 's0 != 's1 JUMP 'j0\n",
+            emit(A.OPER{assem="\t" ^ "bne\t" ^ "'s0, 's1, t\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.LT, e1, e2, t, f)) =
-            emit(A.OPER{assem="IF 's0 < 's1 JUMP 'j0\n",
+            emit(A.OPER{assem="\t" ^ "blt\t" ^ "'s0, 's1, t\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.GT, e1, e2, t, f)) =
-            emit(A.OPER{assem="IF 's0 > 's1 JUMP 'j0\n",
+            emit(A.OPER{assem="\t" ^ "bgt\t" ^ "'s0, 's1, t\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.LE, e1, e2, t, f)) =
-            emit(A.OPER{assem="IF 's0 <= 's1 JUMP 'j0\n",
+            emit(A.OPER{assem="\t" ^ "ble\t" ^ "'s0, 's1, t\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           
           | munchStm(T.CJUMP(T.GE, e1, e2, t, f)) =
-            emit(A.OPER{assem="IF 's0 >= 's1 JUMP 'j0\n",
+            emit(A.OPER{assem="\t" ^ "bge\t" ^ "'s0, 's1, t\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.ULT, e1, e2, t, f)) =
-            emit(A.OPER{assem="IF 's0 < 's1 JUMP 'j0\n",
+            emit(A.OPER{assem="\t" ^ "bltu\t" ^ "'s0, 's1, t\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.UGT, e1, e2, t, f)) =
-            emit(A.OPER{assem="IF 's0 > 's1 JUMP 'j0\n",
+            emit(A.OPER{assem="\t" ^ "bgtu\t" ^ "'s0, 's1, t\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.ULE, e1, e2, t, f)) =
-            emit(A.OPER{assem="IF 's0 <= 's1 JUMP 'j0\n",
+            emit(A.OPER{assem="\t" ^ "bleu\t" ^ "'s0, 's1, t\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.UGE, e1, e2, t, f)) =
-            emit(A.OPER{assem="IF 's0 >= 's1 JUMP 'j0\n",
+            emit(A.OPER{assem="\t" ^ "bgeu\t" ^ "'s0, 's1, t\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
                     (* store exp to loc *)
@@ -84,7 +84,7 @@ struct
                 src=[munchExp e1, munchExp e2],
                 dst= [] ,jump=NONE})
           | munchStm(T.MOVE(T.TEMP i, e2) ) =
-            emit(A.OPER{assem="\t" ^ "addi\t" ^ "'d0, " ^ "'s0, 0\n",
+            emit(A.OPER{assem="\t" ^ "move\t" ^ "'d0, " ^ "'s0\n",
                 src=[munchExp e2],
                 dst=[i],jump=NONE})
           | munchStm (T.EXP e) = (munchExp e; ())
@@ -144,15 +144,45 @@ struct
                   "\t" ^ "mflo\t" ^ "'d0\n",
                     src=[munchExp e1, munchExp e2], dst=[r],
                     jump=NONE}))
+          | munchExp(T.BINOP(T.AND, e1, T.CONST i)) =
+            result(fn r => emit(A.OPER
+                  {assem="\t" ^"andi\t" ^ "'d0, " ^ "'s0, " ^ Int.toString i ^ "\n",
+                    src=[munchExp e1], dst=[r],
+                    jump=NONE}))
+          | munchExp(T.BINOP(T.AND, T.CONST i, e1)) =
+            result(fn r => emit(A.OPER
+                  {assem="\t" ^"andi\t" ^ "'d0, " ^ "'s0, " ^ Int.toString i ^ "\n",
+                    src=[munchExp e1], dst=[r],
+                    jump=NONE}))
           | munchExp(T.BINOP(T.AND, e1, e2)) =
             result(fn r => emit(A.OPER
                   {assem="\t" ^"and\t" ^ "'d0, " ^ "'s0, " ^ "'s1\n",
                     src=[munchExp e1, munchExp e2], dst=[r],
                     jump=NONE}))
+          | munchExp(T.BINOP(T.OR, e1, T.CONST i)) =
+            result(fn r => emit(A.OPER
+                  {assem="\t" ^ "ori\t" ^ "'d0, " ^ "'s0, " ^ Int.toString i ^ "\n",
+                    src=[munchExp e1], dst=[r],
+                    jump=NONE}))
+          | munchExp(T.BINOP(T.OR, T.CONST i, e1)) =
+            result(fn r => emit(A.OPER
+                  {assem="\t" ^ "ori\t" ^ "'d0, " ^ "'s0, " ^ Int.toString i ^ "\n",
+                    src=[munchExp e1], dst=[r],
+                    jump=NONE}))
           | munchExp(T.BINOP(T.OR, e1, e2)) =
             result(fn r => emit(A.OPER
                   {assem="\t" ^ "or\t" ^ "'d0, " ^ "'s0, " ^ "'s1\n",
                     src=[munchExp e1, munchExp e2], dst=[r],
+                    jump=NONE}))
+          | munchExp(T.BINOP(T.XOR, e1, T.CONST i)) =
+            result(fn r => emit(A.OPER
+                  {assem="\t" ^ "xori\t" ^ "'d0, " ^ "'s0, " ^ Int.toString i ^ "\n",
+                    src=[munchExp e1], dst=[r],
+                    jump=NONE}))
+          | munchExp(T.BINOP(T.XOR, T.CONST i, e1)) =
+            result(fn r => emit(A.OPER
+                  {assem="\t" ^ "xori\t" ^ "'d0, " ^ "'s0, " ^ Int.toString i ^ "\n",
+                    src=[munchExp e1], dst=[r],
                     jump=NONE}))
           | munchExp(T.BINOP(T.XOR, e1, e2)) =
             result(fn r => emit(A.OPER
