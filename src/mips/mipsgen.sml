@@ -267,10 +267,11 @@ struct
               fun handleArg(arg, idx: int) =
                   if idx < 4 then (* move first four arguments to $a0-$a3. *)
                     let
-                      val dstReg = List.nth(F.argregs, idx)
+                      val dstReg = case Temp.Table.look(F.tempMap, List.nth(F.argregs, idx)) of SOME reg => reg 
+                        | NONE => raise Fail "arg reg not found"
                       val srcExp = munchExp arg
                     in
-                      emit(A.OPER{assem = "\tmove\t" ^"`d0, `s0\n", src = [srcExp], dst = [dstReg], jump = NONE})
+                      emit(A.OPER{assem = "\tmove\t" ^ dstReg ^ ", `s0\n", src = [srcExp], dst = [], jump = NONE})
                     end
                   else (* push others onto the stack. *)
                     let
