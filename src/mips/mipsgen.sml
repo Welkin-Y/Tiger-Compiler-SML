@@ -23,44 +23,44 @@ struct
                 src=[], dst=[], jump=SOME(labs)})
           (* conditional branch *)
           | munchStm(T.CJUMP(T.EQ, e1, e2, t, f)) =
-            emit(A.OPER{assem="\t" ^ "beq\t" ^ "`s0, `s1, t\n",
+            emit(A.OPER{assem="\t" ^ "beq\t" ^ "`s0, `s1, `j0\n" ^ "\t" ^ "b\t" ^ "`j1\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.NE, e1, e2, t, f)) =
-            emit(A.OPER{assem="\t" ^ "bne\t" ^ "`s0, `s1, t\n",
+            emit(A.OPER{assem="\t" ^ "bne\t" ^ "`s0, `s1, `j0\n" ^ "\t" ^ "b\t" ^ "`j1\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.LT, e1, e2, t, f)) =
-            emit(A.OPER{assem="\t" ^ "blt\t" ^ "`s0, `s1, t\n",
+            emit(A.OPER{assem="\t" ^ "blt\t" ^ "`s0, `s1, `j0\n" ^ "\t" ^ "b\t" ^ "`j1\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.GT, e1, e2, t, f)) =
-            emit(A.OPER{assem="\t" ^ "bgt\t" ^ "`s0, `s1, t\n",
+            emit(A.OPER{assem="\t" ^ "bgt\t" ^ "`s0, `s1, `j0\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.LE, e1, e2, t, f)) =
-            emit(A.OPER{assem="\t" ^ "ble\t" ^ "`s0, `s1, t\n",
+            emit(A.OPER{assem="\t" ^ "ble\t" ^ "`s0, `s1, `j0\n" ^ "\t" ^ "b\t" ^ "`j1\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           
           | munchStm(T.CJUMP(T.GE, e1, e2, t, f)) =
-            emit(A.OPER{assem="\t" ^ "bge\t" ^ "`s0, `s1, t\n",
+            emit(A.OPER{assem="\t" ^ "bge\t" ^ "`s0, `s1, `j0\n" ^ "\t" ^ "b\t" ^ "`j1\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.ULT, e1, e2, t, f)) =
-            emit(A.OPER{assem="\t" ^ "bltu\t" ^ "`s0, `s1, t\n",
+            emit(A.OPER{assem="\t" ^ "bltu\t" ^ "`s0, `s1, `j0\n" ^ "\t" ^ "b\t" ^ "`j1\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.UGT, e1, e2, t, f)) =
-            emit(A.OPER{assem="\t" ^ "bgtu\t" ^ "`s0, `s1, t\n",
+            emit(A.OPER{assem="\t" ^ "bgtu\t" ^ "`s0, `s1, `j0\n" ^ "\t" ^ "b\t" ^ "`j1\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.ULE, e1, e2, t, f)) =
-            emit(A.OPER{assem="\t" ^ "bleu\t" ^ "`s0, `s1, t\n",
+            emit(A.OPER{assem="\t" ^ "bleu\t" ^ "`s0, `s1, `j0\n" ^ "\t" ^ "b\t" ^ "`j1\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           | munchStm(T.CJUMP(T.UGE, e1, e2, t, f)) =
-            emit(A.OPER{assem="\t" ^ "bgeu\t" ^ "`s0, `s1, t\n",
+            emit(A.OPER{assem="\t" ^ "bgeu\t" ^ "`s0, `s1, `j0\n" ^ "\t" ^ "b\t" ^ "`j1\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
           (* store exp to loc *)
