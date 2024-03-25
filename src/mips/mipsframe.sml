@@ -104,7 +104,7 @@ struct
       )
   (* Tree.CALL(Tree.NAME(Tree.Temp.namedlabel s), args) p165*)
 
-  fun string(label: Tree.label, str: string):string = ".data\n" ^ ".align 2\n" ^ Symbol.name label ^ ": .asciiz \"" ^ str ^ "\"\n" (*TODO: GPT work, need consider escapes *)
+  fun string(label: Tree.label, str: string):string = ".data\n" ^ ".align 2\n" ^ Symbol.name label ^ ":\n\t.asciiz \"" ^ str ^ "\"\n" (*TODO: GPT work, need consider escapes *)
   
   (* raise ErrorMsg.impossible "String Not Implemented" *)
   (* Tree.DATASTRING(label, str) *)
