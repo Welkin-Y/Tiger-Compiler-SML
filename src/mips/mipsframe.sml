@@ -36,9 +36,9 @@ struct
   val FP = Temp.newtemp()
   val RA = Temp.newtemp()
 
-  val RV = V0
+  val retregs = [V0, V1]
   
-  val specialregs = [ZERO, AT, V0, V1, K0, K1, GP, SP, FP, RA]
+  val specialregs = [ZERO, AT] @ retregs @ [K0, K1, GP, SP, FP, RA]
   val argregs = [A0, A1, A2, A3]
   val callersaves = [T0, T1, T2, T3, T4, T5, T6, T7, T8, T9]
   val calleesaves = [S0, S1, S2, S3, S4, S5, S6, S7]

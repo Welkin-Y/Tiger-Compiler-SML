@@ -10,7 +10,7 @@ struct
   fun codegen (frame: MipsFrame.frame) (irTree: T.stm): Assem.instr list = 
       (* Following is book example, we need to write our own based on MIPS grm *)
       let 
-        val calldefs = []
+        val calldefs = F.retregs @ F.callersaves
         val ilist = ref (nil: A.instr list)
 
         fun emit x= ilist := x :: !ilist
@@ -21,6 +21,7 @@ struct
           | munchStm(T.JUMP(T.NAME lab, labs)) =
             emit(A.OPER{assem="\t" ^ "j\t" ^ (Symbol.name lab) ^ "\n",
                 src=[], dst=[], jump=SOME(labs)})
+          (* conditional branch *)
           | munchStm(T.CJUMP(T.EQ, e1, e2, t, f)) =
             emit(A.OPER{assem="\t" ^ "beq\t" ^ "'s0, 's1, t\n",
                 src=[munchExp e1, munchExp e2],
@@ -63,6 +64,7 @@ struct
                 src=[munchExp e1, munchExp e2],
                 dst=[], jump=SOME([t,f])})
                     (* store exp to loc *)
+          (* save to mem *)
           | munchStm(T.MOVE(T.MEM(T.BINOP(T.PLUS, e1, T.CONST i)), e2)) = 
             emit(A.OPER{assem="\t" ^ "sw\t" ^ "'s1, " ^ Int.toString(i) ^ "('s0)\n",
                 src=[munchExp e1, munchExp e2], 
@@ -221,10 +223,16 @@ struct
                     jump=NONE}))
           
           (* func call *)
-          | munchExp(T.CALL(e,args)) = (* TODO: save load staffs here *)
+          | munchExp(T.CALL(T.NAME l, args)) = (* TODO: save load staffs here *)
             result(fn r => emit(A.OPER
-                  {assem="\t" ^ "jal\t" ^ "'s0\n",
-                    src=munchExp e::munchArgs(0,args),
+                  {assem="\t" ^ "jal\t" ^ (Symbol.name l) ^ "\n",
+                    src=munchArgs(0, args), 
+                    dst=calldefs,
+                    jump=NONE}))
+          | munchExp(T.CALL(e, args)) = (* TODO: save load staffs here *)
+            result(fn r => emit(A.OPER
+                  {assem="\t" ^ "jalr\t" ^ "'s0\n",
+                    src=munchExp e::munchArgs(0, args),
                     dst=calldefs,
                     jump=NONE}))
           (* load addr *)

@@ -1,9 +1,15 @@
 signature FRAME =
 sig 
     type register = string
-    val RV: Temp.temp 
+
     val FP: Temp.temp
+   
     val registers: register list
+    val specialregs: Temp.temp list
+    val argregs: Temp.temp list
+    val retregs: Temp.temp list
+    val callersaves: Temp.temp list
+    val calleesaves: Temp.temp list
     val tempMap: register Temp.Table.table
     val wordSize: int
     val externalCall: string * Tree.exp list -> Tree.exp
