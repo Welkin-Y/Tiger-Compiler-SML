@@ -23,7 +23,7 @@ struct
                 src=[], dst=[], jump=SOME(labs)})
           | munchStm(T.JUMP(e, _)) =
             emit(A.OPER{assem="\t" ^ "jr\t" ^ "`s0\n",
-                src=[munchExp e], dst=[], jump=NONE})
+                src=[munchExp e], dst=[], jump=SOME[]})
           (* conditional branch *)
           | munchStm(T.CJUMP(T.EQ, e1, e2, t, f)) =
             emit(A.OPER{assem="\t" ^ "beq\t" ^ "`s0, `s1, `j0\n",
