@@ -30,33 +30,35 @@ sudo apt-get install -y python3 python3-pip
 Our codebase is organized as follows:
 
 ```
-553-compiler/
+.
 ├── examples
 │   ├── negative
 │   └── positive
-├── frame_ir
-│   ├── src
-│   └── test
-├── lexer
-│   ├── resources
-│   ├── src
-│   └── test
-├── logger
-│   ├── src
-│   └── test
-├── parser
-│   ├── resources
-│   │   ├── tmp
-│   │   └── truth
-│   ├── src
-│   └── test
-└── semantic
-    ├── resources
-    │   ├── negative
-    │   ├── positive
-    │   └── tmp
-    ├── src
-    └── test
+├── LICENSE
+├── README.md
+├── src
+│   ├── absyn
+│   ├── env
+│   ├── insel
+│   ├── ir
+│   ├── lexer
+│   ├── logger
+│   ├── main.sml
+│   ├── mips
+│   ├── parser
+│   ├── runtime.c
+│   ├── semantic
+│   ├── sources.cm
+│   ├── table
+│   └── tree
+└── test
+    ├── insel
+    ├── ir
+    ├── lexer
+    ├── logger
+    ├── parser
+    └── sematic
+
 ```
 - `examples` directory: Contains test tiger source code files from textbook
 - `resources` directory: Contains test tiger source code files.
