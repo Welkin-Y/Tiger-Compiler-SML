@@ -401,7 +401,7 @@ struct
                     val funentry = case Symbol.look (newvenv, name) of
                         NONE => TC.undefinedNameErr pos name
                       | SOME entry => entry
-                    val {level=fundeclevel, ...} = case funentry of Env.FunEntry record => record
+                    val {level=fundeclevel, label=funlabel, ...} = case funentry of Env.FunEntry record => record
                       | _ => (ErrorMsg.error pos ("TypeError: not a function " ^ Symbol.name name); raise ErrorMsg.Error)
                     (* add all args var into a tmp venv to check body*)
                     val bodylevel = TL.newLevel({parent=fundeclevel, name=Temp.namedlabel "function", formals=[]})
@@ -411,7 +411,7 @@ struct
                     val () = L.log L.DEBUG ("func body typ: " ^ T.toString typ)
                   in
                     TC.checkFunc(newtenv, result, typ, pos);
-                    TL.transFunDec(fundeclevel, bodyexp)::expfuncs
+                    TL.transFunDec(fundeclevel, funlabel, bodyexp)::expfuncs
                   end)) [] fundecs
         in
           PrintEnv.printEnv (newvenv, newtenv);
@@ -479,9 +479,6 @@ struct
         val newLabel = Temp.newlabel()
         val newVenv = Symbol.enter (venv, name, Env.FunEntry {level=level, label=newLabel, formals=params_ty, result=res_ty}) 
         val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {level=level, label=newLabel, formals=params_ty, result=res_ty})
-        (* val newVenv = Symbol.enter (venv, name, Env.FunEntry {level=level, label=newLabel, formals=params_ty, result=res_ty}) 
-                val newFundecGroup = Symbol.enter (fundecGroup, name, Env.FunEntry {level=level, label=newLabel, formals=params_ty, result=res_ty}) *)
-        (* TODO: why newLevel cause error? *)
       in
         PrintEnv.printEnv (newVenv, tenv);
         {venv=newVenv, tenv=tenv, fundecGroup=newFundecGroup}

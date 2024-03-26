@@ -1,5 +1,14 @@
-let
+/* let
     var a := 1
 in
     a + 777
+end */
+
+
+let 
+    function add1(i: int): int = i + 1
+    function add2(i: int): int = i + 2
+    function add3(i: int): int = i + 3
+in
+    add1(1) + add2(2) + add1(3)
 end

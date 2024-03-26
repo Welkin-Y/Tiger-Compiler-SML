@@ -59,7 +59,7 @@ sig
     val transSeq : exp list -> exp
     val transRecord : exp list -> exp
     val transArray : exp * exp -> exp
-    val transFunDec : level * exp -> exp
+    val transFunDec : level * Temp.label * exp -> exp
     val transFunDecs : exp list -> exp
 
 end

@@ -21,6 +21,9 @@ struct
           | munchStm(T.JUMP(T.NAME lab, labs)) =
             emit(A.OPER{assem="\t" ^ "j\t" ^ (Symbol.name lab) ^ "\n",
                 src=[], dst=[], jump=SOME(labs)})
+          | munchStm(T.JUMP(e, _)) =
+            emit(A.OPER{assem="\t" ^ "jr\t" ^ "`s0\n",
+                src=[munchExp e], dst=[], jump=NONE})
           (* conditional branch *)
           | munchStm(T.CJUMP(T.EQ, e1, e2, t, f)) =
             emit(A.OPER{assem="\t" ^ "beq\t" ^ "`s0, `s1, `j0\n",
@@ -90,10 +93,10 @@ struct
                 src=[munchExp e2],
                 dst=[i],jump=NONE})
           | munchStm (T.EXP e) = (munchExp e; ())
-          | munchStm s = (
+          (* | munchStm s = (
               print "FATAL: Cannot convert:\n ";
               Printtree.printtree(TextIO.stdOut, s);raise Fail "MipsGen: munchStm"
-            )
+            ) *)
 
         and munchExp(T.READ(T.TEMP t)) = t
           (* load from mem *)

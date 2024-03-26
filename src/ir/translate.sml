@@ -75,28 +75,28 @@ struct
         | unLx _ = raise ErrorMsg.impossible "unLx not supported type"
 
     fun procEntryExit({level: level, body: exp}) = 
-        case level of
-            ROOT => ErrorMsg.impossible "procEntryExit: no frame, cannot exit at ROOT level"
+            case level of
+                ROOT => ErrorMsg.impossible "procEntryExit: no frame, cannot exit at ROOT level"
             | LEVEL{frame, parent, id} => 
-            let
-                val body' = unEx(body)
-                val funcProc = F.PROC{body=Tr.EXP(body'), frame=frame}
-            in
-                fragments := (!fragments)@[funcProc]
-            end
+                let
+                    val body' = unEx(body)
+                    val funcProc = F.PROC{body=Tr.EXP(body'), frame=frame}
+                in
+                    fragments := (!fragments)@[funcProc]
+                end
 
     (* MEM(+(CONST kn, MEM(+(CONST kn-1, ... MEM(+(CONST k1, TEMP FP)) ...)))) *)
     fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=use_id, parent=use_prt, frame=use_frm}): Tree.exp = 
             if def_id = use_id then rdTmp F.FP
             else (
-                L.log L.DEBUG "Follow use level";
-                F.exp (List.hd(F.formals use_frm))(followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt))
-            )
+                    L.log L.DEBUG "Follow use level";
+                    F.exp (List.hd(F.formals use_frm))(followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt))
+                )
         | followStaticLink(ROOT, _) = let 
-            val errmsg = "followStaticLink: define level is ROOT" 
+                val errmsg = "followStaticLink: define level is ROOT" 
             in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end
         | followStaticLink(_, ROOT) = let
-            val errmsg = "followStaticLink: use level is ROOT" 
+                val errmsg = "followStaticLink: use level is ROOT" 
             in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end
     
     fun transNil () = Ex(Tr.CONST 0)
@@ -104,7 +104,7 @@ struct
     fun simpleVar(access, useLevel) =
             
             let val (defLevel, defAccess) = access
-            val _ = L.log L.DEBUG "Translate.simpleVar";
+                val _ = L.log L.DEBUG "Translate.simpleVar";
             in Ex(F.exp defAccess (followStaticLink(defLevel, useLevel))) end
        
 
@@ -165,17 +165,17 @@ struct
                             (*indexing the array *)
                             
                         ], rdMem (
+                            Tr.BINOP(
+                                Tr.PLUS, 
+                                rdMem(
+                                    rdTmp baseReg
+                                ), 
                                 Tr.BINOP(
-                                    Tr.PLUS, 
-                                    rdMem(
-                                        rdTmp baseReg
-                                    ), 
-                                    Tr.BINOP(
-                                        Tr.MUL, 
-                                        rdTmp indexReg, 
-                                        Tr.CONST F.wordSize)
-                                    )
-                            )))
+                                    Tr.MUL, 
+                                    rdTmp indexReg, 
+                                    Tr.CONST F.wordSize)
+                                )
+                        )))
             end
     fun transVarDec (access, init) = 
             let 
@@ -319,17 +319,39 @@ struct
                 Ex(Tr.ESEQ(seq[initArr, Tr.MOVE(Tr.MEM(Tr.BINOP(Tr.MINUS, rdTmp res, Tr.CONST F.wordSize)), size)], rdTmp res))
             end
     
-    fun transFunDec (level, body) = 
+    fun transFunDec (level, label, body) = 
             let
                 val {frame, ...} = case level of LEVEL level => level | ROOT => raise ErrorMsg.impossible "transFunDec: no frame"
-                val funlabel = F.name frame
+                val funlabel = label
                 val endlabel = Temp.newlabel()
-                (* dummy version *)
-                val prologue = Tr.SEQ(Tr.JUMP(Tr.NAME endlabel, [endlabel]), Tr.LABEL funlabel)
+                (*TODO 
+                Maybe change transFunDec function params for needed info
+                
+                1. ( ) adjust the stack pointer (to allocate a new frame);
+                2. ( ) save "escaping" arguments - including the static link - into the frame, and to move nonescaping arguments into fresh temporary registers;
+                3. ( ) store instructions to save any callee-save registers - including the return address register - used within the function.
+                *)
+                val prologue = seq[Tr.JUMP(Tr.NAME endlabel, [endlabel]), 
+                        Tr.LABEL funlabel] 
+                
                 val body = unEx body
-                val epilogue = Tr.SEQ(seq(map (fn reg => Tr.MOVE(Tr.TEMP reg, body)) F.retregs), Tr.LABEL endlabel)
+
+                (*TODO 
+                1. (✔) move return value to RV 
+                2. ( ) restore the callee-save registers
+                3. ( ) an instruction to reset the stack pointer (to deallocate the frame);
+                4. (✔) jr $ra 
+                *)
+                val epilogue = seq[Tr.MOVE(Tr.TEMP F.RV, body), 
+                        Tr.JUMP(rdTmp (List.nth(F.specialregs,8)), []), 
+                        Tr.LABEL endlabel] 
+
+                (* prologue and epilogue are ISA dependent, can we move them to MipsFrame? *)
             in
-                Nx(Tr.SEQ(prologue, epilogue))
+                (
+                    Printtree.printtree(TextIO.stdOut, prologue); print "\n";
+                    Printtree.printtree(TextIO.stdOut, epilogue); print "\n";
+                    Nx(Tr.SEQ(prologue, epilogue)))
             end
 
     fun transFunDecs (expfuncs) = 

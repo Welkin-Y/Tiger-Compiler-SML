@@ -36,6 +36,8 @@ struct
   val FP = Temp.newtemp()
   val RA = Temp.newtemp()
 
+  val RV = V0
+
   val retregs = [V0, V1]
   val specialregs = [ZERO, AT, V0, V1, K0, K1, GP, SP, FP, RA]
   val argregs = [A0, A1, A2, A3]
