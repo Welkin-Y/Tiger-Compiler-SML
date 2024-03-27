@@ -108,11 +108,35 @@ struct
   (* Tree.CALL(Tree.NAME(Tree.Temp.namedlabel s), args) p165*)
 
   fun string(label: Tree.label, str: string):string = ".data\n" ^ ".align 2\n" ^ Symbol.name label ^ ":\n\t.asciiz \"" ^ str ^ "\"\n" (*TODO: GPT work, need consider escapes *)
-  
+
+  fun exp (access: access) (addr: Tree.exp) : Tree.exp = case access of
+        InFrame(offset) => Tree.READ(Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset)))
+      | InReg(temp) => Tree.READ(Tree.TEMP temp)
+
+  fun loc (access: access) (addr : Tree.exp) : Tree.loc = case access of
+        InFrame(offset) => Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset))
+      | InReg(temp) => Tree.TEMP temp
+
   (* raise ErrorMsg.impossible "String Not Implemented" *)
   (* Tree.DATASTRING(label, str) *)
 
-  fun procEntryExit1 (frm: frame, body: Tree.stm) = body
+  (* save/load registers before/after function call *)
+  fun procEntryExit1 (frm: frame, body: Tree.exp) = 
+      let val {name, formals, inFrameSize} = frm
+      (* get memory for registers*) 
+      val reglocs = map (fn r => loc(allocLocal frm true)(Tree.CONST 0)) ([RA, SP, FP] @ calleesaves)
+      (* save registers *)
+      fun storeReg (r : Temp.temp, l : Tree.loc) = Tree.MOVE(l , Tree.READ (Tree.TEMP r))
+      fun loadReg (r : Temp.temp, l : Tree.loc) = Tree.MOVE(Tree.TEMP r, Tree.READ(l))
+
+      val storeRegs = map (fn (r, acc) => storeReg(r, acc)) (ListPair.zip([RA, SP, FP] @ calleesaves, reglocs))
+      val loadRegs = map (fn (r, acc) => loadReg(r, acc)) (ListPair.zip([RA, SP, FP] @ calleesaves, reglocs))
+      (* seq *)
+      fun seq [] = Tree.EXP(Tree.CONST 0)
+        | seq (x::xs) = Tree.SEQ(x, seq xs)
+      in
+        seq (storeRegs @ [Tree.EXP body] @ loadRegs)
+      end
 
   fun procEntryExit2(frame, body) = body @
       [Assem.OPER{
@@ -126,13 +150,7 @@ struct
         body = body, 
         epilog = "END " ^ Symbol.name name ^ "\n"}
 
-  fun exp (access: access) (addr: Tree.exp) : Tree.exp = case access of
-        InFrame(offset) => Tree.READ(Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset)))
-      | InReg(temp) => Tree.READ(Tree.TEMP temp)
 
-  fun loc (access: access) (addr : Tree.exp) : Tree.loc = case access of
-        InFrame(offset) => Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset))
-      | InReg(temp) => Tree.TEMP temp
 
 
 

@@ -319,7 +319,7 @@ struct
                 Ex(Tr.ESEQ(seq[initArr, Tr.MOVE(Tr.MEM(Tr.BINOP(Tr.MINUS, rdTmp res, Tr.CONST F.wordSize)), size)], rdTmp res))
             end
     
-    fun transFunDec (level, label, body) = 
+    fun transFunDec (level, label: Temp.label , body : exp) = 
             let
                 val {frame, ...} = case level of LEVEL level => level | ROOT => raise ErrorMsg.impossible "transFunDec: no frame"
                 val funlabel = label
@@ -334,6 +334,7 @@ struct
                 val prologue = seq[Tr.JUMP(Tr.NAME endlabel, [endlabel]), 
                         Tr.LABEL funlabel] 
                 
+                val body = Nx(F.procEntryExit1(frame, unEx body))
                 val body = unEx body
 
                 (*TODO 
