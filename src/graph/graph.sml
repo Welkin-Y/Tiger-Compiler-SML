@@ -53,7 +53,8 @@ struct
       end
 
   exception GraphEdge
-  fun check(g,g') = (* if g=g' then () else raise GraphEdge *) ()
+  fun check(g,g') = (* if g=g' then () else raise GraphEdge  *) ()
+  
 
   fun delete(i,j::rest) = if i=j then rest else j::delete(i,rest)
     | delete(_,nil) = raise GraphEdge
