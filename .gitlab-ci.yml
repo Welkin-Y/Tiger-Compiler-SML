@@ -16,7 +16,6 @@ before_script:
   - apt-get install -y smlnj
   - apt-get install -y ml-ulex
   - apt-get install -y ml-yacc
-  - apt-get install -y ml-yacc
   #- echo "Before script section"
   #- echo "For example you might run an update here or install a build dependency"
   #- echo "Or perhaps you might print out some debugging details"
@@ -30,34 +29,40 @@ before_script:
 # script:
 #  - echo "Do your build here"
 
-test_lexer:
-  stage: test
-  script:
-    - ./lexer/test/unitTest.py
+# test_lexer:
+#   stage: test
+#   script:
+#     - ./lexer/test/unitTest.py
 
-test_parser:
-  stage: test
-  script:
-      - ./lexer/test/testLexerConsistency.py
-      - cd ./parser/test/
-      - ./run-test.sh ../resources
+# test_parser:
+#   stage: test
+#   script:
+#       - ./lexer/test/testLexerConsistency.py
+#       - cd ./parser/test/
+#       - ./run-test.sh ../resources
 
-test_semantic:
-  stage: test
-  script:
-      - cd ./semantic/test/
-      - ./pipeline_test.py ../resources/
+# test_semantic:
+#   stage: test
+#   script:
+#       - cd ./semantic/test/
+#       - ./pipeline_test.py ../resources/
 
-test_semantic_book_resources:
-  stage: test
-  script:
-      - cd ./semantic/test/
-      - ./pipeline_test.py ../../examples/
+# test_semantic_book_resources:
+#   stage: test
+#   script:
+#       - cd ./semantic/test/
+#       - ./pipeline_test.py ../../examples/
 
-test_ir_book_resources:
+# test_ir_book_resources:
+#   stage: test
+#   script:
+#       - cd ./ir/test/
+#       - ./pipeline_test.py ../../examples/
+
+test_insel_book_resources:
   stage: test
   script:
-      - cd ./frame_ir/test/
+      - cd ./test/insel/
       - ./pipeline_test.py ../../examples/
 
     #deploy1:

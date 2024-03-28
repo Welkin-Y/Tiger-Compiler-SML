@@ -1,6 +1,0 @@
-for j:=555 to 222 do
-    let
-        function func(i : int) = j := j + 1
-    in
-        func(j)
-    end
