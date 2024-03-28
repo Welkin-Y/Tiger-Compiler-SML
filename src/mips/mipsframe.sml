@@ -79,7 +79,7 @@ struct
         fun getFormals (b, acc) = 
             let
               fun helper(b, (acc, inFrameNum, inRegNum)) = 
-                  if b orelse inRegNum = numArgReg then (
+                  if b then (
                       inFrameSize := inFrameNum + 1;
                       (InFrame(~inFrameNum * wordSize)::acc, inFrameNum + 1, inRegNum)
                     ) 
