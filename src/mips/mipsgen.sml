@@ -68,6 +68,9 @@ struct
                 dst=[], jump=SOME([t,f])})
           (* store exp to loc *)
           (* save to mem *)
+          | munchStm(T.MOVE(T.MEM(T.BINOP(T.PLUS, T.CONST i, T.CONST j)), e2)) =
+            emit(A.OPER{assem="\t" ^ "sw\t" ^ "`s1, " ^ Int.toString(i+j) ^ "(`s0)\n",
+                src=[List.nth(F.specialregs, 0), munchExp e2], dst=[],jump=NONE})
           | munchStm(T.MOVE(T.MEM(T.BINOP(T.PLUS, e1, T.CONST i)), e2)) = 
             emit(A.OPER{assem="\t" ^ "sw\t" ^ "`s1, " ^ Int.toString(i) ^ "(`s0)\n",
                 src=[munchExp e1, munchExp e2], 
@@ -100,6 +103,10 @@ struct
 
         and munchExp(T.READ(T.TEMP t)) = t
           (* load from mem *)
+          | munchExp(T.READ(T.MEM(T.BINOP(T.PLUS, T.CONST i, T.CONST j)))) =
+            result(fn r => emit(A.OPER
+                  {assem="\t" ^ "lw\t" ^  "`d0, " ^ Int.toString(i+j) ^ "(`s0)\n",
+                    src=[List.nth(F.specialregs, 0)], dst=[r], jump=NONE}))
           | munchExp(T.READ(T.MEM(T.BINOP(T.PLUS, e1, T.CONST i)))) =
             result(fn r => emit(A.OPER
                   {assem="\t" ^ "lw\t" ^  "`d0, " ^ Int.toString(i) ^ "(`s0)\n",
