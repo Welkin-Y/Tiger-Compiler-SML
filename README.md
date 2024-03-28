@@ -30,7 +30,7 @@ sudo apt-get install -y python3 python3-pip
 Our codebase is organized as follows:
 
 ```
-553-compiler/
+.
 ├── examples
 │   ├── negative
 │   └── positive
@@ -38,30 +38,39 @@ Our codebase is organized as follows:
 │   ├── src
 │   └── test
 ├── lexer
-│   ├── resources
-│   ├── src
-│   └── test
+│   └── src
 ├── logger
-│   ├── src
-│   └── test
+│   └── src
 ├── parser
 │   ├── resources
-│   │   ├── tmp
-│   │   └── truth
 │   ├── src
 │   └── test
-└── semantic
-    ├── resources
-    │   ├── negative
-    │   ├── positive
-    │   └── tmp
-    ├── src
-    └── test
+├── semantic
+│   ├── resources
+│   ├── src
+│   └── test
+├── src
+│   ├── absyn
+│   ├── env
+│   ├── insel
+│   ├── ir
+│   ├── lexer
+│   ├── logger
+│   ├── mips
+│   ├── parser
+│   ├── semantic
+│   ├── table
+│   └── tree
+└── test
+    ├── insel
+    ├── ir
+    ├── lexer
+    ├── logger
+    ├── parser
+    └── sematic
+
 ```
-- `examples` directory: Contains test tiger source code files from textbook
-- `resources` directory: Contains test tiger source code files.
-- `src` directory: Contains our main work, with the primary component being `src/tiger.lex`. Other files are provided by the textbook. We've also made improvements to `src/errormsg.sml` for better testing.
-- `test` directory: Contains code for testing. `simpleTest.sml` is a small test program for running a single test, and `runTest.sh` is a script for customizing test runs.
+
 
 ## Running the Code
 ### lexer
@@ -70,12 +79,12 @@ We've developed test scripts to run all predefined tests under the `lexer/resour
 
 To do this, follow these steps:
 
-1. Navigate to the parent directory of `lexer`.
+1. Navigate to `test/lexer`.
 2. Run the `runTest.sh` script:
 
 ```
->> cd /path/to/lexer-parent/
->> lexer/test/runTest.sh
+>> cd /path/to/test/lexer-parent/
+>> ./runTest.sh
 ```
 
 You can also directly call our lexer for a specific test file using the following SML code:
@@ -85,17 +94,17 @@ You can also directly call our lexer for a specific test file using the followin
 >> Parse.parse "your-test-source-file";
 ```
 ### parser
-We've developed test scripts to run all predefined tests under the `parser/resources` directory.
+We've developed test scripts to run all predefined tests under the `test/parser/resources` directory.
 
 
 To do this, follow these steps:
 
-1. Navigate to the parent directory of `parser/test`.
+1. Navigate to the parent directory of `test/parser`.
 2. Run the `runTest.sh` script:
 
 ```
 cd /path/to/parser-parent/parser/test
-./runTest.sh ../resources
+./runTest.sh ./resources
 ```
 
 
@@ -141,6 +150,12 @@ We implemented our findescape function in `parser/src/findescape.sml` to analyze
 We implemented our semantic analysis body in `src/translate.sml` and tested it with the self-defined and provided test cases. 
 
 The find escape function in the parser phase is used to analyze the variable escaping over the absract syntax tree.
+
+## Instruction Selection
+We used the Appel's implementation of `canon.sml` and implemented our version of mipsgen in `mipsgen.sml`. Some bugs from the previous phases are fixed in this phase. The `Semantic.sml` is also updated to fix bugs in the previous phase.
+
+We also reorganized the code structure to make it more readable and easier to understand.
+
 ## Implemented Bonus
 - **Semantic Analysis**: We implemented drew's version of Record. We use the functional record to achive the recursive definition
 - **IR Translation**: We implemented the drew's version of the Tree data structures according to the lecture to differentiate loc from exp. Increase the robustness of the code and make it easier to understand.
