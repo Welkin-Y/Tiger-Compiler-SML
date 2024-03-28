@@ -31,9 +31,9 @@ $/ml-yacc-lib.cm
 ../../src/ir/frame.sig
 ../../src/ir/canon.sml
 ../../src/insel/codegen.sig
-../../src/insel/graph.sig
-../../src/insel/graph.sml
-../../src/insel/flowgraph.sml
+../../src/graph/graph.sig
+../../src/graph/graph.sml
+../../src/graph/flowgraph.sml
 ../../src/insel/assem.sml
 ../../src/mips/mipsframe.sml
 ../../src/mips/mipsgen.sml
