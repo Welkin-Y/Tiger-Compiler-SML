@@ -270,18 +270,18 @@ struct
               fun handleArg(arg, idx: int) =
                   if idx < List.length(F.argregs) then (* move first four arguments to $a0-$a3. *)
                     let
-                      val dstReg = case Temp.Table.look(F.tempMap, List.nth(F.argregs, idx)) of SOME reg => reg 
-                        | NONE => raise Fail "arg reg not found"
+                      val dstReg = List.nth(F.argregs, idx)
                       val srcExp = munchExp arg
                     in
-                      emit(A.OPER{assem = "\tmove\t" ^ dstReg ^ ", `s0\n", src = [srcExp], dst = [], jump = NONE})
+                      emit(A.OPER{assem = "\tmove\t" ^ "`d0, `s0\n", src = [srcExp], dst = [dstReg], jump = NONE})
                     end
                   else (* push others onto the stack. *)
                     let
                       val srcExp = munchExp arg
                       val offset = (idx - 4) * F.wordSize 
+                      val asm = "\tsw\t" ^ "`s0, " ^ (Int.toString offset) ^ "(`s1)\n"
                     in
-                      emit(A.OPER{assem = "\tsw\t" ^ "`s0, " ^ Int.toString(offset) ^ "(`s1)\n", src = [srcExp, F.SP], dst = [], jump = NONE})
+                      emit(A.OPER{assem = asm, src = [srcExp, F.SP], dst = [], jump = NONE})
                     end
             in
               ListPair.map handleArg (args,List.tabulate(List.length(args), fn x => x));

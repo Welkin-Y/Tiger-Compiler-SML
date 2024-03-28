@@ -109,35 +109,32 @@ struct
 
   fun string(label: Tree.label, str: string):string = ".data\n" ^ ".align 2\n" ^ Symbol.name label ^ ":\n\t.asciiz \"" ^ str ^ "\"\n" (*TODO: GPT work, need consider escapes *)
 
-  fun exp (access: access) (addr: Tree.exp) : Tree.exp = case access of
-        InFrame(offset) => Tree.READ(Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset)))
-      | InReg(temp) => Tree.READ(Tree.TEMP temp)
+  fun exp (InFrame offset) addr = Tree.READ(Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset)))
+    | exp (InReg temp) addr = Tree.READ(Tree.TEMP temp)
 
-  fun loc (access: access) (addr : Tree.exp) : Tree.loc = case access of
-        InFrame(offset) => Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset))
-      | InReg(temp) => Tree.TEMP temp
-
-  (* raise ErrorMsg.impossible "String Not Implemented" *)
-  (* Tree.DATASTRING(label, str) *)
+  fun loc (InFrame offset) addr = Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset))
+    | loc (InReg temp) addr = Tree.TEMP temp
 
   (* save/load registers before/after function call *)
   fun procEntryExit1 (frm: frame, body: Tree.exp) = 
       let val {name, formals, inFrameSize} = frm
-      (* get memory for registers*) 
-      val reglocs = map (fn r => loc(allocLocal frm true)(Tree.CONST 0)) ([RA, SP, FP] @ calleesaves)
-      (* save registers *)
-      fun storeReg (r : Temp.temp, l : Tree.loc) = Tree.MOVE(l , Tree.READ (Tree.TEMP r))
-      fun loadReg (r : Temp.temp, l : Tree.loc) = Tree.MOVE(Tree.TEMP r, Tree.READ(l))
+        (* get memory for registers*) 
+        val regs = [RA, SP, FP] @ calleesaves
+        val reglocs = map (fn r => loc(allocLocal frm true)(Tree.CONST 0)) (regs)
+        (* save registers *)
+        fun storeReg (r : Temp.temp, l : Tree.loc) = Tree.MOVE(l , Tree.READ (Tree.TEMP r))
+        fun loadReg (r : Temp.temp, l : Tree.loc) = Tree.MOVE(Tree.TEMP r, Tree.READ(l))
 
-      val storeRegs = map (fn (r, acc) => storeReg(r, acc)) (ListPair.zip([RA, SP, FP] @ calleesaves, reglocs))
-      val loadRegs = map (fn (r, acc) => loadReg(r, acc)) (ListPair.zip([RA, SP, FP] @ calleesaves, reglocs))
-      (* seq *)
-      fun seq [] = Tree.EXP(Tree.CONST 0)
-        | seq (x::xs) = Tree.SEQ(x, seq xs)
+        val storeRegs = map (fn (r, acc) => storeReg(r, acc)) (ListPair.zip(regs, reglocs))
+        val loadRegs = map (fn (r, acc) => loadReg(r, acc)) (ListPair.zip(regs, reglocs))
+        (* seq *)
+        fun seq [] = Tree.EXP(Tree.CONST 0)
+          | seq (x::xs) = Tree.SEQ(x, seq xs)
       in
         seq (storeRegs @ [Tree.EXP body] @ loadRegs)
       end
 
+  (* This function appends a "sink" instruction to the function body to tell the register allocator that certain registers are live at procedure exit. *)
   fun procEntryExit2(frame, body) = body @
       [Assem.OPER{
           assem="",
@@ -145,6 +142,7 @@ struct
           dst=[], jump=SOME[]
         }]
 
+  (* Either proc-EntryExit2 should scan the body and record this information in some new component of the frame type, or procEntryExit3 should use the maximum legal value. *)
   fun procEntryExit3({name, formals, inFrameSize}:frame, body) =
       {prolog = "PROCEDURE " ^ Symbol.name name ^ "\n", 
         body = body, 

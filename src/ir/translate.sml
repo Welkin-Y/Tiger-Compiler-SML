@@ -329,7 +329,7 @@ struct
                 
                 1. ( ) adjust the stack pointer (to allocate a new frame);
                 2. ( ) save "escaping" arguments - including the static link - into the frame, and to move nonescaping arguments into fresh temporary registers;
-                3. ( ) store instructions to save any callee-save registers - including the return address register - used within the function.
+                3. (✔) store instructions to save any callee-save registers - including the return address register - used within the function.
                 *)
                 val prologue = seq[Tr.JUMP(Tr.NAME endlabel, [endlabel]), 
                         Tr.LABEL funlabel] 
@@ -339,7 +339,7 @@ struct
 
                 (*TODO 
                 1. (✔) move return value to RV 
-                2. ( ) restore the callee-save registers
+                2. (✔ ) restore the callee-save registers
                 3. ( ) an instruction to reset the stack pointer (to deallocate the frame);
                 4. (✔) jr $ra 
                 *)
