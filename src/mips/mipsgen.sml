@@ -92,9 +92,9 @@ struct
                 src=[munchExp e1, munchExp e2],
                 dst= [] ,jump=NONE})
           | munchStm(T.MOVE(T.TEMP i, e2) ) =
-            emit(A.OPER{assem="\t" ^ "move\t" ^ "`d0, " ^ "`s0\n",
-                src=[munchExp e2],
-                dst=[i],jump=NONE})
+            emit(A.MOVE{assem="\t" ^ "move\t" ^ "`d0, " ^ "`s0\n",
+                src=munchExp e2,
+                dst=i})
           | munchStm (T.EXP e) = (munchExp e; ())
           (* | munchStm s = (
               print "FATAL: Cannot convert:\n ";
@@ -280,7 +280,7 @@ struct
                       val dstReg = List.nth(F.argregs, idx)
                       val srcExp = munchExp arg
                     in
-                      emit(A.OPER{assem = "\tmove\t" ^ "`d0, `s0\n", src = [srcExp], dst = [dstReg], jump = NONE})
+                      emit(A.MOVE{assem = "\tmove\t" ^ "`d0, `s0\n", src = srcExp, dst = dstReg})
                     end
                   else (* push others onto the stack. *)
                     let
