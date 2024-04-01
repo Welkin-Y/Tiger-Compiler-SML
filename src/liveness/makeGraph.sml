@@ -4,7 +4,7 @@ sig
   (* val instrs2graph: Assem.instr list ->
     Flow.flowgraph * Flow.Graph.node list *)
   val instrs2graph: Assem.instr list ->
-    Flow.flowgraph * Graph.node list 
+    Flow.flowgraph * int Graph.node list 
 end
 
 structure MakeGraph :> MAKEGRAPH =
@@ -21,7 +21,7 @@ struct
   fun addEdges (graph, nodes) = raise Fail "Not implemented"
 
   fun instrs2graph instrs = let
-    val graph = G.newGraph()
+    val graph = G.empty
   in
     addEdges(graph, map instr2node instrs)
   end  
