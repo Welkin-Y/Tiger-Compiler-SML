@@ -37,5 +37,7 @@ $/ml-yacc-lib.cm
 ../../src/mips/mipsframe.sml
 ../../src/mips/mipsgen.sml
 ../../src/liveness/flowgraph.sml
+(* ../../src/liveness/liveness.sml *)
+../../src/liveness/makeGraph.sml
 
 ../../src/main.sml
