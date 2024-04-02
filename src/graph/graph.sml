@@ -1,9 +1,6 @@
 structure Graph :> GRAPH =
 struct
-  type node' = int
-  type temp = Temp.temp
-
-  datatype noderep = NODE of {succ: node' list, pred: node' list}
+  datatype noderep = NODE of {succ: int list, pred: int list}
 
   val emptyNode = NODE{succ=[],pred=[]}
 
@@ -20,14 +17,14 @@ struct
 
   type graph = A.array
 
-  type node = graph * node'
+  type node = graph * int 
   fun eq((_,a),(_,b)) = a=b
 
-  fun augment (g: graph) (n: node') : node = (g,n)
+  fun augment (g: graph) (n: int) : node = (g,n)
 
   fun newGraph() = A.array(0,bogusNode)
 
-  fun nodes g = let val b = A.bound g
+  fun nodes g = let 
         fun f i = if isBogus( A.sub(g,i)) then nil
             else (g,i)::f(i+1)
       in f 0			     
