@@ -74,5 +74,7 @@ struct
 
   fun nodename(g,i:int) = "n" ^ Int.toString(i)
 
+  fun getIndex (n : node) = let val (_,i) = n in i end
+
 end
 

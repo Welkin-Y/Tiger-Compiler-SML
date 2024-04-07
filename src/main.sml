@@ -4,6 +4,7 @@ structure Main = struct
   structure S = Semant(Tr)
   structure Mips = MipsGen
   structure L = Logger
+  structure M = MakeGraph
 
   
   (* structure R = RegAlloc *)
@@ -24,6 +25,7 @@ structure Main = struct
         val canon_stms = Canon.traceSchedule(Canon.basicBlocks stms)
         (* val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) canon_stms *)
         val instrs = List.concat(map (Mips.codegen frame) canon_stms) 
+        val _ = M.instrs2graph instrs
         val format0 = Assem.format(Temp.makestring)
       in  app (fn i => TextIO.output(out,format0 i)) instrs
       end
