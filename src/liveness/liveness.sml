@@ -21,7 +21,7 @@ tabl e is useful for efficient membership tests, and the lis t is useful for
 enumerating all the live variables in the set.*)
   type liveSet = unit Temp.Table.table * temp list
   type liveMap = liveSet Flow.Graph.Table.table
-  
+  structure IGraph = Graph
   structure IntMap = RedBlackMapFn(
   struct
     type ord_key = int
@@ -30,15 +30,7 @@ enumerating all the live variables in the set.*)
 );
 
   type visitedMap = unit IntMap.map;
-
-  datatype igraph =
-    IGRAPH of {graph: IGraph.graph,
-      tnode: Temp.temp -> IGraph.node,
-      gtemp: IGraph.node -> Temp.temp,
-      moves: (IGraph.node * IGraph.node) list}
-    
-
-  (*
+    (*
   * graph the interference graph;
   * tnode a mapping from temporaries of the Ass em program to graph nodes;
   * gtemp the inverse mapping, from graph nodes back to temporaries;
@@ -46,12 +38,86 @@ enumerating all the live variables in the set.*)
   * "move instruction" (m, n) is on this list, it would be nice to assign m and n
   * the same register if possible.
   *)
+  datatype igraph =
+    IGRAPH of {graph: IGraph.graph,
+      tnode: Temp.temp -> IGraph.node,
+      gtemp: IGraph.node -> Temp.temp,
+      moves: (IGraph.node * IGraph.node) list}
+    
+
+  (*there is a one-to-one mapping between node and temp*)
   fun interferenceGraph (fg : Flow.flowgraph) =
     let
-      val fg = Flow.Graph.graph fg
+      val graph = IGraph.newGraph()
+      val {control=fgraph,def=defTable, use=useTable, ismove=ismove} = fg
       val (inmap, outmap) = calcLiveMap (fg, Flow.Graph.Table.empty, Flow.Graph.Table.empty)
+      val tnodeMap = Temp.Table.empty
+      val gtempMap = Graph.Table.empty
+      (*init nodes in tnodeMap and gtempMap*)
+      fun initMaps() = 
+      let
+        val nodes = Flow.Graph.nodes fgraph
+        fun getTemps (tmpTable) = foldl (fn (node, temps) => 
+          let
+          val tmpLst = Flow.Graph.Table.find(tmpTable, node)
+          in
+          tmpLst @ temps
+          end) [] nodes
+        val alltemps = getTemps(defTable) @ getTemps(useTable)
+      in
+        (*initialize the tnodeMap and gtempMap by adding all def/use into the maps*)
+        (*for each temp, create a node in the igraph*)
+        foldl (fn (temp, (tnodeMap, gtempMap)) => 
+          if IGraph.Table.inDomain(tnodeMap, temp) then (tnodeMap, gtempMap) else
+          let
+          val node = IGraph.newNode(graph)
+          val tnodeMap = Temp.Table.enter(tnodeMap, temp, node)
+          val gtempMap = Graph.Table.enter(gtempMap, node, temp)
+          in
+          (tnodeMap, gtempMap)
+          end
+        ) (tnodeMap, gtempMap) alltemps
+      end
+      (*iterate through the liveout set connect all nodes that live at the same time*)
+      fun buildLiveGraph() = 
+      let 
+        val nodes = Flow.Graph.nodes fgraph
+        fun connectNodes (node : Flow.Graph.node) = 
+          let
+          val liveout : liveSet = Flow.Graph.Table.find(outmap, node)
+          val (_, liveoutLst) = liveout
+          in
+          foldl (fn (temp, graph) => 
+            let
+            val node1 = Temp.Table.look(tnodeMap, temp)
+            in
+            foldl (fn (temp, graph) => 
+              let
+              val node2 = Temp.Table.look(tnodeMap, temp)
+              in
+              if (IGraph.nodename node1) <> (IGraph.nodename node2) then
+              IGraph.mk_edge(graph, node1, node2) else ()
+              end
+            ) graph liveoutLst
+            end
+          ) graph liveoutLst
+          end
+      in
+      end
+
+      val (tnodeMap, gtempMap) = initMaps()
+      val _ = buildLiveGraph()
+
+      fun tnode(tmp : Temp.temp) = Graph.Table.look(tnodeMap, tmp)
+
+
+      fun gtemp(node : IGraph.node) = Temp.Table.look(gtempMap, node)
+
     in 
+      (*TODO: temepraray leave moves as empty as it is not necessary for regalloc*)
+      IGRAPH {graph: graph, tnode: tnode, gtemp: gtemp, moves = []}
     end
+
   
   fun calcLiveMap (fg : Flow.flowgraph, inmap : liveMap, outmap : liveMap) =
     let
@@ -75,8 +141,6 @@ enumerating all the live variables in the set.*)
         end
         ) true nodes
         end
-
-
     in
       if isLiveMapEqual (inmap, inmap') andalso isLiveMapEqual (outmap, outmap')
       then (inmap, outmap)
