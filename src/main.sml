@@ -5,6 +5,7 @@ structure Main = struct
   structure Mips = MipsGen
   structure L = Logger
   structure M = MakeGraph
+  structure Liv = Liveness
 
   
   (* structure R = RegAlloc *)
@@ -25,7 +26,8 @@ structure Main = struct
         val canon_stms = Canon.traceSchedule(Canon.basicBlocks stms)
         (* val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) canon_stms *)
         val instrs = List.concat(map (Mips.codegen frame) canon_stms) 
-        val _ = M.instrs2graph instrs
+        val (fg, nodes) = M.instrs2graph instrs
+        val _ = Liv.interferenceGraph fg
         val format0 = Assem.format(Temp.makestring)
       in  app (fn i => TextIO.output(out,format0 i)) instrs
       end
