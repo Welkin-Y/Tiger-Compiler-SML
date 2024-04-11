@@ -51,7 +51,7 @@ enumerating all the live variables in the set.*)
   * 4. return the new liveMap.
   *)
   (*DFS the flowGraph reversely compute the new inmap and outmap*)
-  fun calcLiveMapOneIter (fg : Flow.flowgraph, h, inmap : liveMap, outmap: liveMap) = 
+  fun calcLiveMapOneIter (fg : Flow.flowgraph, inmap : liveMap, outmap: liveMap) = 
     let
       val Flow.FGRAPH{control=control, def=defTable, use=useTable, ismove=ismove} = fg
       val head = hd (Flow.G.nodes control)
@@ -138,13 +138,13 @@ enumerating all the live variables in the set.*)
       val (inmap', outmap') = calcLiveMapOneIter (fg, inmap, outmap)
       fun isLiveMapEqual (liveMap1 : liveMap, liveMap2 : liveMap) = 
         let 
-        val {control=graph,...} = fg
+        val Flow.FGRAPH{control=graph,...} = fg
         val nodes = Flow.G.nodes graph
         in
         foldl (fn (node, isEqual) => 
         let
-        val set1 : liveSet = Flow.G.Table.look(liveMap1, node)
-        val set2  : liveSet= Flow.G.Table.look(liveMap2, node)
+        val set1 : liveSet = case Flow.G.Table.look(liveMap1, node) of NONE => (Temp.Table.empty, []) | SOME x => x
+        val set2  : liveSet= case Flow.G.Table.look(liveMap2, node) of NONE => (Temp.Table.empty, []) | SOME x => x
         val (tbl1, lst1) = set1
         val (tbl2, lst2) = set2
         in 
@@ -167,7 +167,7 @@ enumerating all the live variables in the set.*)
   fun interferenceGraph (fg : Flow.flowgraph) =
     let
       val graph = IGraph.newGraph()
-      val {control=fgraph,def=defTable, use=useTable, ismove=ismove} = fg
+      val Flow.FGRAPH {control=fgraph,def=defTable, use=useTable, ismove=ismove} = fg
       val (inmap, outmap) = calcLiveMap (fg, Flow.G.Table.empty, Flow.G.Table.empty)
       val tnodeMap = Temp.Table.empty
       val gtempMap = Graph.Table.empty
@@ -177,7 +177,7 @@ enumerating all the live variables in the set.*)
         val nodes = Flow.G.nodes fgraph
         fun getTemps (tmpTable) = foldl (fn (node, temps) => 
           let
-          val tmpLst = Flow.G.Table.look(tmpTable, node)
+          val tmpLst = case Flow.G.Table.look(tmpTable, node) of NONE => [] | SOME x => x
           in
           tmpLst @ temps
           end) [] nodes
@@ -186,7 +186,7 @@ enumerating all the live variables in the set.*)
         (*initialize the tnodeMap and gtempMap by adding all def/use into the maps*)
         (*for each temp, create a node in the igraph*)
         foldl (fn (temp, (tnodeMap, gtempMap)) => 
-          if case IGraph.Table.look(tnodeMap, temp) of NONE => false | SOME _ => true 
+          if case Temp.Table.look(tnodeMap, temp) of NONE => false | SOME _ => true 
           then (tnodeMap, gtempMap) else
           let
           val node = IGraph.newNode(graph)
@@ -203,40 +203,40 @@ enumerating all the live variables in the set.*)
         val nodes = Flow.G.nodes fgraph
         fun connectNodes (node : Flow.G.node) = 
           let
-          val liveout : liveSet = Flow.G.Table.look(outmap, node)
+          val liveout : liveSet = case Flow.G.Table.look(outmap, node) of NONE => (Temp.Table.empty, []) | SOME x => x
           val (_, liveoutLst) = liveout
           in
-          foldl (fn (temp, graph) => 
+          map (fn (temp) => 
             let
-            val node1 = Temp.Table.look(tnodeMap, temp)
+            val node1 : IGraph.node = case Temp.Table.look(tnodeMap, temp) of NONE => raise Fail "temp not found" | SOME x => x
             in
-            foldl (fn (temp, graph) => 
+            map (fn (temp) => 
               let
-              val node2 = Temp.Table.look(tnodeMap, temp)
+              val node2: IGraph.node = case Temp.Table.look(tnodeMap, temp) of NONE => raise Fail "temp not found" | SOME x => x
               in
               if (IGraph.nodename node1) <> (IGraph.nodename node2) then
-              IGraph.mk_edge(graph, node1, node2) else ()
+              IGraph.mk_edge{from=node1, to=node2} else ()
               end
-            ) graph liveoutLst
+            )liveoutLst
             end
-          ) graph liveoutLst
+          ) liveoutLst
           end
       in
-        foldl (fn (node, graph) => connectNodes(node)) graph nodes
+        map (fn (node) => connectNodes(node)) nodes
       end
 
       val (tnodeMap, gtempMap) = initMaps()
       val _ = buildLiveGraph()
 
-      fun tnode(tmp : Temp.temp) = Graph.Table.look(tnodeMap, tmp)
+      fun tnode(tmp : Temp.temp) = case Temp.Table.look(tnodeMap, tmp) of NONE => raise Fail "temp not found" | SOME x => x
 
 
-      fun gtemp(node : IGraph.node) = Temp.Table.look(gtempMap, node)
-
+      fun gtemp(node : IGraph.node) = case IGraph.Table.look(gtempMap, node) of NONE => raise Fail "node not found" | SOME x => x
+      fun getLiveOut(node : Flow.G.node) = case Flow.G.Table.look(outmap, node) of NONE => [] | SOME x => let val (tbl, lst) = x in lst end
     in 
       (*TODO: temepraray leave moves as empty as it is not necessary for regalloc*)
-      IGRAPH {graph= graph, tnode= tnode, gtemp= gtemp, moves = []}
+      (IGRAPH {graph= graph, tnode= tnode, gtemp= gtemp, moves = []}, getLiveOut)
     end
 
-  fun show = raise Fail "Not implemented"
+  fun show (t, ig) = raise Fail "Not implemented"
 end
