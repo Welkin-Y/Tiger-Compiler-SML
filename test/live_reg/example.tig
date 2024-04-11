@@ -1,5 +1,6 @@
 let
     var a := 5
+    var b := 10
 in
-    a
+    a + b
 end

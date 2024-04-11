@@ -22,6 +22,7 @@ sig
     *)
   val instrs2graph: Assem.instr list ->
     Flow.flowgraph * Graph.node list 
+  val show : Graph.graph -> unit
 end
 
 structure MakeGraph :> MAKEGRAPH =
@@ -39,11 +40,11 @@ struct
   fun addEdges (graph, nodes) = raise Fail "Not implemented"
 
 
-  fun instrs2graph instrs = let
-
-
+  fun instrs2graph instrs = 
+  let
     (* for each instruction, add the node to the graph *)
-    fun initNode(instr, {graph, defTable, useTable, isMoveTable, nodes} : {graph: G.graph, defTable: Temp.temp list Graph.Table.table, useTable: Temp.temp list Graph.Table.table, isMoveTable: bool Graph.Table.table, nodes : Graph.node list}) = let
+    fun initNode(instr, {graph, defTable, useTable, isMoveTable, nodes} : 
+    {graph: G.graph, defTable: Temp.temp list Graph.Table.table, useTable: Temp.temp list Graph.Table.table, isMoveTable: bool Graph.Table.table, nodes : Graph.node list}) = let
       val node = Graph.newNode graph
       val (defTable', useTable', isMoveTable') = case instr of
       A.OPER{assem, dst, src, jump} => 
@@ -56,9 +57,10 @@ struct
         ({graph=graph, defTable=defTable', useTable=useTable', isMoveTable=isMoveTable', nodes=node::nodes})
       end
       val {graph, defTable, useTable, isMoveTable, nodes} = List.foldl initNode {graph=G.newGraph(), defTable=Graph.Table.empty, useTable=Graph.Table.empty, isMoveTable=Graph.Table.empty, nodes=[]} instrs
-    
+      val _ = Logger.log Logger.DEBUG("nodes initialized with length: "^ Int.toString (List.length nodes))
       (*add edges to the adjacent nodes in nodes list*)
       fun initEdges [] = ()
+        | initEdges [node] = ()
         | initEdges (node :: nodes) = 
         let
           val nextNode = hd nodes
@@ -67,6 +69,8 @@ struct
           initEdges nodes
         end
       val _ = initEdges nodes
+      val _ = Logger.log Logger.DEBUG("edges initialized")
+      (*add edges for jump*)
       fun addEdgesForJump [] = ()
       | addEdgesForJump (node::nodes : Graph.node list) = let
         val idx = Graph.getIndex node
