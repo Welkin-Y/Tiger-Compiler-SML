@@ -350,8 +350,8 @@ struct
                 (* prologue and epilogue are ISA dependent, can we move them to MipsFrame? *)
             in
                 (
-                    Printtree.printtree(TextIO.stdOut, prologue); print "\n";
-                    Printtree.printtree(TextIO.stdOut, epilogue); print "\n";
+                    (* Printtree.printtree(TextIO.stdOut, prologue); print "\n";
+                    Printtree.printtree(TextIO.stdOut, epilogue); print "\n"; *)
                     Nx(Tr.SEQ(prologue, epilogue)))
             end
 

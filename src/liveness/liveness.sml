@@ -237,6 +237,22 @@ enumerating all the live variables in the set.*)
       (*TODO: temepraray leave moves as empty as it is not necessary for regalloc*)
       (IGRAPH {graph= graph, tnode= tnode, gtemp= gtemp, moves = []}, getLiveOut)
     end
-
-  fun show (t, ig) = raise Fail "Not implemented"
+  (*print nodes in the graph and adjacent nodes*)
+  fun show (outstream : TextIO.outstream, ig : igraph) = 
+  let 
+    val IGRAPH{graph=graph, tnode=tnode, gtemp=gtemp, moves=moves} = ig
+    val nodes = IGraph.nodes graph
+    fun showNode (node : IGraph.node) : string = 
+      let
+      val nodename = IGraph.nodename node
+      val adjs = IGraph.adj node
+      val theNode = "\nNode: " ^ nodename ^ " \n adjs:\n"
+      in
+      (foldl (fn (adj, str) => str ^ (IGraph.nodename adj) ^ " ") theNode adjs) ^ "\n\n"
+      end
+  in
+    TextIO.output(outstream, "Interference Graph:\n");
+    TextIO.output(outstream, "Nodes:\n");
+    app (fn node => TextIO.output(outstream, showNode node)) nodes
+  end
 end

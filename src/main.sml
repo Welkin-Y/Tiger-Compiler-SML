@@ -26,9 +26,13 @@ structure Main = struct
         val canon_stms = Canon.traceSchedule(Canon.basicBlocks stms)
         (* val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) canon_stms *)
         val instrs = List.concat(map (Mips.codegen frame) canon_stms) 
-        val (fg, nodes) = M.instrs2graph instrs
-        val _ = Liv.interferenceGraph fg
+        (* val (fg, nodes) = M.instrs2graph instrs *)
+        (* val (graph, _) = Liv.interferenceGraph fg *)
+        (* val _ = TextIO.output(TextIO.stdOut, "\t.text\n") *)
+        (* val _ = Liv.show (TextIO.stdOut, graph) *)
         val format0 = Assem.format(Temp.makestring)
+      (* in  *)
+      (* () *)
       in  app (fn i => TextIO.output(out,format0 i)) instrs
       end
       
