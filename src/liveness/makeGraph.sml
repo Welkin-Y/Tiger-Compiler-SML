@@ -22,7 +22,7 @@ sig
     *)
   val instrs2graph: Assem.instr list ->
     Flow.flowgraph * Graph.node list 
-  val show : Graph.graph -> unit
+  val show : Flow.flowgraph * Assem.instr list -> unit
 end
 
 structure MakeGraph :> MAKEGRAPH =
@@ -39,6 +39,52 @@ struct
   
   fun addEdges (graph, nodes) = raise Fail "Not implemented"
 
+  fun show (fg, instrs) = 
+  let
+  val Flow.FGRAPH{control, def, use, ismove} = fg
+  val nodes = G.nodes control
+  fun showNode (node) =
+    let
+      val idx = G.getIndex node
+      (* val _ = Logger.log Logger.DEBUG("node index: " ^ Int.toString idx ^ " instrs length: " ^ Int.toString (List.length instrs)); *)
+      val instr = List.nth(instrs, idx)
+      val succList = G.succ node
+      val defList = case Graph.Table.look(def, node) of SOME l => l | NONE => []
+      val useList = case Graph.Table.look(use, node) of SOME l => l | NONE => []
+      val instrstr = 
+      case instr of 
+      A.OPER{assem, src, dst, jump = NONE} => 
+        assem 
+      | A.OPER{assem, src, dst, jump = SOME jumps} =>
+        assem
+      | A.LABEL{assem, lab} =>
+        "LABEL: " ^ assem
+      | A.MOVE{assem, src, dst} =>
+        assem
+      (* case instr of
+        A.OPER{assem, src, dst, jump = NONE} => 
+          Assem.speak(assem, src, dst, nil)
+        | A.OPER{assem, src, dst, jump = SOME jumps} =>
+          Assem.speak(assem, src, dst,jumps)
+        | A.LABEL{assem, lab} => 
+          "LABEL: " ^ assem
+        | A.MOVE{assem, src, dst} => 
+          Assem.speak(assem, [src], [dst], nil) *)
+    in 
+      L.log L.DEBUG("node " ^ G.nodename node ^ ": " ^ instrstr);
+      L.log L.DEBUG("defList: ");
+      List.app (fn n => L.log L.DEBUG("def node: " ^ Temp.makestring n)) defList;
+      L.log L.DEBUG("useList: ");
+      List.app (fn n => L.log L.DEBUG("use node: " ^ Temp.makestring n)) useList;
+      L.log L.DEBUG("sucList: ");
+      List.app (fn n => L.log L.DEBUG("suc node: " ^ G.nodename n)) succList
+    end
+  in
+    List.app showNode nodes
+  end
+
+
+  (* instrs2graph: Assem.instr list -> Flow.flowgraph * Graph.node list *)
 
   fun instrs2graph instrs = 
   let
@@ -59,47 +105,60 @@ struct
       val {graph, defTable, useTable, isMoveTable, nodes} = List.foldl initNode {graph=G.newGraph(), defTable=Graph.Table.empty, useTable=Graph.Table.empty, isMoveTable=Graph.Table.empty, nodes=[]} instrs
       val _ = Logger.log Logger.DEBUG("nodes initialized with length: "^ Int.toString (List.length nodes))
       (*add edges to the adjacent nodes in nodes list*)
+
       fun initEdges [] = ()
         | initEdges [node] = ()
-        | initEdges (node :: nodes) = 
+        | initEdges (nextNode :: nodes) = 
         let
-          val nextNode = hd nodes
+          val node = hd nodes
+          (* val _ = Logger.log Logger.DEBUG("add edge from node " ^ G.nodename node ^ " to node " ^ G.nodename nextNode) *)
         in 
         G.mk_edge({from=node, to=nextNode});
           initEdges nodes
         end
       val _ = initEdges nodes
+
       val _ = Logger.log Logger.DEBUG("edges initialized")
       (*add edges for jump*)
       fun addEdgesForJump [] = ()
       | addEdgesForJump (node::nodes : Graph.node list) = let
+        val _ =Logger.log Logger.DEBUG("adding edges for jump for node " ^ G.nodename node);
         val idx = Graph.getIndex node
         val instr = List.nth(instrs, idx)
+        val _ = case instr of A.OPER{assem, src, dst, jump} => Logger.log Logger.DEBUG("instr is OPER")
+        | _ => Logger.log Logger.DEBUG("instr is not OPER")
+
         in
-        case instr of A.OPER{assem, src, dst, jump} => 
+        case instr of A.OPER{assem, src, dst, jump=SOME jump} => 
           let
             val targetindices = List.map (fn jump_single => 
             let
             val res = (List.findi (fn (_, A.LABEL{lab, ...}) => lab = (jump_single) | _ => false) instrs)
             in
-            case res of SOME (idx, _) => SOME idx
+            case res of SOME (idx, _) => SOME(idx)
             | NONE => (L.log L.ERROR ("jump target not found"); NONE)
-            end) (Option.valOf jump)
+            end) (jump)
+            val _ = Logger.log Logger.DEBUG("node "^ (G.nodename node) ^" target indices length: " ^ Int.toString (List.length targetindices));
             fun addLink(target) = 
               case target of SOME (idx) => 
                 let
-                  val targetNode = List.nth(nodes, idx)
+                  
+                  val targetNode = G.augment (graph) idx
                 in
-                L.log L.DEBUG("add edge from node " ^ Int.toString idx ^ " to node " ^ Int.toString idx);
+                if G.has_edge{from=node, to=targetNode} 
+                then L.log L.DEBUG("edge from node " ^ G.nodename node ^ " to node " ^ Int.toString idx ^ " already exists")
+                else
                   G.mk_edge({from=node, to=targetNode})
                 end
               | NONE => ()
+            val _ = List.app addLink targetindices
           in
-          List.app addLink targetindices
+          addEdgesForJump nodes
           end
-        | _ => ()
+        | _ => addEdgesForJump nodes
         end
       val _ = addEdgesForJump nodes
+      val _ = Logger.log Logger.DEBUG("edges for jump initialized")
   in
     (F.FGRAPH{control=graph, def=defTable, use=useTable, ismove=isMoveTable}, nodes)
   end  

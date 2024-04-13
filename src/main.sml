@@ -28,9 +28,10 @@ structure Main = struct
         val instrs = List.concat(map (Mips.codegen frame) canon_stms) 
         val (fg, nodes) = M.instrs2graph (instrs)
         handle e => (TextIO.output(TextIO.stdOut, "instrs2graph error\n"); raise e)
-        val (graph, _) = Liv.interferenceGraph fg
-        val _ = TextIO.output(TextIO.stdOut, "\t.text\n")
-        val _ = Liv.show (TextIO.stdOut, graph)
+        val _= M.show(fg, instrs)
+        (* val (graph, _) = Liv.interferenceGraph fg *)
+        (* val _ = TextIO.output(TextIO.stdOut, "\t.text\n") *)
+        (* val _ = Liv.show (TextIO.stdOut, graph) *)
         val format0 = Assem.format(Temp.makestring)
       (* in  *)
       (* () *)

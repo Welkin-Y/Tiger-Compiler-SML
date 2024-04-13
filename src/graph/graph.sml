@@ -50,7 +50,7 @@ struct
       end
 
   exception GraphEdge
-  fun check(g,g') = (* if g=g' then () else raise GraphEdge  *) ()
+  fun check(g,g') = (*if g=g' then () else raise GraphEdge *) ()
   
 
   fun delete(i,j::rest) = if i=j then rest else j::delete(i,rest)
@@ -67,6 +67,12 @@ struct
 
   val mk_edge = diddle_edge (op ::)
   val rm_edge = diddle_edge delete
+  fun has_edge {from=(g,i),to=(g',j)} = 
+      let
+      val _ = check(g,g') 
+      val NODE{succ=s,...} = A.sub(g,i)
+      in List.exists (fn k => k=j) s
+      end
 
   structure Table = RedBlackMapTable(type key = node
       fun getInt(g,n) = n)
