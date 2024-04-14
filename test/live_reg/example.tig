@@ -2,8 +2,5 @@ let
     var a := 5
     var b := 10
 in
-    if a < b then
-        if a > 0 then a else 0
-    else
-        b
+    a + b
 end
