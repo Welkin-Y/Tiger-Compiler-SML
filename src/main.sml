@@ -31,7 +31,7 @@ structure Main = struct
         (* val _= M.show(fg, instrs) *)
         val (graph, _) = Liv.interferenceGraph fg
         (* val _ = TextIO.output(TextIO.stdOut, "\t.text\n") *)
-        (* val _ = Liv.show (TextIO.stdOut, graph) *)
+        val _ = Liv.show (TextIO.stdOut, graph)
         val format0 = Assem.format(Temp.makestring)
       (* in  *)
       (* () *)

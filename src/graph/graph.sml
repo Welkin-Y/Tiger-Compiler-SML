@@ -74,6 +74,9 @@ struct
       in List.exists (fn k => k=j) s
       end
 
+  fun is_adjacent(node1: node, node2:node) = has_edge{from=node1,to=node2} orelse
+      has_edge{from=node2,to=node1}
+
   structure Table = RedBlackMapTable(type key = node
       fun getInt(g,n) = n)
 

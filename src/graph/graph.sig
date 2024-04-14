@@ -16,6 +16,7 @@ sig
     val mk_edge: {from: node, to: node} -> unit
     val rm_edge: {from: node, to: node} -> unit
     val has_edge: {from: node, to: node} -> bool
+    val is_adjacent: node * node -> bool
 
     structure Table : TABLE 
     sharing type Table.key = node

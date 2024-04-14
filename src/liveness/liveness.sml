@@ -61,6 +61,25 @@ enumerating all the live variables in the set.*)
          "Node: " ^ (Int.toString nodeidx) ^ " LiveSet: " ^ liveStr ^ "\n" ^ str
           end
         ) "" map
+    fun makeTNodeMapString (tnodeMap : IGraph.node Temp.Table.table) = 
+      Temp.Table.foldri (fn (temp, node, str) => 
+        let
+        val tempStr = Temp.makestring temp
+        val nodeStr = IGraph.nodename node
+        in
+        str ^ tempStr ^ " -> " ^ nodeStr ^ "\n"
+        end
+      ) "" tnodeMap
+
+    fun makeGTempMapString (gtempMap : Temp.temp Graph.Table.table) = 
+      Graph.Table.foldri (fn (node, temp, str) => 
+        let
+        val tempStr = Temp.makestring temp
+        val nodeStr = IGraph.nodename node
+        in
+        str ^ nodeStr ^ " -> " ^ tempStr ^ "\n"
+        end
+      ) "" gtempMap
 
 
 
@@ -234,12 +253,13 @@ enumerating all the live variables in the set.*)
           tmpLst @ temps
           end) [] nodes
         val alltemps = getTemps(defTable) @ getTemps(useTable)
+        val _ = Logger.log Logger.DEBUG ("All temps: " ^ (foldl (fn (temp, str) => str ^ (Temp.makestring temp) ^ " ") "" alltemps) ^ "\n")
       in
         (*initialize the tnodeMap and gtempMap by adding all def/use into the maps*)
         (*for each temp, create a node in the igraph*)
         foldl (fn (temp, (tnodeMap, gtempMap)) => 
-          if case Temp.Table.look(tnodeMap, temp) of NONE => false | SOME _ => true 
-          then (tnodeMap, gtempMap) else
+          case Temp.Table.look(tnodeMap, temp) of SOME _  => (tnodeMap, gtempMap)
+          | NONE =>
           let
           val node = IGraph.newNode(graph)
           val tnodeMap = Temp.Table.enter(tnodeMap, temp, node)
@@ -250,23 +270,26 @@ enumerating all the live variables in the set.*)
         ) (tnodeMap, gtempMap) alltemps
       end
       (*iterate through the liveout set connect all nodes that live at the same time*)
-      fun buildLiveGraph() = 
+      fun buildLiveGraph(tnodeMap) = 
       let 
         val nodes = Flow.G.nodes fgraph
         fun connectNodes (node : Flow.G.node) = 
           let
           val liveout : liveSet = case Flow.G.Table.look(outmap, node) of NONE => (Temp.Table.empty, []) | SOME x => x
           val (_, liveoutLst) = liveout
+          (*log current tnodeMap*)
+          (* val _ = Logger.log Logger.DEBUG ("Current tnodemap: " ^ makeTNodeMapString tnodeMap ^ "\n") *)
           in
           map (fn (temp) => 
             let
+            val _ = Logger.log Logger.DEBUG ("Connecting temp: " ^ (Temp.makestring temp) ^ "\n")
             val node1 : IGraph.node = case Temp.Table.look(tnodeMap, temp) of NONE => raise Fail "temp not found" | SOME x => x
             in
             map (fn (temp) => 
               let
               val node2: IGraph.node = case Temp.Table.look(tnodeMap, temp) of NONE => raise Fail "temp not found" | SOME x => x
               in
-              if (IGraph.nodename node1) <> (IGraph.nodename node2) then
+              if (IGraph.nodename node1) <> (IGraph.nodename node2) andalso (not (IGraph.is_adjacent(node1, node2))) then
               IGraph.mk_edge{from=node1, to=node2} else ()
               end
             )liveoutLst
@@ -278,7 +301,9 @@ enumerating all the live variables in the set.*)
       end
 
       val (tnodeMap, gtempMap) = initMaps()
-      val _ = buildLiveGraph()
+      val _ = Logger.log Logger.DEBUG ("tnodeMap: " ^ makeTNodeMapString tnodeMap ^ "\n")
+      val _ = Logger.log Logger.DEBUG ("gtempMap: " ^ makeGTempMapString gtempMap ^ "\n")
+      val _ = buildLiveGraph(tnodeMap)
 
       fun tnode(tmp : Temp.temp) = case Temp.Table.look(tnodeMap, tmp) of NONE => raise Fail "temp not found" | SOME x => x
 
