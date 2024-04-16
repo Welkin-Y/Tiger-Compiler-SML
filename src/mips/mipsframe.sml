@@ -123,15 +123,29 @@ struct
         val reglocs = map (fn r => loc(allocLocal frm true)(Tree.CONST 0)) (regs)
         (* save registers *)
         fun storeReg (r : Temp.temp, l : Tree.loc) = Tree.MOVE(l , Tree.READ (Tree.TEMP r))
+        (* load registers *)
         fun loadReg (r : Temp.temp, l : Tree.loc) = Tree.MOVE(Tree.TEMP r, Tree.READ(l))
 
         val storeRegs = map (fn (r, acc) => storeReg(r, acc)) (ListPair.zip(regs, reglocs))
         val loadRegs = map (fn (r, acc) => loadReg(r, acc)) (ListPair.zip(regs, reglocs))
+        (* save fp *)
+        (* move sp to fp *)
+        val saveFP = Tree.MOVE(loc(allocLocal frm true)(Tree.CONST 0), Tree.READ(Tree.TEMP FP))
+        val moveSP = Tree.MOVE(Tree.TEMP FP, Tree.READ(Tree.TEMP SP))
+        (*decrement sp by inFrameSize*)
+        val decSP = Tree.MOVE(Tree.TEMP SP, Tree.BINOP(Tree.MINUS, Tree.READ(Tree.TEMP SP), Tree.CONST (!inFrameSize * wordSize)))
+        (*restore sp*)
+        val restoreSP = Tree.MOVE(Tree.TEMP SP, Tree.READ(Tree.TEMP FP))
+        (* restore fp *)
+        val restoreFP = Tree.MOVE(Tree.TEMP FP, Tree.READ(Tree.MEM(Tree.BINOP(Tree.PLUS, Tree.READ(Tree.TEMP SP), Tree.CONST 0))))
+        val prelogue = [saveFP, moveSP, decSP]
+        val epilogue = [restoreSP, restoreFP]        
         (* seq *)
         fun seq [] = Tree.EXP(Tree.CONST 0)
           | seq (x::xs) = Tree.SEQ(x, seq xs)
       in
-        seq (storeRegs @ [Tree.EXP body] @ loadRegs)
+        seq (prelogue @ storeRegs @ [Tree.EXP body] @ loadRegs @ epilogue)
+
       end
 
   (* This function appends a "sink" instruction to the function body to tell the register allocator that certain registers are live at procedure exit. *)
