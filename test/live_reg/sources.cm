@@ -39,5 +39,9 @@ $/ml-yacc-lib.cm
 ../../src/liveness/flowgraph.sml
 ../../src/liveness/liveness.sml 
 ../../src/liveness/makeGraph.sml
+../../src/regalloc/color.sig
+../../src/regalloc/color.sml
+../../src/regalloc/regalloc.sig
+../../src/regalloc/regalloc.sml
 
 ../../src/main.sml

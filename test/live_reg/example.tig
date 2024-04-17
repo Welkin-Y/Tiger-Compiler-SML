@@ -1,9 +1,7 @@
 let
-    var a := 5
-    var b := 10
+    type intArray = array of int
+
+    var row := intArray [ 5 ] of 0
 in
-    if a < b then
-        a
-    else
-        b + a
+    row[0]
 end
