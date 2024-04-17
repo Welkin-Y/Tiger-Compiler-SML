@@ -6,6 +6,7 @@ structure Main = struct
   structure L = Logger
   structure M = MakeGraph
   structure Liv = Liveness
+  structure RegAlloc = Reg_Alloc(MipsFrame)
 
   
   (* structure R = RegAlloc *)
@@ -32,6 +33,8 @@ structure Main = struct
         val (graph, _) = Liv.interferenceGraph fg
         (* val _ = TextIO.output(TextIO.stdOut, "\t.text\n") *)
         val _ = Liv.show (TextIO.stdOut, graph)
+        val (instrs, allocation) = RegAlloc.alloc(instrs, frame)
+        val _ = RegAlloc.show(allocation)
         val format0 = Assem.format(Temp.makestring)
       (* in  *)
       (* () *)
