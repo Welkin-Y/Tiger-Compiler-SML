@@ -35,7 +35,11 @@ structure Main = struct
         val _ = Liv.show (TextIO.stdOut, graph)
         val (instrs, allocation) = RegAlloc.alloc(instrs, frame)
         val _ = RegAlloc.show(allocation)
-        val format0 = Assem.format(Temp.makestring)
+        fun temp_to_reg temp = 
+          case Temp.Table.look(allocation, temp) of
+            SOME reg => F.reg_to_string reg
+          | NONE => "$ERROR_REG"
+        val format0 = Assem.format(temp_to_reg)
       (* in  *)
       (* () *)
       in  app (fn i => TextIO.output(out,format0 i)) instrs
