@@ -1,7 +1,5 @@
 let
-    type intArray = array of int
-
-    var row := intArray [ 5 ] of 0
+    function fun(a : int , b : int) : int = a + b
 in
-    row[0]
+    fun(1, 2)
 end

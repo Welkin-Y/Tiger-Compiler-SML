@@ -137,7 +137,7 @@ struct
       let val {name, formals, inFrameSize} = frm
         (* get memory for registers*) 
         val regs = [RA, SP, FP] @ calleesaves
-        val reglocs = map (fn r => loc(allocLocal frm true)(Tree.CONST 0)) (regs)
+        val reglocs = map (fn r => loc(allocLocal frm true)(Tree.READ(Tree.TEMP SP))) (regs)
         (* save registers *)
         fun storeReg (r : Temp.temp, l : Tree.loc) = Tree.MOVE(l , Tree.READ (Tree.TEMP r))
         (* load registers *)
@@ -147,7 +147,7 @@ struct
         val loadRegs = map (fn (r, acc) => loadReg(r, acc)) (ListPair.zip(regs, reglocs))
         (* save fp *)
         (* move sp to fp *)
-        val saveFP = Tree.MOVE(loc(allocLocal frm true)(Tree.CONST 0), Tree.READ(Tree.TEMP FP))
+        val saveFP = Tree.MOVE(loc(allocLocal frm true)(Tree.READ(Tree.TEMP SP)), Tree.READ(Tree.TEMP FP))
         val moveSP = Tree.MOVE(Tree.TEMP FP, Tree.READ(Tree.TEMP SP))
         (*decrement sp by inFrameSize*)
         val decSP = Tree.MOVE(Tree.TEMP SP, Tree.BINOP(Tree.MINUS, Tree.READ(Tree.TEMP SP), Tree.CONST (!inFrameSize * wordSize)))
