@@ -40,6 +40,7 @@ structure Main = struct
             SOME reg => F.reg_to_string reg
           | NONE => "$ERROR_REG"
         val format0 = Assem.format(temp_to_reg)
+        (* val format0 = Assem.format(Temp.makestring) *)
       (* in  *)
       (* () *)
       in  app (fn i => TextIO.output(out,format0 i)) instrs

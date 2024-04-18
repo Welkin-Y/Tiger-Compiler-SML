@@ -19,7 +19,7 @@ struct
         fun findNode [] = NONE
           | findNode (node::nlst) = 
             case Temp.Table.look(initial, gtemp node) of
-                NONE => if get_degree node < Frame.regNum then SOME node
+                NONE => if get_degree node < Frame.tempRegNum then SOME node
                         else raise Fail "Non-simplifyable node found"
               | SOME _ => findNode nlst
     in

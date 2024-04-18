@@ -11,7 +11,7 @@ struct
         val (fg, nodes) = M.instrs2graph (instrs)
         handle e => (TextIO.output(TextIO.stdOut, "instrs2graph error\n"); raise e)
         val (igraph, _) = Liv.interferenceGraph fg
-        val (color_alloc, _) = Color.color {interference=igraph, initial=Frame.tempMap, spillCost=(fn n => 0), registers=Frame.registers}
+        val (color_alloc, _) = Color.color {interference=igraph, initial=Frame.tempMap, spillCost=(fn n => 0), registers=Frame.temp_regs}
     in
         (instrs, color_alloc)
     end

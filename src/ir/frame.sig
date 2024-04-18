@@ -2,7 +2,8 @@ signature FRAME =
 sig 
     type register = string
     val registers: register list
-    val regNum: int
+    val temp_regs: register list
+    val tempRegNum: int
     val reg_eq: register * register -> bool
     val reg_to_string: register -> string
 
