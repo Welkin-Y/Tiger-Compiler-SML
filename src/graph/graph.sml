@@ -1,9 +1,6 @@
 structure Graph :> GRAPH =
 struct
-  type node' = int
-  type temp = Temp.temp
-
-  datatype noderep = NODE of {succ: node' list, pred: node' list}
+  datatype noderep = NODE of {succ: int list, pred: int list}
 
   val emptyNode = NODE{succ=[],pred=[]}
 
@@ -20,14 +17,14 @@ struct
 
   type graph = A.array
 
-  type node = graph * node'
+  type node = graph * int 
   fun eq((_,a),(_,b)) = a=b
 
-  fun augment (g: graph) (n: node') : node = (g,n)
+  fun augment (g: graph) (n: int) : node = (g,n)
 
   fun newGraph() = A.array(0,bogusNode)
 
-  fun nodes g = let val b = A.bound g
+  fun nodes g = let 
         fun f i = if isBogus( A.sub(g,i)) then nil
             else (g,i)::f(i+1)
       in f 0			     
@@ -53,7 +50,8 @@ struct
       end
 
   exception GraphEdge
-  fun check(g,g') = (* if g=g' then () else raise GraphEdge *) ()
+  fun check(g,g') = (*if g=g' then () else raise GraphEdge *) ()
+  
 
   fun delete(i,j::rest) = if i=j then rest else j::delete(i,rest)
     | delete(_,nil) = raise GraphEdge
@@ -69,12 +67,23 @@ struct
 
   val mk_edge = diddle_edge (op ::)
   val rm_edge = diddle_edge delete
+  fun has_edge {from=(g,i),to=(g',j)} = 
+      let
+      val _ = check(g,g') 
+      val NODE{succ=s,...} = A.sub(g,i)
+      in List.exists (fn k => k=j) s
+      end
+
+  fun is_adjacent(node1: node, node2:node) = has_edge{from=node1,to=node2} orelse
+      has_edge{from=node2,to=node1}
 
   structure Table = RedBlackMapTable(type key = node
       fun getInt(g,n) = n)
 
 
   fun nodename(g,i:int) = "n" ^ Int.toString(i)
+
+  fun getIndex (n : node) = let val (_,i) = n in i end
 
 end
 

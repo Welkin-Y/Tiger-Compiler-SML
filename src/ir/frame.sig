@@ -2,6 +2,10 @@ signature FRAME =
 sig 
     type register = string
     val registers: register list
+    val temp_regs: register list
+    val tempRegNum: int
+    val reg_eq: register * register -> bool
+    val reg_to_string: register -> string
 
     val FP: Temp.temp
     val SP: Temp.temp
@@ -16,6 +20,7 @@ sig
     val calldefs: Temp.temp list 
 
     val tempMap: register Temp.Table.table
+    val get_reg: Temp.temp -> register
     val wordSize: int
     val externalCall: string * Tree.exp list -> Tree.exp
     type frame (* information about formal parameters and local variables allocated in this frame *)

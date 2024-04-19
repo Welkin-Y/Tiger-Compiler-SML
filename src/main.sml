@@ -4,6 +4,9 @@ structure Main = struct
   structure S = Semant(Tr)
   structure Mips = MipsGen
   structure L = Logger
+  structure M = MakeGraph
+  structure Liv = Liveness
+  structure RegAlloc = Reg_Alloc(MipsFrame)
 
   
   (* structure R = RegAlloc *)
@@ -24,7 +27,22 @@ structure Main = struct
         val canon_stms = Canon.traceSchedule(Canon.basicBlocks stms)
         (* val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) canon_stms *)
         val instrs = List.concat(map (Mips.codegen frame) canon_stms) 
-        val format0 = Assem.format(Temp.makestring)
+        val (fg, nodes) = M.instrs2graph (instrs)
+        handle e => (TextIO.output(TextIO.stdOut, "instrs2graph error\n"); raise e)
+        (* val _= M.show(fg, instrs) *)
+        val (graph, _) = Liv.interferenceGraph fg
+        (* val _ = TextIO.output(TextIO.stdOut, "\t.text\n") *)
+        val _ = Liv.show (TextIO.stdOut, graph)
+        val (instrs, allocation) = RegAlloc.alloc(instrs, frame)
+        val _ = RegAlloc.show(allocation)
+        fun temp_to_reg temp = 
+          case Temp.Table.look(allocation, temp) of
+            SOME reg => F.reg_to_string reg
+          | NONE => "$ERROR_REG"
+        val format0 = Assem.format(temp_to_reg)
+        (* val format0 = Assem.format(Temp.makestring) *)
+      (* in  *)
+      (* () *)
       in  app (fn i => TextIO.output(out,format0 i)) instrs
       end
       
