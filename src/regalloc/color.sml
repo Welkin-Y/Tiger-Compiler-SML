@@ -26,7 +26,7 @@ struct
         case findNode remainingNodes of
             NONE => (remainingNodes, removedNodes)
           | SOME node => (
-            Logger.log Logger.DEBUG ("Simplifying node " ^ Temp.makestring(gtemp node) ^ "\n");
+            Logger.log Logger.DEBUG ("Simplifying node " ^ Temp.makestring(gtemp node));
             simplify (interference, initial,
                                     List.filter (fn n => not (Graph.eq(n, node))) remainingNodes, 
                                     node::removedNodes)
