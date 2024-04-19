@@ -138,6 +138,9 @@ struct
         (* get memory for registers*) 
         val regs = [RA, SP, FP] @ calleesaves
         val reglocs = map (fn r => loc(allocLocal frm true)(Tree.READ(Tree.TEMP SP))) (regs)
+
+
+        (* load $a0-$a3 from formals *)
         (* save registers *)
         fun storeReg (r : Temp.temp, l : Tree.loc) = Tree.MOVE(l , Tree.READ (Tree.TEMP r))
         (* load registers *)
@@ -156,12 +159,19 @@ struct
         (* restore fp *)
         val restoreFP = Tree.MOVE(Tree.TEMP FP, Tree.READ(Tree.MEM(Tree.BINOP(Tree.PLUS, Tree.READ(Tree.TEMP SP), Tree.CONST 0))))
         val prelogue = [saveFP, moveSP, decSP]
-        val epilogue = [restoreSP, restoreFP]        
+        val epilogue = [restoreSP, restoreFP]  
+
+        (* store $a0-$a3 to formals *)
+        val _ = Logger.log Logger.DEBUG ("formals in funcEntryExis1: " ^ Int.toString (List.length formals));
+        val storeArgs  = map (fn (formalloc, acc) => 
+        Tree.MOVE((loc (formalloc) (Tree.READ(Tree.TEMP FP))), Tree.READ(Tree.TEMP (List.nth(argregs, acc))))) 
+        (ListPair.zip(formals, List.tabulate(List.length formals, fn x => x)))
+
         (* seq *)
         fun seq [] = Tree.EXP(Tree.CONST 0)
           | seq (x::xs) = Tree.SEQ(x, seq xs)
       in
-        seq (prelogue @ storeRegs @ [Tree.EXP body] @ loadRegs @ epilogue)
+        seq (prelogue @ storeRegs @ storeArgs @ [Tree.EXP body] @ loadRegs @ epilogue)
 
       end
 

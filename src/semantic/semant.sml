@@ -383,16 +383,22 @@ struct
           (*recursively check the body of each function*)
           val _ = L.log L.DEBUG "begin to check body of each function"
           fun paramTmpVenv (params, newvenv, level) = 
-              let fun helper (param, venv) = 
+              let 
+              val formals = TL.formals level
+              val paramFormals = List.drop (formals, 1)
+              fun helper ((param, formal), venv) = 
                     let
+                      
                       val {name, escape, typ, pos} = param
+
                       val ty = case Symbol.look (tenv, typ) of SOME ty => ty
                         | NONE => TC.undefinedTypeErr pos typ     
                     in
                       (* TODO: how to add args into function's level's frame? *)
-                      (Symbol.enter (venv, name, Env.VarEntry {access=TL.allocLocal level (!escape), ty=ty}))
+                      (Symbol.enter (venv, name, Env.VarEntry {access=formal, ty=ty}))
                     end         
-              in foldl helper newvenv params end
+              in foldl helper newvenv (ListPair.zip (params, paramFormals))
+              end
 
           val expfuncs = foldr (fn (fundec :Absyn.fundec, expfuncs) => (
                   let 
@@ -404,14 +410,27 @@ struct
                     val {level=fundeclevel, label=funlabel, ...} = case funentry of Env.FunEntry record => record
                       | _ => (ErrorMsg.error pos ("TypeError: not a function " ^ Symbol.name name); raise ErrorMsg.Error)
                     (* add all args var into a tmp venv to check body*)
-                    val bodylevel = TL.newLevel({parent=fundeclevel, name=Temp.namedlabel "function", formals=[]})
+                    (* add params into formals *)
+                    val initFormals = map (fn (param) => 
+                          let
+                            val {name, escape, typ, pos} = param
+                          in
+                            !escape
+                          end) params
+                    val bodylevel = TL.newLevel({parent=fundeclevel, name=Temp.namedlabel "function", formals=initFormals})
+                    val _ = L.log L.DEBUG ("function have " ^ Int.toString (length params) ^ " params")
                     val tmpvenv = paramTmpVenv (params, newvenv, bodylevel)
                     val {exp=bodyexp, ty=typ} = transExp (tmpvenv, newtenv, body, 0, bodylevel, breakLabel)
                     (*check if expty consistent with the delared function ty*)
                     val () = L.log L.DEBUG ("func body typ: " ^ T.toString typ)
                   in
                     TC.checkFunc(newtenv, result, typ, pos);
-                    TL.transFunDec(fundeclevel, funlabel, bodyexp)::expfuncs
+
+                    (* TL.transFunDec(fundeclevel, funlabel, bodyexp)::expfuncs 
+                      In our previous discussion we should use fundecLevel instead of bodylevel for some reasons (mutually recursion I guess?)
+                      but it seems that we should use bodylevel here, because we need to use the level of the function
+                    *)
+                    TL.transFunDec(bodylevel, funlabel, bodyexp)::expfuncs
                   end)) [] fundecs
         in
           PrintEnv.printEnv (newvenv, newtenv);
