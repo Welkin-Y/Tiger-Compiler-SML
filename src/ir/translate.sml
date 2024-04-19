@@ -14,7 +14,7 @@ struct
     val outermost = ROOT
 
     fun newLevel ({parent: level, name: Temp.label, formals: bool list}) = let 
-                val () = L.log L.DEBUG "create new level"
+                val () = L.log L.DEBUG ("create new level with formal length: " ^ Int.toString ((length formals) + 1))
             in LEVEL{parent = parent, frame = F.newFrame({name = name, formals = true::formals}), id = ref () } end
 
     fun formals(ROOT) = []
@@ -344,14 +344,14 @@ struct
                 4. (✔) jr $ra 
                 *)
                 val epilogue = seq[Tr.MOVE(Tr.TEMP F.RV, body), 
-                        Tr.JUMP(rdTmp (List.nth(F.specialregs,8)), []), 
+                        Tr.JUMP(rdTmp (List.nth(F.specialregs,9)), []), 
                         Tr.LABEL endlabel] 
 
                 (* prologue and epilogue are ISA dependent, can we move them to MipsFrame? *)
             in
                 (
-                    Printtree.printtree(TextIO.stdOut, prologue); print "\n";
-                    Printtree.printtree(TextIO.stdOut, epilogue); print "\n";
+                    (* Printtree.printtree(TextIO.stdOut, prologue); print "\n";
+                    Printtree.printtree(TextIO.stdOut, epilogue); print "\n"; *)
                     Nx(Tr.SEQ(prologue, epilogue)))
             end
 

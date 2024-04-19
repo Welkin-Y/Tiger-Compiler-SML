@@ -13,6 +13,21 @@ structure Assem = struct
         dst: temp,
         src: temp}
 
+    fun speak(assem,dst,src,jump) =
+            let val saylab = Symbol.name    
+                fun f(#"`":: #"s":: i::rest) = 
+                        (explode(Temp.makestring(List.nth(src,ord i - ord #"0"))) @ f rest)
+                    | f( #"`":: #"d":: i:: rest) = 
+                        (explode(Temp.makestring(List.nth(dst,ord i - ord #"0"))) @ f rest)
+                    | f( #"`":: #"j":: i:: rest) = 
+                        (explode(saylab(List.nth(jump,ord i - ord #"0"))) @ f rest)
+                    | f( #"`":: #"`":: rest) = #"`" :: f rest
+                    | f( #"`":: _ :: rest) = ErrorMsg.impossible "bad Assem format"
+                    | f(c :: rest) = (c :: f rest)
+                    | f nil = nil
+            in implode(f(explode assem))
+            end
+
     fun format saytemp =
             let 
                 fun speak(assem,dst,src,jump) =
