@@ -30,7 +30,7 @@ sudo apt-get install -y python3 python3-pip
 Our codebase is organized as follows:
 
 ```
-.
+553-compiler/
 ├── examples
 │   ├── negative
 │   └── positive
@@ -43,31 +43,45 @@ Our codebase is organized as follows:
 │   └── src
 ├── parser
 │   ├── resources
+│   │   └── tmp
 │   ├── src
 │   └── test
 ├── semantic
 │   ├── resources
+│   │   └── tmp
 │   ├── src
 │   └── test
 ├── src
 │   ├── absyn
 │   ├── env
+│   ├── graph
 │   ├── insel
 │   ├── ir
 │   ├── lexer
+│   │   └── deprecated
+│   ├── liveness
 │   ├── logger
 │   ├── mips
 │   ├── parser
+│   ├── regalloc
 │   ├── semantic
 │   ├── table
 │   └── tree
 └── test
     ├── insel
+    │   └── examples
     ├── ir
     ├── lexer
+    │   └── resources
+    ├── live_reg
     ├── logger
     ├── parser
+    │   └── resources
+    │       └── truth
     └── sematic
+        └── resources
+            ├── negative
+            └── positive
 
 ```
 
@@ -155,6 +169,16 @@ The find escape function in the parser phase is used to analyze the variable esc
 We used the Appel's implementation of `canon.sml` and implemented our version of mipsgen in `mipsgen.sml`. Some bugs from the previous phases are fixed in this phase. The `Semantic.sml` is also updated to fix bugs in the previous phase.
 
 We also reorganized the code structure to make it more readable and easier to understand.
+
+## Liveness Analysis & Register Allocation
+We implemented the liveness analysis and register allocation in `src/liveness/` and `src/regalloc`. The liveness analysis is based on the Appel's instruction level node for control flow graph. The register allocation is based on the graph coloring algorithm. 
+Some bugs from the previous phases are fixed in this phase like view shift. 
+To run our code:
+```
+cd test/live_reg
+echo exmaple.tig | sml test.sml
+```
+which will generate an `example.tig.s` file in the same directory contains the assembly code.
 
 ## Implemented Bonus
 - **Semantic Analysis**: We implemented drew's version of Record. We use the functional record to achive the recursive definition
