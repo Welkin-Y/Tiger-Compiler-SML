@@ -343,7 +343,7 @@ struct
                 3. ( ) an instruction to reset the stack pointer (to deallocate the frame);
                 4. (✔) jr $ra 
                 *)
-                val epilogue = seq[Tr.MOVE(Tr.TEMP F.RV, body), 
+                val epilogue = seq[Tr.EXP body, 
                         Tr.JUMP(rdTmp (List.nth(F.specialregs,9)), []), 
                         Tr.LABEL endlabel] 
 

@@ -171,7 +171,9 @@ struct
         fun seq [] = Tree.EXP(Tree.CONST 0)
           | seq (x::xs) = Tree.SEQ(x, seq xs)
       in
-        seq (prelogue @ storeRegs @ storeArgs @ [Tree.EXP body] @ loadRegs @ epilogue)
+        seq([Tree.MOVE(Tree.TEMP RV,
+        (Tree.ESEQ(seq (prelogue @ storeRegs @ storeArgs @ [Tree.EXP body] ), Tree.CONST 0)))] 
+        @ loadRegs @ epilogue)
 
       end
 
