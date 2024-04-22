@@ -1,5 +1,7 @@
 let
-    function fun(a : int , b : int) : int = a + b
+    function f(a : int, count : int) : int = 
+        if count = 0 then a
+        else f(a + 1, count - 1)
 in
-    fun(1, 2)
+    f(0, 1)
 end

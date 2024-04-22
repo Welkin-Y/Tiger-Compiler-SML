@@ -21,7 +21,7 @@ structure Main = struct
       let
         (* val _ = Printtree.printtree(TextIO.stdOut,body) *)
         val stms = Canon.linearize body
-        (* val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms *)
+        val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms
         (*val (stmslist, _) = Canon.basicBlocks stms
         val _ = app (fn x => (app (fn s => Printtree.printtree(TextIO.stdOut,s)) x; print "\n")) stmslist *)
         val canon_stms = Canon.traceSchedule(Canon.basicBlocks stms)
