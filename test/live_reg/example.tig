@@ -1,7 +1,8 @@
 /* valid for and let */
 
 let
-	var a:= 77
+	type  arrtype = array of int
+	var a:arrtype := arrtype [10] of 0
 in 
-	for i:=5 to 100 do (a:=a+3;())
+	
 end
