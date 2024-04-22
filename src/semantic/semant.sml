@@ -507,7 +507,7 @@ struct
         val () = L.log L.INFO "Start to translate program"
         val venv = Env.base_venv
         val tenv = Env.base_tenv 
-        val startLevel = TL.newLevel({parent = TL.outermost, name = Temp.newlabel(), formals = []})
+        val startLevel = TL.newLevel({parent = TL.outermost, name = Temp.namedlabel("tig_main"), formals = []})
         val {exp=trexp, ty=_} = transExp (venv, tenv, exp, 0,  startLevel, NONE)
       in
         TL.procEntryExit({level=startLevel, body=trexp});
