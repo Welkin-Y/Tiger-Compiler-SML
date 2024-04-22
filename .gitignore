@@ -9,3 +9,4 @@
 *.log
 *.s
 *.amd64-linux
+*.x86-linux
