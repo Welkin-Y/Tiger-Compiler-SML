@@ -102,10 +102,9 @@ struct
     fun transNil () = Ex(Tr.CONST 0)
     
     fun simpleVar(access, useLevel) =
-            
             let val (defLevel, defAccess) = access
                 val _ = L.log L.DEBUG "Translate.simpleVar";
-            in Ex(F.exp defAccess (followStaticLink(defLevel, useLevel))) end
+            in Lx(F.loc defAccess (followStaticLink(defLevel, useLevel))) end
        
 
     fun fieldVar (var, index) = 
@@ -288,7 +287,8 @@ struct
             let
                 val assignVar = transAssign(var, lo)
                 val test = transRelop(A.LeOp, var, hi)
-                val newbody = Nx(Tr.SEQ(unNx body, Tr.EXP(Tr.BINOP(Tr.PLUS, Tr.READ(unLx var), Tr.CONST 1))))
+                val plusone = unNx(transAssign(var, Ex(Tr.BINOP(Tr.PLUS, Tr.READ(unLx var), Tr.CONST 1))))
+                val newbody = Nx(Tr.SEQ(unNx body, plusone))
             in
                 Nx(Tr.SEQ(unNx assignVar, unNx(transLoop(test, newbody, breakLabel))))
             end
