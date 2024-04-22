@@ -236,11 +236,16 @@ struct
           
           (* func call *)
           | munchExp(T.CALL(T.NAME l, args)) = 
-            result(fn r => emit(A.OPER
+            result(fn r => let 
+                  val _ = emit(A.OPER
                   {assem="\t" ^ "jal\t" ^ (Symbol.name l) ^ "\n",
                     src=munchArgs(0, args), 
                     dst=calldefs,
-                    jump=NONE}))
+                    jump=NONE})
+                  in
+                  emit(A.MOVE{assem="\t" ^ "move\t" ^ "`d0, " ^ "`s0\n",
+                    src=F.RV, dst=r})
+                  end)
           | munchExp(T.CALL(e, args)) = 
             result(fn r => emit(A.OPER
                   {assem="\t" ^ "jalr\t" ^ "`s0\n",

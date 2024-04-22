@@ -19,13 +19,14 @@ structure Main = struct
       (* val _ = Printtree.printtree(out,body) *)
       (* val _ = app (fn s => Printtree.printtree(out,s)) stms *)
       let
+        val _ = TextIO.output(out, "main:\n")
         (* val _ = Printtree.printtree(TextIO.stdOut,body) *)
         val stms = Canon.linearize body
-        val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms
+        (* val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms *)
         (*val (stmslist, _) = Canon.basicBlocks stms
         val _ = app (fn x => (app (fn s => Printtree.printtree(TextIO.stdOut,s)) x; print "\n")) stmslist *)
         val canon_stms = Canon.traceSchedule(Canon.basicBlocks stms)
-        (* val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) canon_stms *)
+        val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) canon_stms
         val instrs = List.concat(map (Mips.codegen frame) canon_stms) 
         val (fg, nodes) = M.instrs2graph (instrs)
         handle e => (TextIO.output(TextIO.stdOut, "instrs2graph error\n"); raise e)
