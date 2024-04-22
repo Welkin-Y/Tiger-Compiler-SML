@@ -8,3 +8,4 @@
 **/tmp
 *.log
 *.s
+*.amd64-linux
