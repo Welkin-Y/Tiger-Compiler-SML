@@ -120,7 +120,7 @@ struct
 
   fun externalCall(s: string, args: Tree.exp list) = (
         Logger.log Logger.DEBUG ("external call: " ^ s); 
-        Tree.CALL(Tree.NAME(Temp.namedlabel s), args)
+        Tree.CALL(Tree.NAME(Temp.namedlabel ("tig_" ^ s)), args)
       )
   (* Tree.CALL(Tree.NAME(Tree.Temp.namedlabel s), args) p165*)
 
