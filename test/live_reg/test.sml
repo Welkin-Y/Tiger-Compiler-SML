@@ -1,4 +1,8 @@
 CM.make "sources.cm";
+if not (SMLofNJ.exportML("compiler"))
+then OS.Process.exit OS.Process.success
+else ();
+print("Starting\n")
 let 
     (*datatype level = DEBUG
     | INFO
@@ -13,6 +17,7 @@ let
 
     val inp = TextIO.inputLine TextIO.stdIn;
     val direct = dropNewline (Option.valOf inp);
+    val () = print("Input file is" ^ direct ^ "\n")
 in
     Main.compile direct
 end;

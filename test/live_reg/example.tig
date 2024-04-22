@@ -1,7 +1,7 @@
+/* valid for and let */
+
 let
-    function f(a : int, count : int) : int = 
-        if count = 0 then a
-        else f(a + 1, count - 1)
-in
-    f(0, 1)
+	var a:= 0
+in 
+	for i:=5 to 100 do (a:=a+1;())
 end
