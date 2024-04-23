@@ -324,11 +324,11 @@ enumerating all the live variables in the set.*)
         val nodename = IGraph.nodename node
         val tempname = Temp.makestring(gtemp node)
         val adjs = IGraph.adj node
-        val theNode = "\nNode: " ^ nodename ^ " \n adjs:\n"
-        (* val theNode = "\nNode: " ^ tempname ^ " \n adjs:\n" *)
+        (* val theNode = "\nNode: " ^ nodename ^ " \n adjs:\n" *)
+        val theNode = "\nNode: " ^ tempname ^ " \n adjs:\n"
         in
-        (foldl (fn (adj, str) => str ^ (IGraph.nodename adj) ^ " ") theNode adjs) ^ "\n\n"
-        (* (foldl (fn (adj, str) => str ^ Temp.makestring(gtemp adj) ^ " ") theNode adjs) ^ "\n\n" *)
+        (* (foldl (fn (adj, str) => str ^ (IGraph.nodename adj) ^ " ") theNode adjs) ^ "\n\n" *)
+        (foldl (fn (adj, str) => str ^ Temp.makestring(gtemp adj) ^ " ") theNode adjs) ^ "\n\n"
         end
     in
       TextIO.output(outstream, "Interference Graph:\n");

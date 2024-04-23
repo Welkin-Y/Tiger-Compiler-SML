@@ -1,8 +1,7 @@
-/* valid for and let */
-
+/* a record type and a record variable */
 let
-	var a:= 0
-in 
-	(for i:=5 to 100 do (a:=a+1;());
-    a)
+	type  rectype = {name:int, age:int}
+	var rec1:rectype := rectype {name=123, age=1000}
+in
+	rec1.age
 end

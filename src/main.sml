@@ -19,7 +19,7 @@ structure Main = struct
       (* val _ = Printtree.printtree(out,body) *)
       (* val _ = app (fn s => Printtree.printtree(out,s)) stms *)
       let
-        val _ = TextIO.output(out, "main:\n")
+        val _ = TextIO.output(out, "tig_main:\n")
         (* val _ = Printtree.printtree(TextIO.stdOut,body) *)
         val stms = Canon.linearize body
         (* val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms *)

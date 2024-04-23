@@ -108,13 +108,26 @@ struct
        
 
     fun fieldVar (var, index) = 
-            Ex(rdMem
-                (Tr.BINOP(
-                        Tr.PLUS, 
-                        unEx var, 
-                        Tr.CONST index)
-                )  
-            )
+    let 
+        val indexReg = Temp.newtemp()
+        val baseReg = Temp.newtemp()
+
+    in
+            Lx(Tr.MEM( Tr.ESEQ(
+                seq([
+                    Tr.MOVE(Tr.TEMP indexReg, Tr.CONST index),
+                    Tr.MOVE(Tr.TEMP baseReg, unEx var)
+                ]),
+                Tr.BINOP(
+                Tr.PLUS, 
+                    rdTmp baseReg, 
+                Tr.BINOP(
+                    Tr.MUL, 
+                    rdTmp indexReg, 
+                    Tr.CONST F.wordSize)
+                )
+            )))
+    end
             
     fun subscriptVar (arr, index) = 
             let 
@@ -125,32 +138,22 @@ struct
                 val nextCheckLabel = Temp.newlabel()
             in 
                 
-                Ex(Tr.ESEQ(
+                Lx(Tr.MEM(Tr.ESEQ(
                         seq[
                             Tr.MOVE(Tr.TEMP indexReg, unEx index),
                             Tr.MOVE(Tr.TEMP baseReg, unEx arr),
                             (*check bound*)
                             Tr.CJUMP(Tr.GT, Tr.CONST 0, 
-                                Tr.READ(Tr.MEM(
-                                        Tr.BINOP(
-                                            Tr.MINUS,
-                                            rdMem(
-                                                rdTmp baseReg
-                                            ),
-                                            Tr.CONST F.wordSize
-                                            )
-                                    )),
+                                rdTmp indexReg,
                                 errorLabel,
                                 nextCheckLabel
                                 ),
                             Tr.LABEL nextCheckLabel,
-                            Tr.CJUMP(Tr.LT, rdTmp indexReg, 
+                            Tr.CJUMP(Tr.GT, rdTmp indexReg, 
                                 Tr.READ(Tr.MEM(
                                         Tr.BINOP(
                                             Tr.MINUS,
-                                            rdMem(
-                                                rdTmp baseReg
-                                            ),
+                                                rdTmp baseReg,
                                             Tr.CONST F.wordSize
                                             )
                                     )),
@@ -163,12 +166,10 @@ struct
                             Tr.LABEL succeeLabel
                             (*indexing the array *)
                             
-                        ], rdMem (
+                        ], 
                             Tr.BINOP(
                                 Tr.PLUS, 
-                                rdMem(
-                                    rdTmp baseReg
-                                ), 
+                                    rdTmp baseReg, 
                                 Tr.BINOP(
                                     Tr.MUL, 
                                     rdTmp indexReg, 
@@ -304,7 +305,7 @@ struct
                 val (expseq, _) = foldr (fn (exp, (expseq, index)) => 
                             (transAssign(fieldVar(Ex (rdTmp res), (len - index - 1) * F.wordSize), exp)::expseq, index + 1)
                     ) ([], 0) explist
-                val malloc = Tr.MOVE(Tr.TEMP res, F.externalCall("malloc", [Tr.CONST (len * F.wordSize)]))
+                val malloc = Tr.MOVE(Tr.TEMP res, F.externalCall("allocRecord", [Tr.CONST (len * F.wordSize)]))
             in
                 Ex(Tr.ESEQ(Tr.SEQ(malloc, seq (map unNx expseq)), rdTmp res))
             end
