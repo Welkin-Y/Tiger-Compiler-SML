@@ -1,9 +1,7 @@
-/* valid for and let */
-
+/* a record type and a record variable */
 let
-	type  arrtype = array of int
-	var a:arrtype := arrtype [9] of 7
-	/* var b:int := 77 */
-in 
-	a[5]
+	type  rectype = {name:int, age:int}
+	var rec1:rectype := rectype {name=123, age=1000}
+in
+	rec1.age
 end
