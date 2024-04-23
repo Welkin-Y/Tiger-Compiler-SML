@@ -108,13 +108,13 @@ struct
        
 
     fun fieldVar (var, index) = 
-            Ex(rdMem
+            Lx(Tr.MEM(
                 (Tr.BINOP(
                         Tr.PLUS, 
                         unEx var, 
                         Tr.CONST index)
                 )  
-            )
+            ))
             
     fun subscriptVar (arr, index) = 
             let 
@@ -125,32 +125,22 @@ struct
                 val nextCheckLabel = Temp.newlabel()
             in 
                 
-                Ex(Tr.ESEQ(
+                Lx(Tr.MEM(Tr.ESEQ(
                         seq[
                             Tr.MOVE(Tr.TEMP indexReg, unEx index),
                             Tr.MOVE(Tr.TEMP baseReg, unEx arr),
                             (*check bound*)
                             Tr.CJUMP(Tr.GT, Tr.CONST 0, 
-                                Tr.READ(Tr.MEM(
-                                        Tr.BINOP(
-                                            Tr.MINUS,
-                                            rdMem(
-                                                rdTmp baseReg
-                                            ),
-                                            Tr.CONST F.wordSize
-                                            )
-                                    )),
+                                rdTmp indexReg,
                                 errorLabel,
                                 nextCheckLabel
                                 ),
                             Tr.LABEL nextCheckLabel,
-                            Tr.CJUMP(Tr.LT, rdTmp indexReg, 
+                            Tr.CJUMP(Tr.GT, rdTmp indexReg, 
                                 Tr.READ(Tr.MEM(
                                         Tr.BINOP(
                                             Tr.MINUS,
-                                            rdMem(
-                                                rdTmp baseReg
-                                            ),
+                                            rdTmp baseReg,
                                             Tr.CONST F.wordSize
                                             )
                                     )),
@@ -163,18 +153,15 @@ struct
                             Tr.LABEL succeeLabel
                             (*indexing the array *)
                             
-                        ], rdMem (
-                            Tr.BINOP(
+                        ], Tr.BINOP(
                                 Tr.PLUS, 
-                                rdMem(
-                                    rdTmp baseReg
-                                ), 
+                                rdTmp baseReg, 
                                 Tr.BINOP(
                                     Tr.MUL, 
                                     rdTmp indexReg, 
                                     Tr.CONST F.wordSize)
                                 )
-                        )))
+                )))
             end
     fun transVarDec (access, init) = 
             let 

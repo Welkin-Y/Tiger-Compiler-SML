@@ -2,7 +2,8 @@
 
 let
 	type  arrtype = array of int
-	var a:arrtype := arrtype [10] of 0
+	var a:arrtype := arrtype [9] of 7
+	/* var b:int := 77 */
 in 
-	
+	a[5]
 end
