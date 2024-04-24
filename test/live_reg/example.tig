@@ -6,8 +6,10 @@ let
 	var arr1:intarr := intarr [10] of 15
 	type arrtype = array of intarr
 	var arr2:arrtype := arrtype [10] of arr1
+	/* var i : int := 13 */
+
 
 in
-	arr1[2]
+arr2[0]
 end
 

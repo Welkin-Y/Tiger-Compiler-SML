@@ -15,6 +15,7 @@ sig
                  | Nx of Tree.stm  (* stands for "no result" *)
                  | Cx of Temp.label * Temp.label -> Tree.stm (* stands for "conditional"  *)
                  | Lx of Tree.loc (* stands for "location" *)
+                 | Px of Tree.stm * Temp.temp(* stands for "pointer" *)
                  | NOT_IMPLEMENTED
     
     val seq : Tree.stm list -> Tree.stm

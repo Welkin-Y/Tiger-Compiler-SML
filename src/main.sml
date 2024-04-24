@@ -60,7 +60,7 @@ structure Main = struct
         val _ = L.log L.WARNING ("Start to compile" ^ filename)
         val absyn = Parse.parse filename
         val frags:Tr.frag list = (FindEscape.findEscape absyn; S.transProg absyn)
-        (* val _ = PrintAbsyn.print(TextIO.stdOut,absyn) *)
+        val _ = PrintAbsyn.print(TextIO.stdOut,absyn)
       in 
         withOpenFile (filename ^ ".s") (fn out => (app (emitproc out) frags))
       end

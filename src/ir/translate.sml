@@ -27,6 +27,7 @@ struct
     | Nx of Tr.stm 
     | Cx of (Temp.label * Temp.label -> Tr.stm)
     | Lx of Tr.loc
+    | Px of Tr.stm * Temp.temp (* for record and array pointer *)
     | NOT_IMPLEMENTED (* Placeholder for not implemented translations *)
 
     (* helper function for seq of exps *)
@@ -51,8 +52,8 @@ struct
                         Tr.LABEL t],
                     rdTmp r) end
         | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 0) 
-        | unEx (Lx l) = ( case l of Tr.MEM e => e
-                                    | Tr.TEMP t => Tr.READ(Tr.TEMP t))
+        | unEx (Lx l) = Tr.READ l
+        | unEx (Px (s, t)) = Tr.ESEQ(s,  rdTmp t)
         | unEx NOT_IMPLEMENTED = raise ErrorMsg.impossible "unEx with NOT_IMPLEMENTED"
 
     fun unNx (Ex e) = Tr.EXP e
@@ -255,7 +256,7 @@ struct
     fun transBreak(SOME(label)) = Nx(Tr.JUMP(Tr.NAME label, [label]))
         | transBreak(NONE) = Nx(Tr.EXP(Tr.CONST 0)) (*placeholder break label. even if there are no break in exp, we still need to pass a label*)
 
-    fun transAssign(var, exp) = Nx(Tr.MOVE(unLx var, unEx exp)) 
+    fun transAssign(var, exp) = Nx(Tr.MOVE(unLx var, unEx exp))
 
     fun transCall (label, defLevel, callLevel, args) = case defLevel of 
                 ROOT => Ex(F.externalCall(Symbol.name label, map unEx args))
@@ -308,7 +309,8 @@ struct
                     ) ([], 0) explist
                 val malloc = Tr.MOVE(Tr.TEMP res, F.externalCall("allocRecord", [Tr.CONST (len * F.wordSize)]))
             in
-                Lx(Tr.MEM(Tr.ESEQ(Tr.SEQ(malloc, seq (map unNx expseq)), rdTmp res)))
+                Px(Tr.SEQ(malloc, seq (map unNx expseq)), res)
+                (* Lx(Tr.MEM (Tr.ESEQ(Tr.SEQ(malloc, seq (map unNx expseq)), rdTmp res))) *)
             end
     
     fun transArray(size, init) = 
@@ -322,7 +324,7 @@ struct
                 val res = Temp.newtemp()
                 val initArr = Tr.MOVE(Tr.TEMP res, F.externalCall("initArray", [size, init]))
             in
-                Lx(Tr.MEM(Tr.ESEQ(seq[initArr, Tr.MOVE(Tr.MEM(Tr.BINOP(Tr.MINUS, rdTmp res, Tr.CONST F.wordSize)), size)], rdTmp res)))
+                Px(seq[initArr, Tr.MOVE(Tr.MEM(Tr.BINOP(Tr.MINUS, rdTmp res, Tr.CONST F.wordSize)), size)], res)
             end
     
     fun transFunDec (level, label: Temp.label , body : exp) = 
