@@ -51,7 +51,8 @@ struct
                         Tr.LABEL t],
                     rdTmp r) end
         | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 0) 
-        | unEx (Lx l) = Tr.READ l
+        | unEx (Lx l) = ( case l of Tr.MEM e => e
+                                    | Tr.TEMP t => Tr.READ(Tr.TEMP t))
         | unEx NOT_IMPLEMENTED = raise ErrorMsg.impossible "unEx with NOT_IMPLEMENTED"
 
     fun unNx (Ex e) = Tr.EXP e
@@ -303,21 +304,25 @@ struct
                 val len = length explist
                 val res = Temp.newtemp()
                 val (expseq, _) = foldr (fn (exp, (expseq, index)) => 
-                            (transAssign(fieldVar(Ex (rdTmp res), (len - index - 1) * F.wordSize), exp)::expseq, index + 1)
+                            (transAssign(fieldVar(Ex (rdTmp res), (len - index - 1)), exp)::expseq, index + 1)
                     ) ([], 0) explist
                 val malloc = Tr.MOVE(Tr.TEMP res, F.externalCall("allocRecord", [Tr.CONST (len * F.wordSize)]))
             in
-                Ex(Tr.ESEQ(Tr.SEQ(malloc, seq (map unNx expseq)), rdTmp res))
+                Lx(Tr.MEM(Tr.ESEQ(Tr.SEQ(malloc, seq (map unNx expseq)), rdTmp res)))
             end
     
     fun transArray(size, init) = 
             let
                 val size = unEx size
                 val init = unEx init
+                (* val init = case init of Ex e => e 
+                | Lx l => (case l of Tr.MEM exp => exp 
+                            | Tr.TEMP t => Tr.READ(Tr.TEMP t)) *)
+      
                 val res = Temp.newtemp()
                 val initArr = Tr.MOVE(Tr.TEMP res, F.externalCall("initArray", [size, init]))
             in
-                Ex(Tr.ESEQ(seq[initArr, Tr.MOVE(Tr.MEM(Tr.BINOP(Tr.MINUS, rdTmp res, Tr.CONST F.wordSize)), size)], rdTmp res))
+                Lx(Tr.MEM(Tr.ESEQ(seq[initArr, Tr.MOVE(Tr.MEM(Tr.BINOP(Tr.MINUS, rdTmp res, Tr.CONST F.wordSize)), size)], rdTmp res)))
             end
     
     fun transFunDec (level, label: Temp.label , body : exp) = 

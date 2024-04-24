@@ -452,7 +452,7 @@ struct
                 | _ => (ErrorMsg.error p ("TypeError: not a record type " ^ T.toString ty); raise ErrorMsg.Error)
             in
               case List.findi (fn (i,(name, _)) => name = n) fields of NONE => TC.undefinedNameErr p n 
-              | SOME (idx, (_, ty)) => {exp=TL.fieldVar(varExp, idx), ty=ty}
+              | SOME (idx, (_, ty)) => ((print("idx of field var is "^Int.toString(idx)^"\n"));{exp=TL.fieldVar(varExp, idx), ty=ty})
             end
           | A.SubscriptVar (var, exp, p) => 
             let

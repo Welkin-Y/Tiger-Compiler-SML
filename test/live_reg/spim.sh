@@ -1,2 +1,3 @@
-# sml @SMLload=compiler.amd64-linux example.tig
-cat ../../src/runtime/* example.tig.s > example.s
+ad=compiler.amd64-linux example.tig
+cat example.tig.s ../../src/runtime/*  > example.s
+
