@@ -27,7 +27,7 @@ struct
     | Nx of Tr.stm 
     | Cx of (Temp.label * Temp.label -> Tr.stm)
     | Lx of Tr.loc
-    | Px of Tr.stm * Temp.temp (* for record and array pointer *)
+    | Px of Tr.stm * Temp.temp (* for record and array pointer credit to Mr. Jenus Chen*)
     | NOT_IMPLEMENTED (* Placeholder for not implemented translations *)
 
     (* helper function for seq of exps *)
@@ -324,7 +324,7 @@ struct
                 val res = Temp.newtemp()
                 val initArr = Tr.MOVE(Tr.TEMP res, F.externalCall("initArray", [size, init]))
             in
-                Px(seq[initArr, Tr.MOVE(Tr.MEM(Tr.BINOP(Tr.MINUS, rdTmp res, Tr.CONST F.wordSize)), size)], res)
+                Px(seq[initArr, Tr.MOVE(Tr.TEMP res, Tr.BINOP(Tr.PLUS, rdTmp res, Tr.CONST F.wordSize))], res)
             end
     
     fun transFunDec (level, label: Temp.label , body : exp) = 
