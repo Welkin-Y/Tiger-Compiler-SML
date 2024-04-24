@@ -17,23 +17,40 @@ struct
             end
 
         (* Define a comparator for sorting nodes by degree *)
-        fun node_degree_comparator (n1, n2) = (get_degree n1) > (get_degree n2)
+        (* fun node_degree_comparator (n1, n2) = (get_degree n1) > (get_degree n2) *)
         (* Sort nodes by their degree *)
-        val sortedNodes = ListMergeSort.sort node_degree_comparator remainingNodes
+        (* val sortedNodes = ListMergeSort.sort node_degree_comparator remainingNodes *)
 
-        fun findNode [] = NONE
+        (* fun findNode [] = NONE
           | findNode (node::nlst) = 
             case Temp.Table.look(initial, gtemp node) of
               NONE => if get_degree node < Frame.tempRegNum then SOME node
                 else raise Fail ("Non-simplifyable node found: " ^ Temp.makestring(gtemp node) ^ " with degree " ^ Int.toString(get_degree node))
-            | SOME _ => findNode nlst
+            | SOME _ => findNode nlst *)
+        
+        fun findNode (node, (nonSimplifyable, simplifyable)) =
+          case simplifyable of
+            SOME _ => (nonSimplifyable, simplifyable)
+            | NONE => (
+              case Temp.Table.look(initial, gtemp node) of
+                NONE => if get_degree node < Frame.tempRegNum then (nonSimplifyable, SOME node)
+                  else (SOME node, simplifyable)
+              | SOME _ => (nonSimplifyable, simplifyable) 
+            )
+        
+        val (nonSimplifyable, simplifyable) = foldl findNode (NONE, NONE) remainingNodes
+
       in
-        case findNode sortedNodes of
-          NONE => (sortedNodes, removedNodes)
+        case simplifyable of
+          NONE => (
+            case nonSimplifyable of
+              SOME node => raise Fail ("Non-simplifyable node found: " ^ Temp.makestring(gtemp node) ^ " with degree " ^ Int.toString(get_degree node))
+            | NONE => (remainingNodes, removedNodes)
+          )
         | SOME node => (
             Logger.log Logger.DEBUG ("Simplifying node " ^ Temp.makestring(gtemp node));
             simplify (interference, initial,
-              List.filter (fn n => not (Graph.eq(n, node))) sortedNodes, 
+              List.filter (fn n => not (Graph.eq(n, node))) remainingNodes, 
               node::removedNodes)
           )
       end

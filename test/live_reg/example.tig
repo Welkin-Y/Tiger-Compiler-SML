@@ -1,13 +1,39 @@
-/* a record type and a record variable */
+/* A program to solve the 8-queens problem */
+
 let
-	/* type  rectype = {name:string, age:int}
-	var rec1:rectype := rectype {name="Nobody", age=1000} */
-	type intarr = array of int
-	var arr1:intarr := intarr [10] of 15
-	/* var i : int := 13 */
+    /* var N := 8
 
+    type intArray = array of int
 
-in
-arr1[1]
+    var row := intArray [ N ] of 0
+    var col := intArray [ N ] of 0
+    var diag1 := intArray [N+N-1] of 0
+    var diag2 := intArray [N+N-1] of 0 */
+
+    /* function printboard() =
+       (for i := 0 to N-1
+	 do (for j := 0 to N-1 
+	      do print(if col[i]=j then " O" else " .");
+	     print("\n"));
+         print("\n")) */
+
+	function printa() = 
+		  (for i := 0 to 5 do print("Hello World\n")
+
+    /* function try(c:int) = 
+( /*  for i:= 0 to c do print("."); print("\n"); flush();*/
+     if c=N
+     then ()
+     else for r := 0 to N-1
+	   do if row[r]=0 & diag1[r+c]=0 & diag2[r+7-c]=0
+	           then (row[r]:=1; diag1[r+c]:=1; diag2[r+7-c]:=1;
+		         col[c]:=r;
+	                 try(c+1);
+			 row[r]:=0; diag1[r+c]:=0; diag2[r+7-c]:=0) */
+
+)
+ in 
+	/* try(0) */
+	printa()
 end
-
+	
