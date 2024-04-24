@@ -65,8 +65,8 @@ struct
         | unCx (Ex e) = (fn (t,f) => Tr.CJUMP(Tr.NE, e, Tr.CONST 0, t, f))
         | unCx (Cx genstm) = genstm
         (* unCx(Nx _) need not be translated *)
-        | unCx (Nx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
-        | unCx (Lx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
+        | unCx (Nx _) = (ErrorMsg.impossible "Cannot contruct conditional from Nx"; (fn _ => Tr.EXP(Tr.CONST 0)))
+        | unCx (Lx l) = unCx(Ex(Tr.READ l))
         | unCx NOT_IMPLEMENTED = raise ErrorMsg.impossible "unCx with NOT_IMPLEMENTED"
 
     fun unLx (Lx l) = l
