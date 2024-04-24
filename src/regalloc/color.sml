@@ -20,13 +20,13 @@ struct
           | findNode (node::nlst) = 
             case Temp.Table.look(initial, gtemp node) of
                 NONE => if get_degree node < Frame.tempRegNum then SOME node
-                        else raise Fail "Non-simplifyable node found"
+                        else raise Fail ("Non-simplifyable node found: " ^ Temp.makestring(gtemp node))
               | SOME _ => findNode nlst
     in
         case findNode remainingNodes of
             NONE => (remainingNodes, removedNodes)
           | SOME node => (
-            Logger.log Logger.DEBUG ("Simplifying node " ^ Temp.makestring(gtemp node) ^ "\n");
+            Logger.log Logger.DEBUG ("Simplifying node " ^ Temp.makestring(gtemp node));
             simplify (interference, initial,
                                     List.filter (fn n => not (Graph.eq(n, node))) remainingNodes, 
                                     node::removedNodes)
