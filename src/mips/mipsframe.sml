@@ -124,7 +124,12 @@ struct
       )
   (* Tree.CALL(Tree.NAME(Tree.Temp.namedlabel s), args) p165*)
 
-  fun string(label: Tree.label, str: string):string = ".data\n" ^ ".align 2\n" ^ Symbol.name label ^ ":\n\t.asciiz \"" ^ str ^ "\"\n" (*TODO: GPT work, need consider escapes *)
+  fun string(label: Tree.label, str: string):string = ".data\n" ^ 
+    ".align 4\n" ^ 
+    Symbol.name label ^ ":\n" ^ 
+    ".word " ^ Int.toString (size str) ^ "\n" ^
+    "\t.asciiz \"" ^ str ^ "\"\n" ^
+    ".text\n"
 
   fun exp (InFrame offset) addr = Tree.READ(Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset)))
     | exp (InReg temp) addr = Tree.READ(Tree.TEMP temp)
