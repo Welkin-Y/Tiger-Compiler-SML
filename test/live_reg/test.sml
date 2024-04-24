@@ -1,15 +1,11 @@
 CM.make "sources.cm";
-if not (SMLofNJ.exportML("compiler"))
-then OS.Process.exit OS.Process.success
-else ();
-print("Starting\n")
 let 
     (*datatype level = DEBUG
     | INFO
     | WARNING 
     | ERROR
     | FATAL*)
-    val _ = Logger.setLogLevel Logger.FATAL;
+    val _ = Logger.setLogLevel Logger.DEBUG;
     fun dropNewline str =
             if String.size str > 0 andalso String.sub (str, String.size str - 1) = #"\n"
             then String.extract (str, 0, SOME (String.size str - 1))
@@ -20,4 +16,4 @@ let
     val () = print("Input file is" ^ direct ^ "\n")
 in
     Main.compile direct
-end;
+end
