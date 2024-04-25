@@ -127,9 +127,8 @@ struct
   fun string(label: Tree.label, str: string):string = ".data\n" ^ 
     ".align 4\n" ^ 
     Symbol.name label ^ ":\n" ^ 
-    ".word " ^ Int.toString (size str) ^ "\n" ^
-    "\t.asciiz \"" ^ str ^ "\"\n" ^
-    ".text\n"
+    "\t.word " ^ Int.toString (size str) ^ "\n" ^
+    "\t.asciiz \"" ^ str ^ "\"\n"
 
   fun exp (InFrame offset) addr = Tree.READ(Tree.MEM(Tree.BINOP(Tree.PLUS, addr, Tree.CONST offset)))
     | exp (InReg temp) addr = Tree.READ(Tree.TEMP temp)
