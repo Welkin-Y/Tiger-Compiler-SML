@@ -177,8 +177,8 @@ struct
           | seq (x::xs) = Tree.SEQ(x, seq xs)
       in
         seq([Tree.MOVE(Tree.TEMP RV,
-        (Tree.ESEQ(seq (prelogue @ storeRegs @ storeArgs ), body)))] 
-        @ loadRegs @ epilogue)
+        (Tree.ESEQ(seq ( storeRegs @ prelogue @ storeArgs ), body)))] 
+        @  epilogue @ loadRegs)
 
 
       end
