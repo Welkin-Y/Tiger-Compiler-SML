@@ -1,0 +1,19 @@
+/* A program to solve the 8-queens problem */
+
+let
+    var N := 1
+
+    type intArray = array of int
+    var col := intArray [ N ] of 0
+
+    function printboard() =
+       (for i := 0 to N-1
+	 do (for j := 0 to N-1 
+	      do print(if col[i]=j then " O" else " .");
+	     print("\n"));
+         print("\n"))
+
+in 
+printboard()
+end
+	
