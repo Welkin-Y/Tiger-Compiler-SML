@@ -141,7 +141,7 @@ struct
   fun procEntryExit1 (frm: frame, body: Tree.exp) = 
       let val {name, formals, inFrameSize} = frm
         (* get memory for registers*) 
-        val regs = [RA, SP, FP] @ calleesaves
+        val regs = [RA, FP] @ calleesaves
         val reglocs = map (fn r => loc(allocLocal frm true)(Tree.READ(Tree.TEMP SP))) (regs)
 
 

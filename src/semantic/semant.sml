@@ -142,7 +142,7 @@ struct
             | _ => (ErrorMsg.error pos ("NameError: function not find" ^ Symbol.name func); raise ErrorMsg.Error)
           (*check if the number of args align with the number of formals*)
           (* val () = L.log L.DEBUG ("level of func: " ^ (case funclevel of ROOT => "ROOT" | _ => "not ROOT")) *)
-          val () = L.log L.DEBUG ("length of formals: " ^ Int.toString (length formals))
+          val () = L.log L.DEBUG ("length of formals in call exp: " ^ Int.toString (length formals))
           val _ = if (length args) = (length formals) then ()
             else (ErrorMsg.error pos ("TypeError: " ^ Symbol.name func ^ " () takes " ^ Int.toString (length formals) ^ " positional argument(s) but called with" ^ Int.toString (length args) ^ " argument(s)"); raise ErrorMsg.Error)
           val expargs = foldr (fn ((arg, formal), expargs) =>
