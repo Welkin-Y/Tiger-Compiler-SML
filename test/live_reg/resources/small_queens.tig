@@ -1,15 +1,15 @@
 /* A program to solve the 8-queens problem */
 
 let
-    var N := 1
+    var N := 8
+    type arrType = array of int
+    var board := arrType[ N ] of 0
 
-    type intArray = array of int
-    var col := intArray [ N ] of 0
 
     function printboard() =
        (for i := 0 to N-1
 	 do (for j := 0 to N-1 
-	      do print(if col[i]=j then " O" else " .");
+	      do print(if board[i]=j then " O" else " .");
 	     print("\n"));
          print("\n"))
 

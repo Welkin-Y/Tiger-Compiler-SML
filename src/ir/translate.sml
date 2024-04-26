@@ -81,8 +81,10 @@ struct
                 ROOT => ErrorMsg.impossible "procEntryExit: no frame, cannot exit at ROOT level"
             | LEVEL{frame, parent, id} => 
                 let
+                    (* update $fp and $sp for global variables *)
+                    val decSP = F.procEntryExit2(frame)
                     val body' = unEx(body)
-                    val funcProc = F.PROC{body=Tr.EXP(body'), frame=frame}
+                    val funcProc = F.PROC{body=Tr.SEQ(decSP, Tr.EXP(body')), frame=frame}
                 in
                     fragments := (!fragments)@[funcProc]
                 end

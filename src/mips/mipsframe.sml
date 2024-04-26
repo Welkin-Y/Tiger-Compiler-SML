@@ -183,13 +183,13 @@ struct
       end
 
   (* This function appends a "sink" instruction to the function body to tell the register allocator that certain registers are live at procedure exit. *)
-  fun procEntryExit2(frame, body) = body @
-      [Assem.OPER{
-          assem="",
-          src =[ZERO, RA, SP] @ calleesaves,
-          dst=[], jump=SOME[]
-        }]
-
+  fun procEntryExit2(frm) = 
+  let
+      val {name, formals, inFrameSize} = frm
+      val decSP = Tree.MOVE(Tree.TEMP SP, Tree.BINOP(Tree.MINUS, Tree.READ(Tree.TEMP SP), Tree.CONST ((!inFrameSize + 1) * wordSize)))
+  in
+  decSP
+  end
   (* Either proc-EntryExit2 should scan the body and record this information in some new component of the frame type, or procEntryExit3 should use the maximum legal value. *)
   fun procEntryExit3({name, formals, inFrameSize}:frame, body) =
       {prolog = "PROCEDURE " ^ Symbol.name name ^ "\n", 

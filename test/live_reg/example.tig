@@ -1,16 +1,19 @@
-let 
+/* A program to solve the 8-queens problem */
 
-    type any = {any : int}
-    var buffer := getchar()
-   
+let
+    var N := 8
+    type arrType = array of int
+    var board := arrType[ N ] of 0
 
-    function isdigit(s : string) : int = 
-            ord(buffer)>=ord("0") & ord(buffer)<=ord("9")
 
-   
-   
-     /* BODY OF MAIN PROGRAM */
-    in isdigit(buffer)
-   end
-   
-   
+    function printboard() =
+       (for i := 0 to N-1
+	 do (for j := 0 to N-1 
+	      do print(if board[i]=j then " O" else " .");
+	     print("\n"));
+         print("\n"))
+
+in 
+printboard()
+end
+	
