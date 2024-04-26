@@ -1,19 +1,37 @@
-/* A program to solve the 8-queens problem */
+let 
 
-let
-    var N := 8
-    type arrType = array of int
-    var board := arrType[ N ] of 0
+    var buffer := 1
+   function outer() = 
+   let 
+    var a := 2
+    function readint(num : int) : int =
+      let 
+          function skipto()  = 
+            (buffer = 2;())
+      in 
+        skipto();1
+      end
 
-
-    function printboard() =
-       (for i := 0 to N-1
-	 do (for j := 0 to N-1 
-	      do print(if board[i]=j then " O" else " .");
-	     print("\n"));
-         print("\n"))
-
-in 
-printboard()
-end
-	
+    in
+      readint(2); ()
+    end
+    
+    /* type list = {first: int, rest: list}
+   
+    function readlist() : list =
+       let var any := any{any=0}
+           var i := readint(any)
+        in if any.any
+            then list{first=i,rest=readlist()}
+            else nil
+       end
+    */
+   
+   
+     /* BODY OF MAIN PROGRAM */
+    in 
+        /* readint(3) */
+        outer()
+   end
+   
+   

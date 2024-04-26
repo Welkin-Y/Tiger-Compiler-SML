@@ -90,27 +90,48 @@ struct
                 end
 
     (* MEM(+(CONST kn, MEM(+(CONST kn-1, ... MEM(+(CONST k1, TEMP FP)) ...)))) *)
-    fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=use_id, parent=use_prt, frame=use_frm}): Tree.exp = 
+    (* fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=use_id, parent=use_prt, frame=use_frm}): Tree.exp = 
             if def_id = use_id then rdTmp F.FP
             else (
                     L.log L.DEBUG "Follow use level";
-                    F.exp (List.hd(F.formals use_frm))(followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt))
+                    F.exp (List.hd(F.formals use_frm)) (followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt))
                 )
         | followStaticLink(ROOT, _) = let 
                 val errmsg = "followStaticLink: define level is ROOT" 
             in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end
         | followStaticLink(_, ROOT) = let
                 val errmsg = "followStaticLink: use level is ROOT" 
-            in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end
+            in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end *)
+
+    fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=cur_id, parent=cur_prt, frame=cur_frm}, fp): Tree.exp =
+        let
+            val static_link = F.exp (List.hd(F.formals cur_frm)) fp
+            val prt_id = 
+                case cur_prt of 
+                    LEVEL level => (#id level)
+                  | ROOT => ref ()
+        in 
+            if def_id = cur_id then fp
+            else if def_id = prt_id then static_link
+            else (
+                L.log L.DEBUG "Follow use level";
+                followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, cur_prt, static_link)
+            )
+        end 
+    | followStaticLink(ROOT, _, _) = let 
+            val errmsg = "followStaticLink: define level is ROOT" 
+        in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end
+    | followStaticLink(_, ROOT, _) = let
+            val errmsg = "followStaticLink: use level is ROOT" 
+        in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end
     
     fun transNil () = Ex(Tr.CONST 0)
     
     fun simpleVar(access, useLevel) =
             let val (defLevel, defAccess) = access
                 val _ = L.log L.DEBUG "Translate.simpleVar";
-            in Lx(F.loc defAccess (followStaticLink(defLevel, useLevel))) end
+            in Lx(F.loc defAccess (followStaticLink(defLevel, useLevel, rdTmp F.FP))) end
        
-
     fun fieldVar (var, index) = 
     let 
         val indexReg = Temp.newtemp()
@@ -263,7 +284,7 @@ struct
     fun transCall (label, defLevel, callLevel, args) = case defLevel of 
                 ROOT => Ex(F.externalCall(Symbol.name label, map unEx args))
             | LEVEL{frame, parent, id} => let
-                    val static_link = followStaticLink(defLevel, callLevel)
+                    val static_link = followStaticLink(defLevel, callLevel, rdTmp F.FP)
                 in
                     Ex(Tr.CALL(Tr.NAME label, static_link::(map unEx args)))
                 end
