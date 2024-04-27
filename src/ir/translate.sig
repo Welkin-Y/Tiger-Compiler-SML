@@ -50,6 +50,7 @@ sig
     val transString : string -> exp
     val transIf : exp * exp * exp option -> exp
     val transBinop : A.oper * exp * exp -> exp
+    val transStrCmp :A.oper* exp * exp -> exp
     val transRelop : A.oper * exp * exp -> exp
     val transBreak :  Temp.label option -> exp
     val transAssign : exp * exp -> exp

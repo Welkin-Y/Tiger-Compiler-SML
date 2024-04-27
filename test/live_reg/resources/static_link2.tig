@@ -1,0 +1,46 @@
+let 
+
+	var buffer := 166
+	var m := 77
+   function outer(num: int) = 
+   let 
+    var a := 2
+    /* function readint(num : int) : int =
+      let 
+          function skipto()  = 
+            (buffer = 2;())
+      in 
+        skipto();1
+      end */
+      function skipto()  = 
+            (buffer := 2;())
+
+    in
+      /* readint(2); () */
+      skipto();
+	  m := a;
+	  a := 97;
+	  ()
+    end
+    
+    /* type list = {first: int, rest: list}
+   
+    function readlist() : list =
+       let var any := any{any=0}
+           var i := readint(any)
+        in if any.any
+            then list{first=i,rest=readlist()}
+            else nil
+       end
+    */
+   
+   
+     /* BODY OF MAIN PROGRAM */
+    in 
+        /* readint(3) */
+        outer(58);
+		if buffer = 2 then print("NiuBi!!\n")
+		else print("ShaBi...\n")
+   end
+   
+   

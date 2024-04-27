@@ -10,7 +10,11 @@ let
    
    
      /* BODY OF MAIN PROGRAM */
-    in isdigit(buffer)
+    in 
+        if isdigit(buffer) then 
+            print("It is a digit")
+        else 
+            print("It is not a digit")
    end
    
    

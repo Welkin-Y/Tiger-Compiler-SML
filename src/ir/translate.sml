@@ -275,6 +275,8 @@ struct
     fun transBinop(oper, e1, e2) = Ex(Tr.BINOP(Tr.getBinop oper, unEx e1, unEx e2))
 
     fun transRelop(oper, e1, e2) = Cx(fn (t, f) => Tr.CJUMP(Tr.getRelop oper, unEx e1, unEx e2, t, f))
+    (*compare string use external call*)
+    fun transStrCmp(oper, e1, e2) = transRelop(oper, Ex(F.externalCall("stringEqual", [unEx e1, unEx e2])), Ex(Tr.CONST 1))
 
     fun transBreak(SOME(label)) = Nx(Tr.JUMP(Tr.NAME label, [label]))
         | transBreak(NONE) = Nx(Tr.EXP(Tr.CONST 0)) (*placeholder break label. even if there are no break in exp, we still need to pass a label*)

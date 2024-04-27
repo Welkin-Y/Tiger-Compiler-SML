@@ -47,8 +47,14 @@ struct
           | A.MinusOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transBinop(oper, expleft, expright), ty=T.INT})
           | A.TimesOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transBinop(oper, expleft, expright), ty=T.INT})
           | A.DivideOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transBinop(oper, expleft, expright), ty=T.INT})
-          | A.EqOp => (TC.checkEqOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
-          | A.NeqOp => (TC.checkEqOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
+          | A.EqOp => (TC.checkEqOp oper pos (tyleft, tyright);
+                        case tyleft of
+                          T.STRING => {exp=TL.transStrCmp(oper, expleft, expright), ty=T.INT}
+                        | _ => {exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
+          | A.NeqOp => (TC.checkEqOp oper pos (tyleft, tyright);
+                        case tyleft of
+                          T.STRING => {exp=TL.transStrCmp(oper, expleft, expright), ty=T.INT}
+                        | _ => {exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
           | A.LtOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
           | A.LeOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
           | A.GtOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
