@@ -55,9 +55,8 @@ struct
     ]
   
   val temp_regs: register list = [
-      "$a0", "$a1", "$a2", "$a3",
-      "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "$t9",
-      "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7"
+      "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
+      "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "$t9"
   ]
 
   val tempRegNum = length temp_regs
@@ -92,19 +91,13 @@ struct
 
   fun newFrame (arg : {name: Temp.label, formals: bool list}) : frame = let
         val {name, formals} = arg
-        val inFrameSize = ref 0
-        fun getFormals (b, acc) = 
-            let
-              fun helper(b, (acc, inFrameNum, inRegNum)) = 
-                  if b then (
-                      inFrameSize := inFrameNum + 1;
-                      (InFrame(~inFrameNum * wordSize)::acc, inFrameNum + 1, inRegNum)
-                    ) 
-                  else ((InReg(Temp.newtemp()))::acc, inFrameNum, inRegNum + 1)
-              val (acc, _, _) = foldl helper ([], 0, 0) formals
-            in acc end
+        val (acc, inFrameSize, _) = foldl (fn (formal, (acc: access list, inFrameSize, inRegSize)) =>
+            if formal then (acc@[InFrame(~(inFrameSize + 1) * wordSize)], inFrameSize + 1, inRegSize)
+            else (acc@[InReg(Temp.newtemp())], inFrameSize, inRegSize + 1)
+        ) ([], 0, 0) formals
+        val inFrameSize = ref inFrameSize
       in
-        {name = name, formals = getFormals(formals, []), inFrameSize = inFrameSize}
+         {name=name, formals=acc, inFrameSize=inFrameSize}
       end
 
   fun name (frm: frame) : Temp.label = let val {name, ...} = frm in name end
@@ -113,7 +106,7 @@ struct
 
   fun allocLocal (frm: frame) (onFrame : bool) : access = case onFrame of
         true => (
-            #inFrameSize frm := !(#inFrameSize frm)+ 1; 
+            #inFrameSize frm := !(#inFrameSize frm) + 1; 
             InFrame(~(!(#inFrameSize frm)) * wordSize)
           )
       | false => InReg(Temp.newtemp()) 
@@ -141,7 +134,7 @@ struct
       let val {name, formals, inFrameSize} = frm
         (* get memory for registers*) 
         val regs = [RA, FP] @ calleesaves
-        val reglocs = map (fn r => loc(allocLocal frm true)(Tree.READ(Tree.TEMP SP))) (regs)
+        val reglocs = map (fn r => loc (allocLocal frm true) (Tree.READ(Tree.TEMP SP))) (regs)
 
 
         (* load $a0-$a3 from formals *)
@@ -154,16 +147,16 @@ struct
         val loadRegs = map (fn (r, acc) => loadReg(r, acc)) (ListPair.zip(regs, reglocs))
         (* save fp *)
         (* move sp to fp *)
-        val saveFP = Tree.MOVE(loc(allocLocal frm true)(Tree.READ(Tree.TEMP SP)), Tree.READ(Tree.TEMP FP))
+        (* val saveFP = Tree.MOVE(loc(allocLocal frm true)(Tree.READ(Tree.TEMP SP)), Tree.READ(Tree.TEMP FP)) *)
         val moveSP = Tree.MOVE(Tree.TEMP FP, Tree.READ(Tree.TEMP SP))
         (*decrement sp by inFrameSize*)
         val decSP = Tree.MOVE(Tree.TEMP SP, Tree.BINOP(Tree.MINUS, Tree.READ(Tree.TEMP SP), Tree.CONST (!inFrameSize * wordSize)))
         (*restore sp*)
         val restoreSP = Tree.MOVE(Tree.TEMP SP, Tree.READ(Tree.TEMP FP))
         (* restore fp *)
-        val restoreFP = Tree.MOVE(Tree.TEMP FP, Tree.READ(Tree.MEM(Tree.BINOP(Tree.PLUS, Tree.READ(Tree.TEMP SP), Tree.CONST 0))))
-        val prelogue = [saveFP, moveSP, decSP]
-        val epilogue = [restoreSP, restoreFP]  
+        (* val restoreFP = Tree.MOVE(Tree.TEMP FP, Tree.READ(Tree.MEM(Tree.BINOP(Tree.PLUS, Tree.READ(Tree.TEMP SP), Tree.CONST 0)))) *)
+        val prelogue = [moveSP, decSP]
+        val epilogue = [restoreSP]  
 
         (* store $a0-$a3 to formals *)
         val _ = Logger.log Logger.DEBUG ("formals in funcEntryExis1: " ^ Int.toString (List.length formals));
@@ -186,7 +179,7 @@ struct
   fun procEntryExit2(frm) = 
   let
       val {name, formals, inFrameSize} = frm
-      val decSP = Tree.MOVE(Tree.TEMP SP, Tree.BINOP(Tree.MINUS, Tree.READ(Tree.TEMP SP), Tree.CONST ((!inFrameSize + 1) * wordSize)))
+      val decSP = Tree.MOVE(Tree.TEMP SP, Tree.BINOP(Tree.MINUS, Tree.READ(Tree.TEMP SP), Tree.CONST ((!inFrameSize) * wordSize)))
   in
   decSP
   end

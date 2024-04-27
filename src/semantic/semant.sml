@@ -417,7 +417,7 @@ struct
                           in
                             !escape
                           end) params
-                    val initFormals = true::initFormals (*add the staticlink into the fundec*)
+                    (* val initFormals = true::initFormals add the staticlink into the fundec *)
                     val bodylevel = TL.newLevel({parent=fundeclevel, name=Temp.namedlabel "function", formals=initFormals})
                     val _ = L.log L.DEBUG ("function have " ^ Int.toString (length params) ^ " params and " ^ Int.toString (length initFormals) ^ " formals")
                     val tmpvenv = paramTmpVenv (params, newvenv, bodylevel)

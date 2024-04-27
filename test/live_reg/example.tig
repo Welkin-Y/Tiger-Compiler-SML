@@ -1,19 +1,24 @@
 let 
 
-    var buffer := 1
-   function outer() = 
+	var buffer := 166
+	var m := 77
+   function outer(num: int) = 
    let 
     var a := 2
-    function readint(num : int) : int =
+    /* function readint(num : int) : int =
       let 
           function skipto()  = 
             (buffer = 2;())
       in 
         skipto();1
-      end
+      end */
 
     in
-      readint(2); ()
+      /* readint(2); () */
+	  buffer := num;
+	  m := a;
+	  a := 97;
+	  ()
     end
     
     /* type list = {first: int, rest: list}
@@ -31,7 +36,9 @@ let
      /* BODY OF MAIN PROGRAM */
     in 
         /* readint(3) */
-        outer()
+        outer(58);
+		if buffer = 58 then print("NiuBi!!\n")
+		else print("ShaBi...\n")
    end
    
    
