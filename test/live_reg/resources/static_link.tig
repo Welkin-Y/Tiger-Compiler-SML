@@ -1,0 +1,20 @@
+let 
+
+    type any = {any : int}
+    var buffer := getchar()
+   
+
+    function isdigit(s : string) : int = 
+            ord(buffer)>=ord("0") & ord(buffer)<=ord("9")
+
+   
+   
+     /* BODY OF MAIN PROGRAM */
+    in 
+        if isdigit(buffer) then 
+            print("It is a digit")
+        else 
+            print("It is not a digit")
+   end
+   
+   

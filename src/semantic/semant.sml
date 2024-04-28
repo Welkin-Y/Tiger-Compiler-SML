@@ -47,8 +47,14 @@ struct
           | A.MinusOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transBinop(oper, expleft, expright), ty=T.INT})
           | A.TimesOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transBinop(oper, expleft, expright), ty=T.INT})
           | A.DivideOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transBinop(oper, expleft, expright), ty=T.INT})
-          | A.EqOp => (TC.checkEqOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
-          | A.NeqOp => (TC.checkEqOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
+          | A.EqOp => (TC.checkEqOp oper pos (tyleft, tyright);
+                        case tyleft of
+                          T.STRING => {exp=TL.transStrCmp(oper, expleft, expright), ty=T.INT}
+                        | _ => {exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
+          | A.NeqOp => (TC.checkEqOp oper pos (tyleft, tyright);
+                        case tyleft of
+                          T.STRING => {exp=TL.transStrCmp(oper, expleft, expright), ty=T.INT}
+                        | _ => {exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
           | A.LtOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
           | A.LeOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
           | A.GtOp => (TC.checkIntStringOp oper pos (tyleft, tyright);{exp=TL.transRelop(oper, expleft, expright), ty=T.INT})
@@ -142,7 +148,7 @@ struct
             | _ => (ErrorMsg.error pos ("NameError: function not find" ^ Symbol.name func); raise ErrorMsg.Error)
           (*check if the number of args align with the number of formals*)
           (* val () = L.log L.DEBUG ("level of func: " ^ (case funclevel of ROOT => "ROOT" | _ => "not ROOT")) *)
-          val () = L.log L.DEBUG ("length of formals: " ^ Int.toString (length formals))
+          val () = L.log L.DEBUG ("length of formals in call exp: " ^ Int.toString (length formals))
           val _ = if (length args) = (length formals) then ()
             else (ErrorMsg.error pos ("TypeError: " ^ Symbol.name func ^ " () takes " ^ Int.toString (length formals) ^ " positional argument(s) but called with" ^ Int.toString (length args) ^ " argument(s)"); raise ErrorMsg.Error)
           val expargs = foldr (fn ((arg, formal), expargs) =>
@@ -417,8 +423,10 @@ struct
                           in
                             !escape
                           end) params
+                    (* val initFormals = true::initFormals add the staticlink into the fundec *)
                     val bodylevel = TL.newLevel({parent=fundeclevel, name=Temp.namedlabel "function", formals=initFormals})
-                    val _ = L.log L.DEBUG ("function have " ^ Int.toString (length params) ^ " params")
+                    val _ = L.log L.DEBUG ("function have " ^ Int.toString (length params) ^ " params and " ^ Int.toString (length initFormals) ^ " formals")
+
                     val tmpvenv = paramTmpVenv (params, newvenv, bodylevel)
                     val {exp=bodyexp, ty=typ} = transExp (tmpvenv, newtenv, body, 0, bodylevel, breakLabel)
                     (*check if expty consistent with the delared function ty*)
@@ -452,7 +460,7 @@ struct
                 | _ => (ErrorMsg.error p ("TypeError: not a record type " ^ T.toString ty); raise ErrorMsg.Error)
             in
               case List.findi (fn (i,(name, _)) => name = n) fields of NONE => TC.undefinedNameErr p n 
-              | SOME (idx, (_, ty)) => {exp=TL.fieldVar(varExp, idx), ty=ty}
+              | SOME (idx, (_, ty)) => ((print("idx of field var is "^Int.toString(idx)^"\n"));{exp=TL.fieldVar(varExp, idx), ty=ty})
             end
           | A.SubscriptVar (var, exp, p) => 
             let
@@ -507,7 +515,7 @@ struct
         val () = L.log L.INFO "Start to translate program"
         val venv = Env.base_venv
         val tenv = Env.base_tenv 
-        val startLevel = TL.newLevel({parent = TL.outermost, name = Temp.newlabel(), formals = []})
+        val startLevel = TL.newLevel({parent = TL.outermost, name = Temp.namedlabel("tig_main"), formals = []})
         val {exp=trexp, ty=_} = transExp (venv, tenv, exp, 0,  startLevel, NONE)
       in
         TL.procEntryExit({level=startLevel, body=trexp});

@@ -1,0 +1,20 @@
+(
+print("example 1:\n");
+(
+    for i:=1 to 10 do print (
+        if i<5 then
+            concat(chr(i+ord("0")),"\n")
+        else 
+            (break; "This should not be printed")
+    )
+);
+print("example 2:\n");
+(
+    for i:=1 to 10 do (
+        if i<5 then
+            print(concat(chr(i+ord("0")),"\n"))
+        else 
+            break
+    )
+)
+)

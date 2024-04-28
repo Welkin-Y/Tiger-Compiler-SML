@@ -15,6 +15,7 @@ sig
                  | Nx of Tree.stm  (* stands for "no result" *)
                  | Cx of Temp.label * Temp.label -> Tree.stm (* stands for "conditional"  *)
                  | Lx of Tree.loc (* stands for "location" *)
+                 | Px of Tree.stm * Temp.temp(* stands for "pointer" *)
                  | NOT_IMPLEMENTED
     
     val seq : Tree.stm list -> Tree.stm
@@ -49,6 +50,7 @@ sig
     val transString : string -> exp
     val transIf : exp * exp * exp option -> exp
     val transBinop : A.oper * exp * exp -> exp
+    val transStrCmp :A.oper* exp * exp -> exp
     val transRelop : A.oper * exp * exp -> exp
     val transBreak :  Temp.label option -> exp
     val transAssign : exp * exp -> exp
