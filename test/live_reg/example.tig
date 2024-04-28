@@ -1,15 +1,9 @@
-<<<<<<< HEAD
+
 /* an array type and an array variable */
 let
 	type  arrtype = array of int
 	var arr1:arrtype := arrtype [10] of 15
 in
-	arr1[3]
+	if arr1[3] = 15 then print("arr1[3] = 15\n") else print("arr1[3] != 15\n")
 end
-=======
-let
-    function fun(a : int , b : int) : int = a + b
-in
-    fun(1, 2)
-end
->>>>>>> origin
+
