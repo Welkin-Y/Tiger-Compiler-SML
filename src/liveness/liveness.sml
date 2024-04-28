@@ -327,12 +327,13 @@ enumerating all the live variables in the set.*)
         (* val theNode = "\nNode: " ^ nodename ^ " \n adjs:\n" *)
         fun isInterestNode (adjs, degree) = 
           if List.length adjs < degree then false else true (* For Debug *)
-        val theNode = if (isInterestNode (adjs,22)) then 
+        val theNode = if (isInterestNode (adjs,100)) then 
           "\nNode: " ^ tempname ^ " \n adjs: "^ Int.toString(List.length adjs) ^ "\n"
         else ""
         in
         (* (foldl (fn (adj, str) => str ^ (IGraph.nodename adj) ^ " ") theNode adjs) ^ "\n\n" *)
-        (foldl (fn (adj, str) => str ^ Temp.makestring(gtemp adj) ^ " ") theNode adjs) ^ "\n\n"
+        if theNode = "" then "" else 
+          (foldl (fn (adj, str) => str ^ Temp.makestring(gtemp adj) ^ " ") theNode adjs) ^ "\n\n"
         end
     in
       TextIO.output(outstream, "Interference Graph:\n");
