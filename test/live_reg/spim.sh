@@ -1,4 +1,5 @@
 
 sml @SMLload=compiler.amd64-linux example.tig
-cat example.tig.s ../../src/runtime/*  > example.s
+cat ../../src/runtime/* example.tig.s  > example.s
+echo -e "\tjal\ttig_exit\n" >> example.s
 

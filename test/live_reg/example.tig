@@ -1,32 +1,7 @@
-let 
-
-  type any = {any : int}
-  var buffer := getchar()
- 
- function readint(any: any) : int =
-  let var i := 0
-      function isdigit(s : string) : int = 
-       ord(buffer)>=ord("0") & ord(buffer)<=ord("9")
-      function skipto() =
-        while buffer=" " | buffer="\n"
-          do buffer := getchar()
-   in skipto();
-      any.any := isdigit(buffer);
-      while isdigit(buffer)
-        do (i := i*10+ord(buffer)-ord("0"); buffer := getchar());
-      i
-  end
- 
-
- 
- 
- 
- 
-
- 
- 
-   /* BODY OF MAIN PROGRAM */
-  in if readint(any{any=0}) = 3 then print("yes") else print("no")
- end
- 
- 
+/* an array type and an array variable */
+let
+	type  arrtype = array of int
+	var arr1:arrtype := arrtype [10] of 15
+in
+	arr1[3]
+end
