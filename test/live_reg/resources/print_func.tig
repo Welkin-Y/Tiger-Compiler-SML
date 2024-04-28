@@ -1,0 +1,8 @@
+/* a record type and a record variable */
+let
+in
+	print("hello world\n")
+end 
+
+/* an array type and an array variable */
+

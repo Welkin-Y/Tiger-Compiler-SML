@@ -1,0 +1,12 @@
+/* an array type and an array variable */
+let
+	type arrtype = array of int
+	var arr:arrtype := arrtype [10] of 0
+    function digitToStr(i:int):string = chr(i+ord("0"))
+in
+	for i := 1 to 4 do (
+        print(concat(digitToStr(i), ": "));
+        arr[i] := i*i;
+        print(concat(chr(arr[i]+ord("0")), "\n"))
+    )
+end

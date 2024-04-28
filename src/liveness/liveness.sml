@@ -101,7 +101,8 @@ enumerating all the live variables in the set.*)
         let
         val nodeidx = Flow.G.getIndex node
         val visited = IntMap.insert(visited, nodeidx, ())
-        val _ = Logger.log Logger.DEBUG ("DFS node: " ^ (Int.toString nodeidx) ^ "\n")
+        val _ = Logger.log Logger.DEBUG ("DFS node: " ^ (Int.toString nodeidx))
+
         val (inMap', outMap', visited') = foldl (fn (node, (inmap, outmap, visited)) =>
           let 
           val nodeidx = Flow.G.getIndex node
@@ -114,7 +115,8 @@ enumerating all the live variables in the set.*)
         (*liveout = union of all livein of succ
         * 1. get liveIn of all succ from inMap
         *)
-        val _ = Logger.log Logger.DEBUG ("Calculating liveout for node: " ^ (Int.toString nodeidx) ^ "\n")
+        val _ = Logger.log Logger.DEBUG ("Calculating liveout for node: " ^ (Int.toString nodeidx))
+
         val liveout : liveSet = case Flow.G.Table.look(outMap', node) of NONE => (Temp.Table.empty, []) | SOME x => x
         val liveout : liveSet = foldl (fn (succ : Flow.G.node, liveout : liveSet) => 
           let
@@ -132,7 +134,7 @@ enumerating all the live variables in the set.*)
           ) liveout liveinLst
           end) liveout (Flow.G.succ(node))
       val _ = Logger.log Logger.DEBUG ("Calculated liveout for node: " ^ (Int.toString nodeidx) ^"\n" ^ (makeLiveSetString liveout)^" Done\n")
-       val _ = Logger.log Logger.DEBUG ("Calculating livein for node: " ^ (Int.toString nodeidx) ^ "\n")
+
         (*livein = use U (liveout - def)*)
         fun updateLiveIn (node : Flow.G.node, livein : liveSet) = 
           let
@@ -140,7 +142,8 @@ enumerating all the live variables in the set.*)
           val useLst : Temp.temp list= case  Flow.G.Table.look(useTable, node) of NONE => [] | SOME x => x
           val liveout : liveSet = case  Flow.G.Table.look(outMap', node) of NONE => (Temp.Table.empty, []) | SOME x => x
           val (_, liveoutLst) = liveout
-          val _ = Logger.log Logger.DEBUG ("all information for node: " ^ (Int.toString nodeidx) ^ " is collected\n")
+          val _ = Logger.log Logger.DEBUG ("all information for node: " ^ (Int.toString nodeidx) ^ " is collected")
+
           (*first add all use into live in*)
           val livein' = foldl (fn (temp, livein) => 
             let 
@@ -190,14 +193,15 @@ enumerating all the live variables in the set.*)
 
   fun calcLiveMap (fg : Flow.flowgraph, inmap : liveMap, outmap : liveMap) =
     let
-      val _ = Logger.log Logger.DEBUG "Calculating Live Map Itration\n";
+      val _ = Logger.log Logger.DEBUG "Calculating Live Map Itration";
       val (inmap', outmap') = calcLiveMapOneIter (fg, inmap, outmap)
 
       val _ = Logger.log Logger.DEBUG "Itration Calculated\n";
-      val _ = Logger.log Logger.DEBUG ("inmap' is : " ^ makeLiveMapString inmap' ^ "\n")
-      val _ = Logger.log Logger.DEBUG ("outmap' is : " ^ makeLiveMapString outmap' ^ "\n")
-      val _ = Logger.log Logger.DEBUG ("inmap is : " ^ makeLiveMapString inmap ^ "\n")
-      val _ = Logger.log Logger.DEBUG ("outmap is : " ^ makeLiveMapString outmap ^ "\n")
+      val _ = Logger.log Logger.DEBUG ("inmap' is : " ^ makeLiveMapString inmap')
+      val _ = Logger.log Logger.DEBUG ("outmap' is : " ^ makeLiveMapString outmap')
+      val _ = Logger.log Logger.DEBUG ("inmap is : " ^ makeLiveMapString inmap)
+      val _ = Logger.log Logger.DEBUG ("outmap is : " ^ makeLiveMapString outmap)
+
       (*check if the two liveMap are equal*)
       fun isLiveMapEqual (liveMap1 : liveMap, liveMap2 : liveMap) = 
         let 
@@ -237,9 +241,10 @@ enumerating all the live variables in the set.*)
     let
       val graph = IGraph.newGraph()
       val Flow.FGRAPH {control=fgraph,def=defTable, use=useTable, ismove=ismove} = fg
-      val _ = Logger.log Logger.DEBUG "Calculating Live Map\n"
+      val _ = Logger.log Logger.DEBUG "Calculating Live Map"
       val (inmap, outmap) = calcLiveMap (fg, Flow.G.Table.empty, Flow.G.Table.empty)
-      val _ = Logger.log Logger.DEBUG "Live Map Calculated\n"
+      val _ = Logger.log Logger.DEBUG "Live Map Calculated"
+
       val tnodeMap = Temp.Table.empty
       val gtempMap = Graph.Table.empty
       (*init nodes in tnodeMap and gtempMap*)
@@ -253,7 +258,8 @@ enumerating all the live variables in the set.*)
           tmpLst @ temps
           end) [] nodes
         val alltemps = getTemps(defTable) @ getTemps(useTable)
-        val _ = Logger.log Logger.DEBUG ("All temps: " ^ (foldl (fn (temp, str) => str ^ (Temp.makestring temp) ^ " ") "" alltemps) ^ "\n")
+        val _ = Logger.log Logger.DEBUG ("All temps: " ^ (foldl (fn (temp, str) => str ^ (Temp.makestring temp) ^ " ") "" alltemps))
+
       in
         (*initialize the tnodeMap and gtempMap by adding all def/use into the maps*)
         (*for each temp, create a node in the igraph*)
@@ -282,7 +288,8 @@ enumerating all the live variables in the set.*)
           in
           map (fn (temp) => 
             let
-            val _ = Logger.log Logger.DEBUG ("Connecting temp: " ^ (Temp.makestring temp) ^ "\n")
+            val _ = Logger.log Logger.DEBUG ("Connecting temp: " ^ (Temp.makestring temp))
+
             val node1 : IGraph.node = case Temp.Table.look(tnodeMap, temp) of NONE => raise Fail "temp not found" | SOME x => x
             in
             map (fn (temp) => 
@@ -301,8 +308,9 @@ enumerating all the live variables in the set.*)
       end
 
       val (tnodeMap, gtempMap) = initMaps()
-      val _ = Logger.log Logger.DEBUG ("tnodeMap: " ^ makeTNodeMapString tnodeMap ^ "\n")
-      val _ = Logger.log Logger.DEBUG ("gtempMap: " ^ makeGTempMapString gtempMap ^ "\n")
+      val _ = Logger.log Logger.DEBUG ("tnodeMap: " ^ makeTNodeMapString tnodeMap)
+      val _ = Logger.log Logger.DEBUG ("gtempMap: " ^ makeGTempMapString gtempMap)
+
       val _ = buildLiveGraph(tnodeMap)
 
       fun tnode(tmp : Temp.temp) = case Temp.Table.look(tnodeMap, tmp) of NONE => raise Fail "temp not found" | SOME x => x
@@ -324,11 +332,18 @@ enumerating all the live variables in the set.*)
         val nodename = IGraph.nodename node
         val tempname = Temp.makestring(gtemp node)
         val adjs = IGraph.adj node
-        val theNode = "\nNode: " ^ nodename ^ " \n adjs:\n"
-        (* val theNode = "\nNode: " ^ tempname ^ " \n adjs:\n" *)
+
+        (* val theNode = "\nNode: " ^ nodename ^ " \n adjs:\n" *)
+        fun isInterestNode (adjs, degree) = 
+          if List.length adjs < degree then false else true (* For Debug *)
+        val theNode = if (isInterestNode (adjs,100)) then 
+          "\nNode: " ^ tempname ^ " \n adjs: "^ Int.toString(List.length adjs) ^ "\n"
+        else ""
         in
-        (foldl (fn (adj, str) => str ^ (IGraph.nodename adj) ^ " ") theNode adjs) ^ "\n\n"
-        (* (foldl (fn (adj, str) => str ^ Temp.makestring(gtemp adj) ^ " ") theNode adjs) ^ "\n\n" *)
+        (* (foldl (fn (adj, str) => str ^ (IGraph.nodename adj) ^ " ") theNode adjs) ^ "\n\n" *)
+        if theNode = "" then "" else 
+          (foldl (fn (adj, str) => str ^ Temp.makestring(gtemp adj) ^ " ") theNode adjs) ^ "\n\n"
+
         end
     in
       TextIO.output(outstream, "Interference Graph:\n");

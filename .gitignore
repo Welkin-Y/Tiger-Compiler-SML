@@ -8,3 +8,8 @@
 **/tmp
 *.log
 *.s
+*.amd64-linux
+*.amd64-darwin
+*.x86-linux
+!runtime-le.s
+!sysspim.s

@@ -81,14 +81,8 @@ struct
             emit(A.OPER{assem="\t" ^ "sw\t" ^ "`s1, " ^ intToString(i) ^ "(`s0)\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[],jump=NONE})
-          | munchStm(T.MOVE(T.MEM(e1), T.READ(T.MEM(e2)))) =
-            emit(A.OPER{assem="\t" ^ "lw\t" ^ "t0, " ^ "0(`s1)\n" ^ 
-                "\t" ^ "sw\t" ^  "t0,\t" ^ "0(`s0)\n",
-                src=[munchExp e1, munchExp e2],
-                dst=[],jump=NONE})
-          | munchStm(T.MOVE(T.MEM(T.CONST i), e2)) =
-            emit(A.OPER{assem="\t" ^ "sw\t" ^ "`s1, " ^ intToString(i) ^ "(r0)\n",
-                src=[munchExp e2], dst=[],jump=NONE})
+
+
           | munchStm(T.MOVE(T.MEM(e1), e2)) =
             emit(A.OPER{assem="\t" ^ "sw\t" ^ "`s1, " ^ "0(`s0)\n",
                 src=[munchExp e1, munchExp e2],
@@ -236,15 +230,20 @@ struct
           
           (* func call *)
           | munchExp(T.CALL(T.NAME l, args)) = 
-            result(fn r => emit(A.OPER
+            result(fn r => let 
+                  val _ = emit(A.OPER
                   {assem="\t" ^ "jal\t" ^ (Symbol.name l) ^ "\n",
-                    src=munchArgs(0, args), 
+                    src=munchArgs(args), 
                     dst=calldefs,
-                    jump=NONE}))
+                    jump=NONE})
+                  in
+                  emit(A.MOVE{assem="\t" ^ "move\t" ^ "`d0, " ^ "`s0\n",
+                    src=F.RV, dst=r})
+                  end)
           | munchExp(T.CALL(e, args)) = 
             result(fn r => emit(A.OPER
                   {assem="\t" ^ "jalr\t" ^ "`s0\n",
-                    src=munchExp e::munchArgs(0, args),
+                    src=munchExp e::munchArgs(args),
                     dst=calldefs,
                     jump=NONE}))
           (* load addr *)
@@ -274,7 +273,7 @@ struct
           can see that their values need to be kept up to the point 
           of call. *)
           (* TODO need check *)
-        and munchArgs(i, args) =
+        and munchArgs(args) =
             let
               fun handleArg(arg, idx: int) =
                   if idx < List.length(F.argregs) then (* move first four arguments to $a0-$a3. *)

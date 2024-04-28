@@ -34,7 +34,7 @@ sig
     val loc : access -> Tree.exp -> Tree.loc (* access and its stack frame' address *)
 
     val procEntryExit1 : frame * Tree.exp -> Tree.stm
-    val procEntryExit2: frame * Assem.instr list -> Assem.instr list (* tell the register allocator that certain registers are live at procedure exit. *)
+    val procEntryExit2: frame  -> Tree.stm (* tell the register allocator that certain registers are live at procedure exit. *)
     val procEntryExit3 : frame * Assem.instr list -> {prolog: string, body: Assem.instr list, epilog: string}
 
     datatype frag = PROC of {body: Tree.stm, frame: frame}

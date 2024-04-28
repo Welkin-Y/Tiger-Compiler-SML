@@ -27,6 +27,7 @@ struct
     | Nx of Tr.stm 
     | Cx of (Temp.label * Temp.label -> Tr.stm)
     | Lx of Tr.loc
+    | Px of Tr.stm * Temp.temp (* for record and array pointer credit to Mr. Jenus Chen*)
     | NOT_IMPLEMENTED (* Placeholder for not implemented translations *)
 
     (* helper function for seq of exps *)
@@ -52,6 +53,7 @@ struct
                     rdTmp r) end
         | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 0) 
         | unEx (Lx l) = Tr.READ l
+        | unEx (Px (s, t)) = Tr.ESEQ(s,  rdTmp t)
         | unEx NOT_IMPLEMENTED = raise ErrorMsg.impossible "unEx with NOT_IMPLEMENTED"
 
     fun unNx (Ex e) = Tr.EXP e
@@ -65,8 +67,8 @@ struct
         | unCx (Ex e) = (fn (t,f) => Tr.CJUMP(Tr.NE, e, Tr.CONST 0, t, f))
         | unCx (Cx genstm) = genstm
         (* unCx(Nx _) need not be translated *)
-        | unCx (Nx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
-        | unCx (Lx _) = (ErrorMsg.impossible "Cannot contruct conditional from no results"; (fn _ => Tr.EXP(Tr.CONST 0)))
+        | unCx (Nx _) = (ErrorMsg.impossible "Cannot contruct conditional from Nx"; (fn _ => Tr.EXP(Tr.CONST 0)))
+        | unCx (Lx l) = unCx(Ex(Tr.READ l))
         | unCx NOT_IMPLEMENTED = raise ErrorMsg.impossible "unCx with NOT_IMPLEMENTED"
 
     fun unLx (Lx l) = l
@@ -79,43 +81,78 @@ struct
                 ROOT => ErrorMsg.impossible "procEntryExit: no frame, cannot exit at ROOT level"
             | LEVEL{frame, parent, id} => 
                 let
+                    (* update $fp and $sp for global variables *)
+                    val decSP = F.procEntryExit2(frame)
                     val body' = unEx(body)
-                    val funcProc = F.PROC{body=Tr.EXP(body'), frame=frame}
+                    val funcProc = F.PROC{body=Tr.SEQ(decSP, Tr.EXP(body')), frame=frame}
                 in
                     fragments := (!fragments)@[funcProc]
                 end
 
     (* MEM(+(CONST kn, MEM(+(CONST kn-1, ... MEM(+(CONST k1, TEMP FP)) ...)))) *)
-    fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=use_id, parent=use_prt, frame=use_frm}): Tree.exp = 
+    (* fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=use_id, parent=use_prt, frame=use_frm}): Tree.exp = 
             if def_id = use_id then rdTmp F.FP
             else (
                     L.log L.DEBUG "Follow use level";
-                    F.exp (List.hd(F.formals use_frm))(followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt))
+                    F.exp (List.hd(F.formals use_frm)) (followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, use_prt))
                 )
         | followStaticLink(ROOT, _) = let 
                 val errmsg = "followStaticLink: define level is ROOT" 
             in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end
         | followStaticLink(_, ROOT) = let
                 val errmsg = "followStaticLink: use level is ROOT" 
-            in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end
+            in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end *)
+
+    fun followStaticLink (LEVEL{id=def_id, parent=def_prt, frame=def_frm}, LEVEL{id=cur_id, parent=cur_prt, frame=cur_frm}, fp): Tree.exp =
+        let
+            val static_link = F.exp (List.hd(F.formals cur_frm)) fp
+            val prt_id = 
+                case cur_prt of 
+                    LEVEL level => (#id level)
+                  | ROOT => ref ()
+        in 
+            if def_id = cur_id then fp
+            else if def_id = prt_id then static_link
+            else (
+                L.log L.DEBUG "Follow use level";
+                followStaticLink(LEVEL{id=def_id, parent=def_prt, frame=def_frm}, cur_prt, static_link)
+            )
+        end 
+    | followStaticLink(ROOT, _, _) = let 
+            val errmsg = "followStaticLink: define level is ROOT" 
+        in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end
+    | followStaticLink(_, ROOT, _) = let
+            val errmsg = "followStaticLink: use level is ROOT" 
+        in L.log L.FATAL errmsg; ErrorMsg.impossible errmsg end
     
     fun transNil () = Ex(Tr.CONST 0)
     
     fun simpleVar(access, useLevel) =
-            
             let val (defLevel, defAccess) = access
                 val _ = L.log L.DEBUG "Translate.simpleVar";
-            in Ex(F.exp defAccess (followStaticLink(defLevel, useLevel))) end
+            in Lx(F.loc defAccess (followStaticLink(defLevel, useLevel, rdTmp F.FP))) end
        
-
     fun fieldVar (var, index) = 
-            Ex(rdMem
-                (Tr.BINOP(
-                        Tr.PLUS, 
-                        unEx var, 
-                        Tr.CONST index)
-                )  
-            )
+    let 
+        val indexReg = Temp.newtemp()
+        val baseReg = Temp.newtemp()
+
+    in
+            Lx(Tr.MEM( Tr.ESEQ(
+                seq([
+                    Tr.MOVE(Tr.TEMP indexReg, Tr.CONST index),
+                    Tr.MOVE(Tr.TEMP baseReg, unEx var)
+                ]),
+                Tr.BINOP(
+                Tr.PLUS, 
+                    rdTmp baseReg, 
+                Tr.BINOP(
+                    Tr.MUL, 
+                    rdTmp indexReg, 
+                    Tr.CONST F.wordSize)
+                )
+            )))
+    end
             
     fun subscriptVar (arr, index) = 
             let 
@@ -126,32 +163,22 @@ struct
                 val nextCheckLabel = Temp.newlabel()
             in 
                 
-                Ex(Tr.ESEQ(
+                Lx(Tr.MEM(Tr.ESEQ(
                         seq[
                             Tr.MOVE(Tr.TEMP indexReg, unEx index),
                             Tr.MOVE(Tr.TEMP baseReg, unEx arr),
                             (*check bound*)
                             Tr.CJUMP(Tr.GT, Tr.CONST 0, 
-                                Tr.READ(Tr.MEM(
-                                        Tr.BINOP(
-                                            Tr.MINUS,
-                                            rdMem(
-                                                rdTmp baseReg
-                                            ),
-                                            Tr.CONST F.wordSize
-                                            )
-                                    )),
+                                rdTmp indexReg,
                                 errorLabel,
                                 nextCheckLabel
                                 ),
                             Tr.LABEL nextCheckLabel,
-                            Tr.CJUMP(Tr.LT, rdTmp indexReg, 
+                            Tr.CJUMP(Tr.GT, rdTmp indexReg, 
                                 Tr.READ(Tr.MEM(
                                         Tr.BINOP(
                                             Tr.MINUS,
-                                            rdMem(
-                                                rdTmp baseReg
-                                            ),
+                                                rdTmp baseReg,
                                             Tr.CONST F.wordSize
                                             )
                                     )),
@@ -164,18 +191,16 @@ struct
                             Tr.LABEL succeeLabel
                             (*indexing the array *)
                             
-                        ], rdMem (
+                        ], 
                             Tr.BINOP(
                                 Tr.PLUS, 
-                                rdMem(
-                                    rdTmp baseReg
-                                ), 
+                                    rdTmp baseReg, 
                                 Tr.BINOP(
                                     Tr.MUL, 
                                     rdTmp indexReg, 
                                     Tr.CONST F.wordSize)
                                 )
-                        )))
+                )))
             end
     fun transVarDec (access, init) = 
             let 
@@ -250,16 +275,18 @@ struct
     fun transBinop(oper, e1, e2) = Ex(Tr.BINOP(Tr.getBinop oper, unEx e1, unEx e2))
 
     fun transRelop(oper, e1, e2) = Cx(fn (t, f) => Tr.CJUMP(Tr.getRelop oper, unEx e1, unEx e2, t, f))
+    (*compare string use external call*)
+    fun transStrCmp(oper, e1, e2) = transRelop(oper, Ex(F.externalCall("stringEqual", [unEx e1, unEx e2])), Ex(Tr.CONST 1))
 
     fun transBreak(SOME(label)) = Nx(Tr.JUMP(Tr.NAME label, [label]))
         | transBreak(NONE) = Nx(Tr.EXP(Tr.CONST 0)) (*placeholder break label. even if there are no break in exp, we still need to pass a label*)
 
-    fun transAssign(var, exp) = Nx(Tr.MOVE(unLx var, unEx exp)) 
+    fun transAssign(var, exp) = Nx(Tr.MOVE(unLx var, unEx exp))
 
     fun transCall (label, defLevel, callLevel, args) = case defLevel of 
                 ROOT => Ex(F.externalCall(Symbol.name label, map unEx args))
             | LEVEL{frame, parent, id} => let
-                    val static_link = followStaticLink(defLevel, callLevel)
+                    val static_link = followStaticLink(defLevel, callLevel, rdTmp F.FP)
                 in
                     Ex(Tr.CALL(Tr.NAME label, static_link::(map unEx args)))
                 end
@@ -288,7 +315,8 @@ struct
             let
                 val assignVar = transAssign(var, lo)
                 val test = transRelop(A.LeOp, var, hi)
-                val newbody = Nx(Tr.SEQ(unNx body, Tr.EXP(Tr.BINOP(Tr.PLUS, Tr.READ(unLx var), Tr.CONST 1))))
+                val plusone = unNx(transAssign(var, Ex(Tr.BINOP(Tr.PLUS, Tr.READ(unLx var), Tr.CONST 1))))
+                val newbody = Nx(Tr.SEQ(unNx body, plusone))
             in
                 Nx(Tr.SEQ(unNx assignVar, unNx(transLoop(test, newbody, breakLabel))))
             end
@@ -302,21 +330,26 @@ struct
                 val len = length explist
                 val res = Temp.newtemp()
                 val (expseq, _) = foldr (fn (exp, (expseq, index)) => 
-                            (transAssign(fieldVar(Ex (rdTmp res), (len - index - 1) * F.wordSize), exp)::expseq, index + 1)
+                            (transAssign(fieldVar(Ex (rdTmp res), (len - index - 1)), exp)::expseq, index + 1)
                     ) ([], 0) explist
-                val malloc = Tr.MOVE(Tr.TEMP res, F.externalCall("malloc", [Tr.CONST (len * F.wordSize)]))
+                val malloc = Tr.MOVE(Tr.TEMP res, F.externalCall("allocRecord", [Tr.CONST (len * F.wordSize)]))
             in
-                Ex(Tr.ESEQ(Tr.SEQ(malloc, seq (map unNx expseq)), rdTmp res))
+                Px(Tr.SEQ(malloc, seq (map unNx expseq)), res)
+                (* Lx(Tr.MEM (Tr.ESEQ(Tr.SEQ(malloc, seq (map unNx expseq)), rdTmp res))) *)
             end
     
     fun transArray(size, init) = 
             let
                 val size = unEx size
                 val init = unEx init
+                (* val init = case init of Ex e => e 
+                | Lx l => (case l of Tr.MEM exp => exp 
+                            | Tr.TEMP t => Tr.READ(Tr.TEMP t)) *)
+      
                 val res = Temp.newtemp()
                 val initArr = Tr.MOVE(Tr.TEMP res, F.externalCall("initArray", [size, init]))
             in
-                Ex(Tr.ESEQ(seq[initArr, Tr.MOVE(Tr.MEM(Tr.BINOP(Tr.MINUS, rdTmp res, Tr.CONST F.wordSize)), size)], rdTmp res))
+                Px(seq[initArr, Tr.MOVE(Tr.TEMP res, Tr.BINOP(Tr.PLUS, rdTmp res, Tr.CONST F.wordSize))], res)
             end
     
     fun transFunDec (level, label: Temp.label , body : exp) = 
@@ -343,7 +376,8 @@ struct
                 3. ( ) an instruction to reset the stack pointer (to deallocate the frame);
                 4. (✔) jr $ra 
                 *)
-                val epilogue = seq[Tr.MOVE(Tr.TEMP F.RV, body), 
+                val epilogue = seq[Tr.EXP body, 
+
                         Tr.JUMP(rdTmp (List.nth(F.specialregs,9)), []), 
                         Tr.LABEL endlabel] 
 
