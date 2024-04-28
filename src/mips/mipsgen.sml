@@ -81,6 +81,8 @@ struct
             emit(A.OPER{assem="\t" ^ "sw\t" ^ "`s1, " ^ intToString(i) ^ "(`s0)\n",
                 src=[munchExp e1, munchExp e2],
                 dst=[],jump=NONE})
+
+
           | munchStm(T.MOVE(T.MEM(e1), e2)) =
             emit(A.OPER{assem="\t" ^ "sw\t" ^ "`s1, " ^ "0(`s0)\n",
                 src=[munchExp e1, munchExp e2],

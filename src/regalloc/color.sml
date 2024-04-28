@@ -60,6 +60,7 @@ struct
       let
         val {graph, tnode, gtemp, moves} = 
           case interference of Liveness.IGRAPH igraph => igraph
+
         val (remainingNodes, removedNodes) = simplify (interference, initial, Graph.nodes graph, [])
         val _ = Logger.log Logger.DEBUG ("Remaining nodes: " ^ Int.toString (length remainingNodes))
         val _ = Logger.log Logger.DEBUG ("Removed nodes: " ^ Int.toString (length removedNodes))
@@ -81,6 +82,7 @@ struct
       in
         ((#1 alloc), [])
       end
+
 
     
 end

@@ -377,6 +377,7 @@ struct
                 4. (✔) jr $ra 
                 *)
                 val epilogue = seq[Tr.EXP body, 
+
                         Tr.JUMP(rdTmp (List.nth(F.specialregs,9)), []), 
                         Tr.LABEL endlabel] 
 

@@ -180,6 +180,7 @@ echo exmaple.tig | sml test.sml
 ```
 which will generate an `example.tig.s` file in the same directory contains the assembly code.
 
+
 ## Putting it all together
 **note** We used **3 late days** for this phase.
 We fixed multiple bugs in the previous phases and developed a script to add runtime library to the generated assembly code. 
@@ -190,6 +191,7 @@ sml drew.sml
 bash spim.sh
 ```
 `bash spim.sh` will compile the `example.tig` in the directory and generate a `example.s` file. You can run it using the spim simulator.
+
 
 ## Implemented Bonus
 - **Semantic Analysis**: We implemented drew's version of Record. We use the functional record to achive the recursive definition

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* an array type and an array variable */
 let
 	type  arrtype = array of int
@@ -5,3 +6,10 @@ let
 in
 	arr1[3]
 end
+=======
+let
+    function fun(a : int , b : int) : int = a + b
+in
+    fun(1, 2)
+end
+>>>>>>> origin
